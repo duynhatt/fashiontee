@@ -138,10 +138,16 @@ class GioHangController extends Controller
         }
 
         if ($request->wantsJson()) {
+            $cartCount = GioHang::where('nguoi_dung_id', Auth::id())
+                ->dangTrongGio()
+                ->whereNotNull('bien_the_id')
+                ->count();
+
             return response()->json([
                 'success'      => true,
                 'message'      => $message,
                 'cart_item_id' => $cartItemId,
+                'cart_count'   => $cartCount,
             ]);
         }
 
@@ -238,6 +244,126 @@ class GioHangController extends Controller
         session(['gio_hang_selected_ids' => $ids]);
 
         return response()->json(['success' => true, 'selected' => $ids]);
+    }
+
+    /**
+     * Lấy dữ liệu giỏ hàng cho Mini-Cart Drawer
+     */
+    public function getDrawerData()
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'logged_in'          => false,
+                'items'              => [],
+                'total_qty'          => 0,
+                'total_items'        => 0,
+                'subtotal'           => 0,
+                'subtotal_formatted' => '0 ₫',
+            ]);
+        }
+
+        $items = GioHang::with(['sanPham.category', 'bienThe.color', 'bienThe.size'])
+            ->where('nguoi_dung_id', Auth::id())
+            ->dangTrongGio()
+            ->whereHas('sanPham', function ($q) {
+                $q->where('trang_thai', true)
+                  ->whereHas('danhMuc', function ($q2) {
+                      $q2->where('trang_thai', 1);
+                  });
+            })
+            ->whereHas('bienThe', function ($q) {
+                $q->where('trang_thai', true);
+            })
+            ->whereNotNull('bien_the_id')
+            ->orderBy('updated_at', 'desc')
+            ->get();
+
+        $formattedItems = [];
+        $totalQty = 0;
+        $subtotal = 0;
+
+        foreach ($items as $item) {
+            $item->syncGiaMoi();
+            $item->thanh_tien = $item->so_luong * $item->don_gia;
+            if ($item->isDirty()) {
+                $item->save();
+            }
+
+            $sp = $item->sanPham;
+            $bt = $item->bienThe;
+
+            $imageUrl = asset('img/default-avatar.png');
+            if ($sp && $sp->hinh_anh_chinh) {
+                if (str_starts_with($sp->hinh_anh_chinh, 'http')) {
+                    $imageUrl = $sp->hinh_anh_chinh;
+                } elseif (str_starts_with($sp->hinh_anh_chinh, 'img/')) {
+                    $imageUrl = asset($sp->hinh_anh_chinh);
+                } else {
+                    $imageUrl = asset('storage/' . $sp->hinh_anh_chinh);
+                }
+            }
+
+            $formattedItems[] = [
+                'id'           => $item->id,
+                'san_pham_id'  => $item->san_pham_id,
+                'name'         => $sp->ten_san_pham ?? 'Sản phẩm',
+                'slug'         => $sp->slug ?? '',
+                'url'          => $sp ? route('sanpham.chitiet', $sp->slug) : '#',
+                'image'        => $imageUrl,
+                'color'        => $bt && $bt->color ? $bt->color->ten_mau : null,
+                'color_code'   => $bt && $bt->color ? $bt->color->ma_mau : null,
+                'size'         => $bt && $bt->size ? $bt->size->ten_kich_thuoc : null,
+                'so_luong'     => $item->so_luong,
+                'don_gia'      => (float) $item->don_gia,
+                'don_gia_formatted' => number_format($item->don_gia, 0, ',', '.') . ' ₫',
+                'thanh_tien'   => (float) $item->thanh_tien,
+                'thanh_tien_formatted' => number_format($item->thanh_tien, 0, ',', '.') . ' ₫',
+            ];
+
+            $totalQty += $item->so_luong;
+            $subtotal += $item->thanh_tien;
+        }
+
+        return response()->json([
+            'logged_in'          => true,
+            'items'              => $formattedItems,
+            'total_qty'          => $totalQty,
+            'total_items'        => count($formattedItems),
+            'subtotal'           => (float) $subtotal,
+            'subtotal_formatted' => number_format($subtotal, 0, ',', '.') . ' ₫',
+        ]);
+    }
+
+    /**
+     * Xóa nhanh item trực tiếp từ Mini-Cart Drawer
+     */
+    public function quickRemove($id)
+    {
+        if (!Auth::check()) {
+            return response()->json(['success' => false, 'message' => 'Vui lòng đăng nhập.'], 401);
+        }
+
+        $item = GioHang::where('id', $id)
+            ->where('nguoi_dung_id', Auth::id())
+            ->dangTrongGio()
+            ->first();
+
+        if (!$item) {
+            return response()->json(['success' => false, 'message' => 'Sản phẩm không tồn tại trong giỏ.'], 404);
+        }
+
+        $item->delete();
+
+        $cartCount = GioHang::where('nguoi_dung_id', Auth::id())
+            ->dangTrongGio()
+            ->whereNotNull('bien_the_id')
+            ->count();
+
+        return response()->json([
+            'success'    => true,
+            'message'    => 'Đã xóa sản phẩm khỏi giỏ hàng.',
+            'cart_count' => $cartCount,
+        ]);
     }
 
     private function authorizeCartItem(GioHang $gioHang): void

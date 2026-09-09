@@ -1,17 +1,19 @@
-@include('client.layout.header')
+<?php echo $__env->make('client.layout.header', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
 <div class="container my-4">
     <nav aria-label="breadcrumb" class="product-breadcrumb">
         <ol class="breadcrumb bg-transparent px-0 mb-0">
             <li class="breadcrumb-item">
-                <a href="{{ url('/') }}" class="text-decoration-none">Trang chủ</a>
+                <a href="<?php echo e(url('/')); ?>" class="text-decoration-none">Trang chủ</a>
             </li>
             <li class="breadcrumb-item">
-                <a href="{{ url('/Shop') }}" class="text-decoration-none">
-                    {{ $sanPham->category->ten_danh_muc ?? 'Danh mục' }}
+                <a href="<?php echo e(url('/Shop')); ?>" class="text-decoration-none">
+                    <?php echo e($sanPham->category->ten_danh_muc ?? 'Danh mục'); ?>
+
                 </a>
             </li>
-            <li class="breadcrumb-item active fw-semibold text-dark" aria-current="page">{{ $sanPham->ten_san_pham }}
+            <li class="breadcrumb-item active fw-semibold text-dark" aria-current="page"><?php echo e($sanPham->ten_san_pham); ?>
+
             </li>
         </ol>
     </nav>
@@ -23,8 +25,8 @@
         <div class="col-lg-5">
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="ratio ratio-1x1 bg-light product-main-media">
-                    <img src="{{ asset('storage/' . $sanPham->hinh_anh_chinh) }}" class="product-main-img w-100 h-100"
-                        width="800" height="800" style="object-fit: contain;" alt="{{ $sanPham->ten_san_pham }}"
+                    <img src="<?php echo e(asset('storage/' . $sanPham->hinh_anh_chinh)); ?>" class="product-main-img w-100 h-100"
+                        width="800" height="800" style="object-fit: contain;" alt="<?php echo e($sanPham->ten_san_pham); ?>"
                         fetchpriority="high" decoding="async">
                 </div>
             </div>
@@ -32,26 +34,27 @@
         </div>
 
         <div class="col-lg-7">
-            <h1 class="fw-bold mb-2">{{ $sanPham->ten_san_pham }}</h1>
+            <h1 class="fw-bold mb-2"><?php echo e($sanPham->ten_san_pham); ?></h1>
 
             <div class="mb-3 d-flex align-items-center">
                 <div class="text-warning me-2 fs-5">
-                    @for ($i = 1; $i <= 5; $i++)
-                        @if ($i <= floor($avgRating))
+                    <?php for($i = 1; $i <= 5; $i++): ?>
+                        <?php if($i <= floor($avgRating)): ?>
                             ★
-                        @else
+                        <?php else: ?>
                             ☆
-                        @endif
-                    @endfor
+                        <?php endif; ?>
+                    <?php endfor; ?>
                 </div>
                 <span class="text-muted">
-                    {{ $avgRating }}/5 ({{ $totalRating }} đánh giá)
+                    <?php echo e($avgRating); ?>/5 (<?php echo e($totalRating); ?> đánh giá)
                 </span>
             </div>
 
             <div class="mb-4">
                 <h3 class="d-inline fw-bold text-danger me-3" id="gia-hien-tai">
-                    {{ $priceRange }}
+                    <?php echo e($priceRange); ?>
+
                 </h3>
 
                 <span class="text-muted text-decoration-line-through fs-5 d-none" id="gia-goc"></span>
@@ -59,20 +62,21 @@
             </div>
 
             <p class="text-secondary mb-4 lead" style="word-break: break-word;">
-                {{ $sanPham->mo_ta_ngan }}
+                <?php echo e($sanPham->mo_ta_ngan); ?>
+
             </p>
 
             <div class="mb-4">
                 <label class="fw-semibold d-block mb-2">Màu sắc:</label>
                 <div class="d-flex flex-wrap gap-2" id="color-options">
-                    @foreach ($sanPham->variants->unique('mau_sac_id') as $variant)
+                    <?php $__currentLoopData = $sanPham->variants->unique('mau_sac_id'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $variant): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <button type="button" class="btn btn-outline-secondary btn-sm color-btn rounded-pill px-3 d-inline-flex align-items-center gap-2"
-                            data-color-id="{{ $variant->mau_sac_id }}"
-                            data-color-name="{{ $variant->color->ten_mau ?? '' }}">
-                            <span class="color-swatch-dot" style="background-color: {{ $variant->color->ma_mau ?? '#ccc' }};"></span>
-                            <span>{{ $variant->color->ten_mau }}</span>
+                            data-color-id="<?php echo e($variant->mau_sac_id); ?>"
+                            data-color-name="<?php echo e($variant->color->ten_mau ?? ''); ?>">
+                            <span class="color-swatch-dot" style="background-color: <?php echo e($variant->color->ma_mau ?? '#ccc'); ?>;"></span>
+                            <span><?php echo e($variant->color->ten_mau); ?></span>
                         </button>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
 
@@ -84,13 +88,14 @@
                     </button>
                 </div>
                 <div class="d-flex flex-wrap gap-2" id="size-options">
-                    @foreach ($sanPham->variants->unique('kich_thuoc_id') as $variant)
+                    <?php $__currentLoopData = $sanPham->variants->unique('kich_thuoc_id'); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $variant): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <button type="button" class="btn btn-outline-secondary btn-sm size-btn px-3"
-                            data-size-id="{{ $variant->kich_thuoc_id }}"
-                            data-size-name="{{ $variant->size->ten_kich_thuoc ?? '' }}">
-                            {{ $variant->size->ten_kich_thuoc }}
+                            data-size-id="<?php echo e($variant->kich_thuoc_id); ?>"
+                            data-size-name="<?php echo e($variant->size->ten_kich_thuoc ?? ''); ?>">
+                            <?php echo e($variant->size->ten_kich_thuoc); ?>
+
                         </button>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
 
@@ -103,11 +108,11 @@
                     <button class="btn btn-outline-secondary" type="button" id="btn-increase">+</button>
                 </div>
                 <small class="text-muted d-block mt-2" id="ton-kho-info">
-                    @if ($totalStock > 0)
-                        Còn {{ $totalStock }} sản phẩm (tổng tất cả)
-                    @else
+                    <?php if($totalStock > 0): ?>
+                        Còn <?php echo e($totalStock); ?> sản phẩm (tổng tất cả)
+                    <?php else: ?>
                         Hết hàng
-                    @endif
+                    <?php endif; ?>
                 </small>
             </div>
 
@@ -126,11 +131,12 @@
                 <div class="row g-3">
                     <div class="col-6 col-md-4">
                         <strong>Danh mục:</strong><br>
-                        {{ $sanPham->category->ten_danh_muc ?? '—' }}
+                        <?php echo e($sanPham->category->ten_danh_muc ?? '—'); ?>
+
                     </div>
                     <div class="col-6 col-md-4">
                         <strong>Tình trạng:</strong><br>
-                        <span class="text-success">{{ $totalStock > 0 ? 'Còn hàng' : 'Hết hàng' }}</span>
+                        <span class="text-success"><?php echo e($totalStock > 0 ? 'Còn hàng' : 'Hết hàng'); ?></span>
                     </div>
                     <div class="col-6 col-md-4">
                         <strong>đổi trả:</strong><br>
@@ -146,80 +152,84 @@
 
                 }
             </style>
-            @if ($sanPham->mo_ta_chi_tiet)
+            <?php if($sanPham->mo_ta_chi_tiet): ?>
                 <div class="mt-5">
                     <h5 class="mb-3">Mô tả chi tiết</h5>
                     <div class="product-description">
-                        {!! nl2br(e($sanPham->mo_ta_chi_tiet)) !!}
+                        <?php echo nl2br(e($sanPham->mo_ta_chi_tiet)); ?>
+
                     </div>
                 </div>
-            @endif
+            <?php endif; ?>
 
             <div class="mt-5">
                 <h4 class="fw-bold mb-4">Đánh giá sản phẩm</h4>
 
-                @if ($danhGias->count() > 0)
+                <?php if($danhGias->count() > 0): ?>
 
-                    @foreach ($danhGias as $dg)
+                    <?php $__currentLoopData = $danhGias; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dg): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                         <div class="border rounded p-3 mb-3 shadow-sm">
 
                             <div class="d-flex justify-content-between mb-2">
                                 <div>
-                                    <strong>{{ $dg->user->name ?? 'Khách hàng' }}</strong>
-                                    @if ($dg->bienThe)
+                                    <strong><?php echo e($dg->user->name ?? 'Khách hàng'); ?></strong>
+                                    <?php if($dg->bienThe): ?>
                                         <div class="small text-muted d-flex align-items-center gap-1">
-                                            @if ($dg->bienThe->color)
+                                            <?php if($dg->bienThe->color): ?>
                                                 <span class="border rounded"
-                                                    style="width:14px;height:14px;background-color:{{ $dg->bienThe->color->ma_mau ?? '#ccc' }};"></span>
-                                                <span>{{ $dg->bienThe->color->ten_mau ?? '—' }}</span>
-                                            @endif
-                                            @if ($dg->bienThe->size)
-                                                <span>/ {{ $dg->bienThe->size->ten_kich_thuoc }}</span>
-                                            @endif
+                                                    style="width:14px;height:14px;background-color:<?php echo e($dg->bienThe->color->ma_mau ?? '#ccc'); ?>;"></span>
+                                                <span><?php echo e($dg->bienThe->color->ten_mau ?? '—'); ?></span>
+                                            <?php endif; ?>
+                                            <?php if($dg->bienThe->size): ?>
+                                                <span>/ <?php echo e($dg->bienThe->size->ten_kich_thuoc); ?></span>
+                                            <?php endif; ?>
                                         </div>
-                                    @endif
+                                    <?php endif; ?>
                                 </div>
 
                                 <small class="text-muted">
-                                    {{ $dg->created_at->format('d/m/Y') }}
+                                    <?php echo e($dg->created_at->format('d/m/Y')); ?>
+
                                 </small>
                             </div>
 
-                            {{-- Sao --}}
+                            
                             <div class="text-warning mb-2">
-                                @for ($i = 1; $i <= 5; $i++)
-                                    @if ($i <= $dg->so_sao)
+                                <?php for($i = 1; $i <= 5; $i++): ?>
+                                    <?php if($i <= $dg->so_sao): ?>
                                         ⭐
-                                    @else
+                                    <?php else: ?>
                                         ☆
-                                    @endif
-                                @endfor
+                                    <?php endif; ?>
+                                <?php endfor; ?>
                             </div>
 
                             <p class="mb-0 text-secondary">
-                                {{ $dg->noi_dung }}
+                                <?php echo e($dg->noi_dung); ?>
+
                             </p>
 
                         </div>
-                    @endforeach
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                    {{-- Pagination --}}
+                    
                     <div class="mt-4">
-                        {{ $danhGias->links('pagination::bootstrap-5') }}
+                        <?php echo e($danhGias->links('pagination::bootstrap-5')); ?>
+
                     </div>
-                @else
+                <?php else: ?>
                     <p class="text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
 
-                @endif
+                <?php endif; ?>
             </div>
 
         </div>
     </div>
 
-    @php
+    <?php
         $relatedSlides = $sanPhamCungDanhMuc->chunk(4);
-    @endphp
-    @if ($sanPhamCungDanhMuc->isNotEmpty())
+    ?>
+    <?php if($sanPhamCungDanhMuc->isNotEmpty()): ?>
         <div class="row mt-5 pt-4 border-top">
             <div class="col-12">
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
@@ -236,28 +246,28 @@
                     <div class="related-carousel-viewport flex-grow-1" id="relatedCarouselViewport" role="region"
                         aria-roledescription="carousel" aria-label="Sản phẩm cùng danh mục" tabindex="0">
                         <div class="related-carousel-track">
-                            @foreach ($relatedSlides as $slideGroup)
+                            <?php $__currentLoopData = $relatedSlides; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $slideGroup): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <div class="related-carousel-slide flex-shrink-0">
                                     <div class="row g-3 row-cols-2 row-cols-md-4">
-                                        @foreach ($slideGroup as $spLienQuan)
+                                        <?php $__currentLoopData = $slideGroup; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $spLienQuan): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                             <div class="col">
                                                 <div
                                                     class="card product-wap related-product-card h-100 border-0 shadow-sm">
                                                     <div class="card border-0">
-                                                        <a href="{{ route('sanpham.chitiet', $spLienQuan->slug) }}"
+                                                        <a href="<?php echo e(route('sanpham.chitiet', $spLienQuan->slug)); ?>"
                                                             class="d-block related-product-img-link">
                                                             <img class="card-img rounded-0 related-product-thumb"
-                                                                src="{{ $spLienQuan->hinh_anh_chinh ? asset('storage/' . $spLienQuan->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
+                                                                src="<?php echo e($spLienQuan->hinh_anh_chinh ? asset('storage/' . $spLienQuan->hinh_anh_chinh) : asset('img/shop_01.jpg')); ?>"
                                                                 width="400" height="533" loading="lazy"
                                                                 decoding="async"
-                                                                alt="{{ $spLienQuan->ten_san_pham }}">
+                                                                alt="<?php echo e($spLienQuan->ten_san_pham); ?>">
                                                         </a>
                                                         <div
                                                             class="card-img-overlay product-overlay d-flex align-items-center justify-content-center">
                                                             <ul class="list-unstyled">
                                                                 <li>
                                                                     <a class="btn btn-success text-white"
-                                                                        href="{{ route('sanpham.chitiet', $spLienQuan->slug) }}"
+                                                                        href="<?php echo e(route('sanpham.chitiet', $spLienQuan->slug)); ?>"
                                                                         title="Xem chi tiết">
                                                                         <i class="far fa-eye"></i>
                                                                     </a>
@@ -266,43 +276,45 @@
                                                         </div>
                                                     </div>
                                                     <div class="card-body py-3 px-3">
-                                                        <a href="{{ route('sanpham.chitiet', $spLienQuan->slug) }}"
+                                                        <a href="<?php echo e(route('sanpham.chitiet', $spLienQuan->slug)); ?>"
                                                             class="h6 text-decoration-none product-title d-block text-dark small mb-2">
-                                                            {{ $spLienQuan->ten_san_pham }}
+                                                            <?php echo e($spLienQuan->ten_san_pham); ?>
+
                                                         </a>
                                                         <p class="mb-0 text-success fw-semibold small related-price">
-                                                            @if ($spLienQuan->variants_min_gia)
-                                                                {{ number_format($spLienQuan->variants_min_gia, 0, ',', '.') }}
+                                                            <?php if($spLienQuan->variants_min_gia): ?>
+                                                                <?php echo e(number_format($spLienQuan->variants_min_gia, 0, ',', '.')); ?>
+
                                                                 đ
-                                                            @else
+                                                            <?php else: ?>
                                                                 Liên hệ
-                                                            @endif
+                                                            <?php endif; ?>
                                                         </p>
                                                     </div>
                                                 </div>
                                             </div>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </div>
                                 </div>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
                     </div>
                     <button type="button"
                         class="btn related-carousel-nav related-carousel-next flex-shrink-0 rounded-circle p-2 p-md-3 shadow-sm"
                         aria-controls="relatedCarouselViewport" aria-label="Xem nhóm sau"
-                        @if ($relatedSlides->count() <= 1) disabled @endif>
+                        <?php if($relatedSlides->count() <= 1): ?> disabled <?php endif; ?>>
                         <i class="fas fa-chevron-right" aria-hidden="true"></i>
                     </button>
                 </div>
-                @if ($relatedSlides->count() > 1)
+                <?php if($relatedSlides->count() > 1): ?>
                     <p class="text-center text-muted small mt-3 mb-0 related-carousel-counter" aria-live="polite">
                         <span class="related-carousel-current">1</span> / <span
-                            class="related-carousel-total">{{ $relatedSlides->count() }}</span>
+                            class="related-carousel-total"><?php echo e($relatedSlides->count()); ?></span>
                     </p>
-                @endif
+                <?php endif; ?>
             </div>
         </div>
-    @endif
+    <?php endif; ?>
 </div>
 
 <style>
@@ -680,10 +692,10 @@
     </div>
 </div>
 
-@include('client.layout.footer')
-@include('client.layout.scripts')
+<?php echo $__env->make('client.layout.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php echo $__env->make('client.layout.scripts', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-@php
+<?php
     $variantsForJs = $sanPham->variants->map(function($v) {
         return [
             'id'             => (int) $v->id,
@@ -695,7 +707,7 @@
             'gia_khuyen_mai' => $v->gia_khuyen_mai ? (float) $v->gia_khuyen_mai : null,
         ];
     })->values();
-@endphp
+?>
 
 <script>
     (function() {
@@ -740,7 +752,7 @@
         const buyNowBtn = document.getElementById('btn-buy-now');
         const quantityInput = document.getElementById('quantity');
 
-        const allVariants = {!! json_encode($variantsForJs) !!};
+        const allVariants = <?php echo json_encode($variantsForJs); ?>;
 
         let selectedColor = null;
         let selectedSize = null;
@@ -864,11 +876,11 @@
             if (!selectedColor || !selectedSize) {
                 currentVariantId = null;
                 currentStock = null;
-                giaHienTai.textContent = '{{ $priceRange }}';
+                giaHienTai.textContent = '<?php echo e($priceRange); ?>';
                 giaGoc.classList.add('d-none');
                 phanTramGiam.classList.add('d-none');
                 tonKhoInfo.innerHTML =
-                    '{{ $totalStock > 0 ? "Còn $totalStock sản phẩm (tổng tất cả)" : 'Hết hàng' }}';
+                    '<?php echo e($totalStock > 0 ? "Còn $totalStock sản phẩm (tổng tất cả)" : 'Hết hàng'); ?>';
                 quantityInput.disabled = false;
                 addToCartBtn.disabled = false;
                 buyNowBtn.disabled = false;
@@ -876,7 +888,7 @@
             }
 
             fetch(
-                    `/api/product-variant?product_id={{ $sanPham->id }}&color=${selectedColor}&size=${selectedSize}`)
+                    `/api/product-variant?product_id=<?php echo e($sanPham->id); ?>&color=${selectedColor}&size=${selectedSize}`)
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.variant) {
@@ -978,7 +990,7 @@
                 return;
             }
             addToCartBtn.disabled = true;
-            fetch('{{ route('gio-hang.store') }}', {
+            fetch('<?php echo e(route('gio-hang.store')); ?>', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -987,14 +999,14 @@
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        san_pham_id: {{ $sanPham->id }},
+                        san_pham_id: <?php echo e($sanPham->id); ?>,
                         bien_the_id: currentVariantId,
                         so_luong: qty
                     })
                 })
                 .then(async r => {
                     if (r.status === 401) {
-                        window.location.href = '{{ url('/login') }}';
+                        window.location.href = '<?php echo e(url('/login')); ?>';
                         return;
                     }
                     const data = await r.json();
@@ -1043,7 +1055,7 @@
                 return;
             }
             buyNowBtn.disabled = true;
-            fetch('{{ route('buy-now') }}', {
+            fetch('<?php echo e(route('buy-now')); ?>', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -1052,14 +1064,14 @@
                         'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify({
-                        san_pham_id: {{ $sanPham->id }},
+                        san_pham_id: <?php echo e($sanPham->id); ?>,
                         bien_the_id: currentVariantId,
                         so_luong: qty
                     })
                 })
                 .then(async r => {
                     if (r.status === 401) {
-                        window.location.href = '{{ url('/login') }}';
+                        window.location.href = '<?php echo e(url('/login')); ?>';
                         return;
                     }
                     const data = await r.json();
@@ -1153,3 +1165,4 @@
         })();
     });
 </script>
+<?php /**PATH D:\e7\laragon\www\DATN\DATN-CustomTee\Customtee\resources\views/client/productdetail.blade.php ENDPATH**/ ?>

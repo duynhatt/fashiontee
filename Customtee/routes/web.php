@@ -23,6 +23,7 @@ use App\Http\Controllers\client\ShopController;
 use App\Models\BienThe;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\client\OrderController;
+use App\Http\Controllers\Client\SearchController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -84,6 +85,12 @@ Route::get('/api/product-variant', function (Request $request) {
     return response()->json(['success' => false]);
 })->name('api.product.variant');
 
+// API Gợi ý tìm kiếm nhanh (Live search)
+Route::get('/api/search/suggest', [SearchController::class, 'suggest'])->name('api.search.suggest');
+
+// API Lấy dữ liệu Mini-Cart Drawer (cho cả khách và user)
+Route::get('/api/cart/drawer-data', [GioHangController::class, 'getDrawerData'])->name('api.cart.drawer-data');
+
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'index'])->name('profile');
     Route::post('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
@@ -102,6 +109,7 @@ Route::middleware('auth')->group(function () {
     Route::put('/gio-hang/{gioHang}', [GioHangController::class, 'update'])->name('gio-hang.update');
     Route::delete('/gio-hang/{gioHang}', [GioHangController::class, 'destroy'])->name('gio-hang.destroy');
     Route::post('/gio-hang/selection', [GioHangController::class, 'updateSelection'])->name('gio-hang.selection');
+    Route::delete('/api/cart/quick-remove/{id}', [GioHangController::class, 'quickRemove'])->name('api.cart.quick-remove');
 
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('dat-hang');
     Route::post('/checkout/process', [CheckoutController::class, 'process'])->name('checkout.process');

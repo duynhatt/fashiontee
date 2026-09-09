@@ -116,42 +116,45 @@
 
                     <div class="d-lg-none flex-sm-fill mt-3 mb-4 col-7 col-sm-auto pr-3">
                         <form action="<?php echo e(url('/Shop')); ?>" method="get">
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="inputMobileSearch" name="q"
-                                    value="<?php echo e(request('q')); ?>" placeholder="Tìm sản phẩm...">
-                                <button class="input-group-text" type="submit">
-                                    <i class="fa fa-fw fa-search"></i>
-                                </button>
+                            <div class="position-relative w-100">
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="inputMobileSearch" name="q"
+                                        value="<?php echo e(request('q')); ?>" placeholder="Tìm sản phẩm..." autocomplete="off">
+                                    <button class="input-group-text" type="submit">
+                                        <i class="fa fa-fw fa-search"></i>
+                                    </button>
+                                </div>
+                                <div id="liveSearchResultsMobile" class="live-search-dropdown shadow-lg rounded-3 border d-none">
+                                    <div id="liveSearchContentMobile"></div>
+                                </div>
                             </div>
                         </form>
                     </div>
 
                     <a class="nav-icon d-none d-lg-inline" href="#" data-bs-toggle="modal"
-                        data-bs-target="#templatemo_search">
+                        data-bs-target="#templatemo_search" title="Tìm kiếm">
                         <i class="fa fa-fw fa-search text-dark mr-2"></i>
                     </a>
 
-                    <?php if(auth()->guard()->check()): ?>
-                        <a class="nav-icon position-relative text-decoration-none" href="<?php echo e(route('gio-hang.index')); ?>"
-                            title="Giỏ hàng">
-                            <i class="fa fa-fw fa-cart-arrow-down text-dark mr-1"></i>
-                            <?php
-                                $cartCount = \App\Models\GioHang::where('nguoi_dung_id', auth()->id())
-                                    ->dangTrongGio()
-                                    ->whereNotNull('bien_the_id')
-                                    ->count();
-                            ?> 
-                             <?php if($cartCount > 0): ?>
-                                <span
-                                    class="position-absolute top-0 left-100 translate-middle badge rounded-pill bg-danger"><?php echo e($cartCount > 99 ? '99+' : $cartCount); ?></span>
-                            <?php endif; ?>
-                        </a>
-                    <?php else: ?>
-                        <a class="nav-icon position-relative text-decoration-none" href="<?php echo e(url('/login')); ?>"
-                            title="Đăng nhập để xem giỏ hàng">
-                            <i class="fa fa-fw fa-cart-arrow-down text-dark mr-1"></i>
-                        </a>
-                    <?php endif; ?>
+                    
+                    <?php
+                        $headerCartCount = auth()->check()
+                            ? \App\Models\GioHang::where('nguoi_dung_id', auth()->id())
+                                ->dangTrongGio()
+                                ->whereNotNull('bien_the_id')
+                                ->count()
+                            : 0;
+                    ?>
+                    <a class="nav-icon position-relative text-decoration-none"
+                        href="javascript:void(0)"
+                        onclick="window.openMiniCartDrawer(); return false;"
+                        title="Giỏ hàng">
+                        <i class="fa fa-fw fa-cart-arrow-down text-dark mr-1"></i>
+                        <span class="position-absolute top-0 left-100 translate-middle badge rounded-pill bg-danger header-cart-badge <?php echo e($headerCartCount > 0 ? '' : 'd-none'); ?>">
+                            <?php echo e($headerCartCount > 99 ? '99+' : $headerCartCount); ?>
+
+                        </span>
+                    </a>
 
                     <!-- Auth Links -->
 <?php if(auth()->guard()->guest()): ?>
@@ -223,24 +226,111 @@
         </div>
     <?php endif; ?>
 
-    <!-- Modal -->
+    <!-- Search Modal -->
     <div class="modal fade bg-white" id="templatemo_search" tabindex="-1" role="dialog"
         aria-labelledby="exampleModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
-<div class="w-100 pt-1 mb-5 text-right">
+            <div class="w-100 pt-1 mb-5 text-end">
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form action="<?php echo e(url('/Shop')); ?>" method="get" class="modal-content modal-body border-0 p-0">
-                <div class="input-group mb-2">
-                    <input type="text" class="form-control" id="inputModalSearch" name="q"
-                        value="<?php echo e(request('q')); ?>" placeholder="Tìm sản phẩm...">
-                    <button type="submit" class="input-group-text bg-success text-light">
-                        <i class="fa fa-fw fa-search text-white"></i>
-                    </button>
+                <div class="position-relative w-100">
+                    <div class="input-group mb-2">
+                        <input type="text" class="form-control form-control-lg" id="inputModalSearch" name="q"
+                            value="<?php echo e(request('q')); ?>" placeholder="Nhập tên sản phẩm cần tìm..." autocomplete="off">
+                        <button type="submit" class="input-group-text bg-success text-light px-4">
+                            <i class="fa fa-fw fa-search text-white"></i>
+                        </button>
+                    </div>
+                    <!-- Live Search Dropdown -->
+                    <div id="liveSearchResults" class="live-search-dropdown shadow-lg rounded-3 border d-none">
+                        <div id="liveSearchContent"></div>
+                    </div>
                 </div>
             </form>
         </div>
     </div>
+
+    
+    <?php echo $__env->make('client.layout.mini-cart-drawer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+    <style>
+        .live-search-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #fff;
+            z-index: 1060;
+            max-height: 420px;
+            overflow-y: auto;
+            margin-top: 4px;
+        }
+        .live-search-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            text-decoration: none;
+            color: inherit;
+            border-bottom: 1px solid #f2f2f2;
+            transition: background 0.15s;
+        }
+        .live-search-item:last-child {
+            border-bottom: none;
+        }
+        .live-search-item:hover {
+            background-color: #f8f9fa;
+        }
+        .live-search-thumb {
+            width: 48px;
+            height: 48px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid #eee;
+            flex-shrink: 0;
+        }
+        .live-search-info {
+            flex-grow: 1;
+            min-width: 0;
+        }
+        .live-search-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #212529;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+        .live-search-category {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        .live-search-price {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #198754;
+            text-align: right;
+            white-space: nowrap;
+        }
+        .live-search-footer {
+            padding: 10px;
+            text-align: center;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        .live-search-footer a {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #198754;
+            text-decoration: none;
+        }
+        .live-search-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+
     <script>
         setTimeout(function() {
             const toasts = document.querySelectorAll('.custom-toast');
@@ -249,6 +339,112 @@
                 setTimeout(() => toast.remove(), 500);
             });
         }, 3000);
+
+        // Live Search Handler
+        function initLiveSearch(inputId, resultsId, contentId) {
+            const input = document.getElementById(inputId);
+            const results = document.getElementById(resultsId);
+            const content = document.getElementById(contentId);
+            if (!input || !results || !content) return;
+
+            let debounceTimer = null;
+
+            function escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
+            }
+
+            input.addEventListener('input', function() {
+                const q = this.value.trim();
+                clearTimeout(debounceTimer);
+
+                if (q.length < 1) {
+                    results.classList.add('d-none');
+                    content.innerHTML = '';
+                    return;
+                }
+
+                debounceTimer = setTimeout(() => {
+                    content.innerHTML = `
+                        <div class="p-3 text-center text-muted small">
+                            <span class="spinner-border spinner-border-sm text-success me-2" role="status"></span>
+                            Đang tìm sản phẩm...
+                        </div>
+                    `;
+                    results.classList.remove('d-none');
+
+                    fetch(`/api/search/suggest?q=${encodeURIComponent(q)}`)
+                        .then(r => r.json())
+                        .then(res => {
+                            if (!res.success || !res.data || res.data.length === 0) {
+                                content.innerHTML = `
+                                    <div class="p-3 text-center text-muted small">
+                                        <i class="fa fa-info-circle me-1"></i> Không tìm thấy sản phẩm nào khớp với "<strong>${escapeHtml(q)}</strong>"
+                                    </div>
+                                `;
+                                return;
+                            }
+
+                            let html = '<div class="live-search-list">';
+                            res.data.forEach(item => {
+                                html += `
+                                    <a href="${item.url}" class="live-search-item">
+                                        <img src="${item.image}" alt="${escapeHtml(item.name)}" class="live-search-thumb">
+                                        <div class="live-search-info">
+                                            <div class="live-search-title">${escapeHtml(item.name)}</div>
+                                            <div class="live-search-category"><i class="fa fa-tag me-1"></i>${escapeHtml(item.category_name)}</div>
+                                        </div>
+                                        <div class="live-search-price">${item.price_formatted}</div>
+                                    </a>
+                                `;
+                            });
+                            html += '</div>';
+
+                            if (res.total > 0) {
+                                html += `
+                                    <div class="live-search-footer">
+                                        <a href="<?php echo e(url('/Shop')); ?>?q=${encodeURIComponent(q)}">
+                                            Xem tất cả ${res.total} sản phẩm <i class="fa fa-arrow-right ms-1"></i>
+                                        </a>
+                                    </div>
+                                `;
+                            }
+
+                            content.innerHTML = html;
+                        })
+                        .catch(() => {
+                            content.innerHTML = `
+                                <div class="p-3 text-center text-danger small">
+                                    Lỗi khi tìm kiếm. Vui lòng thử lại.
+                                </div>
+                            `;
+                        });
+                }, 280);
+            });
+
+            document.addEventListener('click', function(e) {
+                if (!input.contains(e.target) && !results.contains(e.target)) {
+                    results.classList.add('d-none');
+                }
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    results.classList.add('d-none');
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initLiveSearch('inputModalSearch', 'liveSearchResults', 'liveSearchContent');
+            initLiveSearch('inputMobileSearch', 'liveSearchResultsMobile', 'liveSearchContentMobile');
+        });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
