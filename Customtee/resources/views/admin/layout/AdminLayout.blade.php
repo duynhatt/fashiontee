@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="keywords"
+        content="Visitors Responsive web template, Bootstrap Web Templates, Flat Web Templates, Android Compatible web template, 
+        Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, SonyEricsson, Motorola web design" />
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Admin Dashboard</title>
+
+    <!-- JavaScript Hide URL Bar -->
+    <script type="application/x-javascript">
+        addEventListener("load", function() {
+            setTimeout(hideURLbar, 0);
+        }, false);
+
+        function hideURLbar() {
+            window.scrollTo(0, 1);
+        }
+    </script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{{ asset('AdminAssets/css/bootstrap.min.css') }}">
+
+    <!-- Custom CSS -->
+    <link href="{{ asset('AdminAssets/css/style.css') }}" rel='stylesheet' type='text/css' />
+    <link href="{{ asset('AdminAssets/css/style-responsive.css') }}" rel="stylesheet" />
+
+    <!-- Font CSS -->
+    <link
+        href='//fonts.googleapis.com/css?family=Roboto:400,100,100italic,300,300italic,400italic,500,500italic,700,700italic,900,900italic'
+        rel='stylesheet' type='text/css'>
+
+    <!-- Font Awesome & Icons -->
+    <link rel="stylesheet" href="{{ asset('AdminAssets/css/font.css') }}" type="text/css" />
+    <link href="{{ asset('AdminAssets/css/font-awesome.css') }}" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('AdminAssets/css/morris.css') }}" type="text/css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <!-- Calendar CSS -->
+    <link rel="stylesheet" href="{{ asset('AdminAssets/css/monthly.css') }}">
+
+    <!-- jQuery & Required Scripts -->
+    <script src="{{ asset('AdminAssets/js/jquery2.0.3.min.js') }}"></script>
+    <script src="{{ asset('AdminAssets/js/raphael-min.js') }}"></script>
+    <script src="{{ asset('AdminAssets/js/morris.js') }}"></script>
+</head>
+
+<body>
+    @if (session('success'))
+        <script>
+            toastr.success("{{ session('success') }}");
+        </script>
+    @endif
+
+    @if (session('error'))
+        <script>
+            toastr.error("{{ session('error') }}");
+        </script>
+    @endif
+
+    @if (session('warning'))
+        <script>
+            toastr.warning("{{ session('warning') }}");
+        </script>
+    @endif
+
+    @if (session('info'))
+        <script>
+            toastr.info("{{ session('info') }}");
+        </script>
+    @endif
+    <style>
+        .dropup .dropdown-menu,
+        .dropdown-menu {
+            z-index: 3000 !important;
+        }
+
+        */
+    </style>
+    <section id="container">
+
+        <!-- Header -->
+        <header class="header fixed-top clearfix">
+            <div class="brand">
+                <a href="{{ url('admin') }}" class="logo">ADMIN</a>
+                <div class="sidebar-toggle-box">
+                    <div class="fa fa-bars"></div>
+                </div>
+            </div>
+
+            <div class="nav notify-row" id="top_menu">
+                <ul class="nav top-menu">
+                </ul>
+            <div class="top-nav clearfix pull-right" style="margin-top: 15px; margin-right: 20px;">
+                <span style="color: #fff; margin-right: 15px; font-size: 13px;">
+                    <i class="fa fa-user-circle"></i>
+                    <strong>{{ auth()->user()->name ?? 'Admin' }}</strong>
+                    @if(auth()->check() && auth()->user()->roles->first())
+                        <span class="label label-info" style="margin-left: 4px;">{{ auth()->user()->roles->first()->display_name }}</span>
+                    @endif
+                </span>
+                <a href="{{ url('/') }}" class="btn btn-xs btn-default" target="_blank" style="margin-right: 8px;">
+                    <i class="fa fa-globe"></i> Xem Website
+                </a>
+                <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-xs btn-danger">
+                        <i class="fa fa-sign-out"></i> Đăng xuất
+                    </button>
+                </form>
+            </div>
+
+            {{-- <div class="- ">
+                <ul class="nav pull-right top-menu">
+                    <a class="active" href="{{ url('/') }}">
+                        <i class="fa fa-dashboard"></i>
+                        <span>fashionTee</span>
+                    </a>
+                </ul>
+            </div> --}}
+        </header>
+
+        <!-- Sidebar -->
+        <aside>
+            <div id="sidebar" class="nav-collapse">
+                <div class="leftside-navigation">
+                    <ul class="sidebar-menu" id="nav-accordion">
+                        <!-- Dashboard -->
+                        <li>
+                           <a class="active" href="{{ url('/') }}">
+                        <i class="fa fa-dashboard"></i>
+                        <span>fashionTee</span>
+                    </a>
+                            
+                            <a class="{{ request()->is('admin') || request()->is('admin/dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">
+                                <i class="fa fa-dashboard"></i>
+                                <span>Tổng quan</span>
+                            </a>
+                        </li>
+
+                        <!-- Categories -->
+                        @can('categories.view')
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-list"></i>
+                                <span>Danh mục</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="{{ route('admin.danh-muc.index') }}">Danh mục</a></li>
+                            </ul>
+                        </li>
+                        @endcan
+
+                        <!-- Attributes -->
+                        @can('attributes.view')
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-tags"></i>
+                                <span>Thuộc tính</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="{{ route('admin.mau-sac.index') }}">Màu sắc</a></li>
+                                <li><a href="{{ route('admin.kich-thuoc.index') }}">Kích thước</a></li>
+                            </ul>
+                        </li>
+                        @endcan
+
+                        <!-- Variants -->
+                        @can('inventory.view')
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-random"></i>
+                                <span>Biến thể</span>
+                                <span>Biến thể & Tồn kho</span>
+                            </a>
+                            <ul class="sub">
+                                @can('inventory.update')
+                                <li>
+                                    <a href="{{ route('variants.create') }}">
+                                        Thêm mới biến thể
+                                    </a>
+                                </li>
+                                @endcan
+                                <li>
+                                    <a href="{{ route('variants.index') }}">
+                                        Danh sách biến thể
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        @endcan
+
+                        <!-- Products -->
+                        @can('products.view')
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-shopping-bag"></i>
+                                <span>Sản phẩm</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="{{ route('admin.san-pham.index') }}">Danh sách sản phẩm</a></li>
+                            </ul>
+                        </li>
+                        @endcan
+
+                        <!-- Orders -->
+                        @can('orders.view')
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-shopping-cart"></i>
+                                <span>Đơn hàng</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="{{ route('admin.don-hang.index') }}">Danh sách đơn hàng</a></li>
+                            </ul>
+                            <ul class="sub">
+                                @can('orders.refund')
+                                <li><a href="{{ route('admin.hoan-tra.index') }}">Hoàn trả</a></li>
+                                @endcan
+                            </ul>
+                        </li>
+                        @endcan
+
+                        @can('reviews.view')
+                        <li>
+                            <a href="{{ route('admin.binh-luan.index') }}">
+                                <i class="fa fa-star"></i>
+                                <span>Đánh giá</span>
+                            </a>
+                        </li>
+                        @endcan
+
+                        @can('vouchers.view')
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-ticket"></i>
+                                <span>Quản lý Voucher</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="{{ route('admin.vouchers.index') }}">Danh sách Voucher</a></li>
+                                @can('vouchers.create')
+                                <li><a href="{{ route('admin.vouchers.create') }}">Thêm Voucher mới</a></li>
+                                @endcan
+                            </ul>
+                        </li>
+                        @endcan
+
+                        @can('contacts.view')
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-ticket"></i>
+                                <i class="fa fa-envelope"></i>
+                                <span>Quản lý liên hệ</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="{{ route('admin.lien-he.index') }}">Danh sách liên hệ</a></li>
+                            </ul>
+                        </li>
+                        @endcan
+
+                        <!-- Users Management -->
+                        @can('users.view')
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-users"></i>
+                                <span>Tài khoản người dùng</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="{{ route('admin.users.index') }}">Danh sách tài khoản</a></li>
+                                @can('users.create')
+                                <li><a href="{{ route('admin.users.create') }}">Thêm tài khoản mới</a></li>
+                                @endcan
+                            </ul>
+                        </li>
+                        @endcan
+
+                        <!-- Roles & Permissions Management -->
+                        @can('roles.view')
+                        <li class="sub-menu">
+                            <a href="javascript:;">
+                                <i class="fa fa-shield"></i>
+                                <span>Vai trò & Phân quyền</span>
+                            </a>
+                            <ul class="sub">
+                                <li><a href="{{ route('admin.roles.index') }}">Danh sách vai trò</a></li>
+                                @can('roles.manage')
+                                <li><a href="{{ route('admin.roles.create') }}">Thêm vai trò mới</a></li>
+                                @endcan
+                            </ul>
+                        </li>
+                        @endcan
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <section id="main-content">
+            <section class="wrapper">
+                @yield('AdminContent')
+            </section>
+        </section>
+    </section>
+
+    <!-- Core Scripts -->
+    <script src="{{ asset('AdminAssets/js/bootstrap.js') }}"></script>
+    <script src="{{ asset('AdminAssets/js/jquery.dcjqaccordion.2.7.js') }}"></script>
+    <script src="{{ asset('AdminAssets/js/scripts.js') }}"></script>
+    <script src="{{ asset('AdminAssets/js/jquery.slimscroll.js') }}"></script>
+    <script src="{{ asset('AdminAssets/js/jquery.nicescroll.js') }}"></script>
+    <script src="{{ asset('AdminAssets/js/jquery.scrollTo.js') }}"></script>
+
+    <!-- Toastr Notifications -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        toastr.options = {
+            "closeButton": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "timeOut": "1500",
+            "extendedTimeOut": "7000",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
+    </script>
+
+    <!-- Calendar -->
+    <script type="text/javascript" src="{{ asset('AdminAssets/js/monthly.js') }}"></script>
+    <script type="text/javascript">
+        $(window).load(function() {
+            $('#mycalendar').monthly({
+                mode: 'event'
+            });
+
+            $('#mycalendar2').monthly({
+                mode: 'picker',
+                target: '#mytarget',
+                setWidth: '250px',
+                startHidden: true,
+                showTrigger: '#mytarget',
+                stylePast: true,
+                disablePast: true
+            });
+
+            // Protocol check for local development
+            switch (window.location.protocol) {
+                case 'http:':
+                case 'https:':
+                    break;
+                case 'file:':
+                    alert('Just a heads-up, events will not work when run locally.');
+                    break;
+            }
+        });
+    </script>
+
+    <!-- Custom Dashboard Scripts -->
+    <script>
+        $(document).ready(function() {
+            // Box Button Show/Hide Animation
+            jQuery('.small-graph-box').hover(function() {
+                jQuery(this).find('.box-button').fadeIn('fast');
+            }, function() {
+                jQuery(this).find('.box-button').fadeOut('fast');
+            });
+
+            jQuery('.small-graph-box .box-close').click(function() {
+                jQuery(this).closest('.small-graph-box').fadeOut(200);
+                return false;
+            });
+
+            // Morris Area Chart
+            function gd(year, day, month) {
+                return new Date(year, month - 1, day).getTime();
+            }
+
+            var graphArea2 = Morris.Area({
+                element: 'hero-area',
+                padding: 10,
+                behaveLikeLine: true,
+                gridEnabled: false,
+                gridLineColor: '#dddddd',
+                axes: true,
+                resize: true,
+                smooth: true,
+                pointSize: 0,
+                lineWidth: 0,
+                fillOpacity: 0.85,
+                data: [{
+                        period: '2015 Q1',
+                        iphone: 2668,
+                        ipad: null,
+                        itouch: 2649
+                    },
+                    {
+                        period: '2015 Q2',
+                        iphone: 15780,
+                        ipad: 13799,
+                        itouch: 12051
+                    },
+                    {
+                        period: '2015 Q3',
+                        iphone: 12920,
+                        ipad: 10975,
+                        itouch: 9910
+                    },
+                    {
+                        period: '2015 Q4',
+                        iphone: 8770,
+                        ipad: 6600,
+                        itouch: 6695
+                    },
+                    {
+                        period: '2016 Q1',
+                        iphone: 10820,
+                        ipad: 10924,
+                        itouch: 12300
+                    },
+                    {
+                        period: '2016 Q2',
+                        iphone: 9680,
+                        ipad: 9010,
+                        itouch: 7891
+                    },
+                    {
+                        period: '2016 Q3',
+                        iphone: 4830,
+                        ipad: 3805,
+                        itouch: 1598
+                    },
+                    {
+                        period: '2016 Q4',
+                        iphone: 15083,
+                        ipad: 8977,
+                        itouch: 5185
+                    },
+                    {
+                        period: '2017 Q1',
+                        iphone: 10697,
+                        ipad: 4470,
+                        itouch: 2038
+                    }
+                ],
+                lineColors: ['#eb6f6f', '#926383', '#eb6f6f'],
+                xkey: 'period',
+                redraw: true,
+                ykeys: ['iphone', 'ipad', 'itouch'],
+                labels: ['All Visitors', 'Returning Visitors', 'Unique Visitors'],
+                pointSize: 2,
+                hideHover: 'auto',
+                resize: true
+            });
+        });
+    </script>
+
+    @yield('scripts')
+
+</body>
+
+</html>
