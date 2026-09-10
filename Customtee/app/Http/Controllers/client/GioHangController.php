@@ -318,6 +318,7 @@ class GioHangController extends Controller
                 'don_gia_formatted' => number_format($item->don_gia, 0, ',', '.') . ' ₫',
                 'thanh_tien'   => (float) $item->thanh_tien,
                 'thanh_tien_formatted' => number_format($item->thanh_tien, 0, ',', '.') . ' ₫',
+                'max_stock'    => $bt ? (int) $bt->so_luong : 0,
             ];
 
             $totalQty += $item->so_luong;
