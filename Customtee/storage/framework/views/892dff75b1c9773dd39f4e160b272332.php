@@ -86,11 +86,13 @@
         z-index: 9998;
         opacity: 0;
         visibility: hidden;
+        pointer-events: none;
         transition: opacity 0.3s ease, visibility 0.3s ease;
     }
     .mini-cart-backdrop.show {
         opacity: 1;
         visibility: visible;
+        pointer-events: auto;
     }
 
     /* Container Drawer trượt từ bên phải */
@@ -107,6 +109,7 @@
         box-shadow: -5px 0 25px rgba(0, 0, 0, 0.18) !important;
         transform: translateX(100%) !important;
         visibility: hidden !important;
+        pointer-events: none !important;
         transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), visibility 0.3s !important;
         display: flex !important;
         flex-direction: column !important;
@@ -115,6 +118,7 @@
     .mini-cart-drawer.open {
         transform: translateX(0) !important;
         visibility: visible !important;
+        pointer-events: auto !important;
     }
 
     .mini-cart-body {

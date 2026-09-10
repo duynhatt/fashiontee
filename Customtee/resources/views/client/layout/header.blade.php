@@ -82,132 +82,143 @@
     </style>
 
 
-    <!-- Header -->
-    <nav class="navbar navbar-expand-lg navbar-light shadow">
-        <div class="container d-flex justify-content-between align-items-center">
+    <!-- Floating Island Header -->
+    <header class="fashion-floating-header-wrapper position-sticky w-100" id="fashionFloatingHeader">
+        <div class="container-xl px-2 px-sm-3 px-lg-4">
+            <nav class="navbar navbar-expand-lg fashion-floating-navbar py-2 px-3 px-lg-4" id="fashionFloatingNavbar">
+                <div class="container-fluid px-0 d-flex justify-content-between align-items-center">
 
-            <a class="navbar-brand text-success logo h1 align-self-center" href="{{ url('/') }}">
-                FashionTee
-            </a>
+                    <!-- Brand Logo -->
+                    <a class="navbar-brand d-flex align-items-center gap-1 text-decoration-none py-1" href="{{ url('/') }}">
+                        <span class="fashion-brand-logo fw-extrabold fs-4 tracking-tight">Fashion<span class="text-success">Tee</span></span>
+                    </a>
 
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
-                data-bs-target="#templatemo_main_nav" aria-controls="navbarSupportedContent" aria-expanded="false"
-                aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                    <!-- Mobile Toggler Button -->
+                    <button class="navbar-toggler border-0 shadow-none p-1-5 rounded-circle" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#templatemo_main_nav" aria-controls="navbarSupportedContent" aria-expanded="false"
+                        aria-label="Toggle navigation" id="fashionNavbarToggler">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
 
-            <div class="align-self-center collapse navbar-collapse flex-fill  d-lg-flex justify-content-lg-between"
-                id="templatemo_main_nav">
-                <div class="flex-fill">
-                    <ul class="nav navbar-nav d-flex justify-content-between mx-lg-auto">
-                        <li class="nav-item">
-<a class="nav-link" href="{{ url('/') }}">Trang chủ</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/Shop') }}">Cửa hàng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ url('/Contact') }}">Liên hệ</a>
-                        </li>
-                    </ul>
-                </div>
+                    <!-- Nav Links & Actions -->
+                    <div class="collapse navbar-collapse flex-grow-1" id="templatemo_main_nav">
+                        <!-- Navigation Menu (Centered) -->
+                        <ul class="navbar-nav mx-auto d-flex align-items-lg-center gap-1 py-2 py-lg-0 fashion-menu-list">
+                            <li class="nav-item">
+                                <a class="nav-link fashion-nav-pill {{ request()->is('/') ? 'active' : '' }}" href="{{ url('/') }}">
+                                    Trang chủ
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link fashion-nav-pill {{ request()->is('Shop*') || request()->is('san-pham*') ? 'active' : '' }}" href="{{ url('/Shop') }}">
+                                    Cửa hàng
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link fashion-nav-pill {{ request()->is('Contact*') ? 'active' : '' }}" href="{{ url('/Contact') }}">
+                                    Liên hệ
+                                </a>
+                            </li>
+                        </ul>
 
-                <div class="navbar align-self-center d-flex">
+                        <!-- Action Icons & Auth -->
+                        <div class="d-flex align-items-center gap-2 pt-3 pt-lg-0 border-top border-light-subtle border-top-lg-0">
 
-                    <div class="d-lg-none flex-sm-fill mt-3 mb-4 col-7 col-sm-auto pr-3">
-                        <form action="{{ url('/Shop') }}" method="get">
-                            <div class="position-relative w-100">
-                                <div class="input-group">
-                                    <input type="text" class="form-control" id="inputMobileSearch" name="q"
-                                        value="{{ request('q') }}" placeholder="Tìm sản phẩm..." autocomplete="off">
-                                    <button class="input-group-text" type="submit">
-                                        <i class="fa fa-fw fa-search"></i>
-                                    </button>
-                                </div>
-                                <div id="liveSearchResultsMobile" class="live-search-dropdown shadow-lg rounded-3 border d-none">
-                                    <div id="liveSearchContentMobile"></div>
-                                </div>
+                            <!-- Mobile Quick Search Bar (Inside drawer) -->
+                            <div class="d-lg-none w-100 mb-3">
+                                <form action="{{ url('/Shop') }}" method="get">
+                                    <div class="position-relative w-100">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control rounded-pill fs-7 ps-3 border-light-subtle" id="inputMobileSearch" name="q"
+                                                value="{{ request('q') }}" placeholder="Tìm áo thun..." autocomplete="off">
+                                            <button class="btn btn-dark rounded-pill px-3 ms-1" type="submit" aria-label="Tìm kiếm">
+                                                <i class="fa fa-fw fa-search"></i>
+                                            </button>
+                                        </div>
+                                        <div id="liveSearchResultsMobile" class="live-search-dropdown shadow-lg rounded-3 border d-none">
+                                            <div id="liveSearchContentMobile"></div>
+                                        </div>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
-                    </div>
 
-                    <a class="nav-icon d-none d-lg-inline" href="#" data-bs-toggle="modal"
-                        data-bs-target="#templatemo_search" title="Tìm kiếm">
-                        <i class="fa fa-fw fa-search text-dark mr-2"></i>
-                    </a>
-
-                    {{-- Icon Giỏ hàng mở Mini-Cart Drawer --}}
-                    @php
-                        $headerCartCount = auth()->check()
-                            ? \App\Models\GioHang::where('nguoi_dung_id', auth()->id())
-                                ->dangTrongGio()
-                                ->whereNotNull('bien_the_id')
-                                ->count()
-                            : 0;
-                    @endphp
-                    <a class="nav-icon position-relative text-decoration-none"
-                        href="javascript:void(0)"
-                        onclick="window.openMiniCartDrawer(); return false;"
-                        title="Giỏ hàng">
-                        <i class="fa fa-fw fa-cart-arrow-down text-dark mr-1"></i>
-                        <span class="position-absolute top-0 left-100 translate-middle badge rounded-pill bg-danger header-cart-badge {{ $headerCartCount > 0 ? '' : 'd-none' }}">
-                            {{ $headerCartCount > 99 ? '99+' : $headerCartCount }}
-                        </span>
-                    </a>
-
-                    <!-- Auth Links -->
-@guest
-                        <a class="btn btn-outline-success me-2" href="{{ url('/login') }}">Đăng nhập</a>
-                        <a class="btn btn-outline-primary me-2" href="{{ url('/register') }}">Đăng ký</a>
-                    @else
-                        <div class="dropdown">
-                            <a class="btn btn-light dropdown-toggle d-flex align-items-center" href="#"
-                                id="userDropdown" data-bs-toggle="dropdown">
-                                <img src="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('img/default-avatar.png') }}"
-                                    class="rounded-circle me-2" width="50" height="50" style="object-fit: cover">
-                                {{ auth()->user()->name }}
+                            <!-- Desktop Search Trigger Modal -->
+                            <a class="nav-icon-circle d-none d-lg-inline-flex align-items-center justify-content-center text-decoration-none" href="#" data-bs-toggle="modal"
+                                data-bs-target="#templatemo_search" title="Tìm kiếm">
+                                <i class="fa fa-fw fa-search text-dark"></i>
                             </a>
 
-                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                                <!-- Thông tin cá nhân -->
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('profile') }}">
-                                        <i class="fa fa-user me-2"></i> Thông tin cá nhân
-                                    </a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('order') }}">
-                                        <i class="fa fa-user me-2"></i> Đơn hàng của tôi
-                                    </a>
-                                </li>
+                            <!-- Mini-Cart Drawer Trigger -->
+                            @php
+                                $headerCartCount = auth()->check()
+                                    ? \App\Models\GioHang::where('nguoi_dung_id', auth()->id())
+                                        ->dangTrongGio()
+                                        ->whereNotNull('bien_the_id')
+                                        ->count()
+                                    : 0;
+                            @endphp
+                            <a class="nav-icon-circle position-relative d-inline-flex align-items-center justify-content-center text-decoration-none"
+                                href="javascript:void(0)"
+                                onclick="window.openMiniCartDrawer(); return false;"
+                                title="Giỏ hàng">
+                                <i class="fa fa-fw fa-shopping-bag text-dark"></i>
+                                <span class="position-absolute top-0 end-0 translate-middle badge rounded-pill bg-danger header-cart-badge {{ $headerCartCount > 0 ? '' : 'd-none' }}">
+                                    {{ $headerCartCount > 99 ? '99+' : $headerCartCount }}
+                                </span>
+                            </a>
 
-                                <li>
-                                    <hr class="dropdown-divider">
-                                </li>
+                            <!-- User Auth Links / Profile Dropdown -->
+                            @guest
+                                <div class="d-flex align-items-center gap-1-5 ms-1">
+                                    <a class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1-5 fw-semibold fs-8" href="{{ url('/login') }}">
+                                        Đăng nhập
+                                    </a>
+                                    <a class="btn btn-sm btn-dark rounded-pill px-3 py-1-5 fw-semibold fs-8 d-none d-sm-inline-block" href="{{ url('/register') }}">
+                                        Đăng ký
+                                    </a>
+                                </div>
+                            @else
+                                <div class="dropdown ms-1">
+                                    <a class="user-pill-btn d-flex align-items-center gap-2 text-decoration-none dropdown-toggle rounded-pill p-1 pe-2-5" href="#"
+                                        id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <img src="{{ auth()->user()->avatar ? asset('storage/' . auth()->user()->avatar) : asset('img/default-avatar.png') }}"
+                                            class="rounded-circle border border-2 border-white shadow-xs" width="34" height="34" style="object-fit: cover">
+                                        <span class="fw-semibold fs-8 text-dark d-none d-md-inline text-truncate" style="max-width: 120px;">
+                                            {{ auth()->user()->name }}
+                                        </span>
+                                    </a>
 
-                                <!-- Đăng xuất -->
-                                <li>
-                                    <form method="POST" action="{{ url('/logout') }}">
-                                        @csrf
-                                        <button class="dropdown-item text-danger" type="submit">
-                                            <i class="fa fa-sign-out-alt me-2"></i> Đăng xuất
-                                        </button>
-                                    </form>
-                                </li>
-                            </ul>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border border-light-subtle rounded-3 p-2 mt-2" aria-labelledby="userDropdown">
+                                        <li>
+                                            <a class="dropdown-item rounded-2 py-2 fs-8 fw-medium" href="{{ route('profile') }}">
+                                                <i class="fa fa-user text-muted me-2"></i> Thông tin cá nhân
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item rounded-2 py-2 fs-8 fw-medium" href="{{ route('order') }}">
+                                                <i class="fa fa-box text-muted me-2"></i> Đơn hàng của tôi
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider my-1"></li>
+                                        <li>
+                                            <form method="POST" action="{{ url('/logout') }}">
+                                                @csrf
+                                                <button class="dropdown-item rounded-2 py-2 fs-8 fw-medium text-danger" type="submit">
+                                                    <i class="fa fa-sign-out-alt me-2"></i> Đăng xuất
+                                                </button>
+                                            </form>
+                                        </li>
+                                    </ul>
+                                </div>
+                            @endguest
+
                         </div>
-                    @endguest
-
-
-
-
-
+                    </div>
 
                 </div>
-            </div>
-
+            </nav>
         </div>
-    </nav>
+    </header>
     <!-- Close Header -->
 
     @if (session('success'))
@@ -251,6 +262,217 @@
     @include('client.layout.mini-cart-drawer')
 
     <style>
+        /* ============================================================
+           FLOATING ISLAND HEADER & SOFT CAPSULE PILL HOVER
+           ============================================================ */
+        @keyframes levitateFloat {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+                box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+            }
+            50% {
+                transform: translateY(-4px) rotate(0.12deg);
+                box-shadow: 0 18px 40px -10px rgba(15, 23, 42, 0.14), 0 6px 12px -2px rgba(15, 23, 42, 0.05);
+            }
+        }
+
+        @keyframes levitateFloatScrolled {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+                box-shadow: 0 14px 35px -8px rgba(15, 23, 42, 0.12), 0 4px 8px -2px rgba(15, 23, 42, 0.04);
+            }
+            50% {
+                transform: translateY(-5px) rotate(-0.15deg);
+                box-shadow: 0 24px 48px -10px rgba(15, 23, 42, 0.18), 0 8px 16px -2px rgba(15, 23, 42, 0.06);
+            }
+        }
+
+        @keyframes headerWobble {
+            0%   { transform: translateY(0) scale(1); }
+            20%  { transform: translateY(-3px) scale(1.008) rotate(-0.35deg); }
+            40%  { transform: translateY(-1px) scale(1.005) rotate(0.3deg); }
+            60%  { transform: translateY(-2.5px) scale(1.006) rotate(-0.15deg); }
+            80%  { transform: translateY(-2px) scale(1.005) rotate(0.08deg); }
+            100% { transform: translateY(-2px) scale(1.005) rotate(0deg); }
+        }
+
+        @keyframes pillJiggle {
+            0%   { transform: scale(1) translateY(0); }
+            30%  { transform: scale(1.06) translateY(-2px) rotate(-1.2deg); }
+            60%  { transform: scale(1.03) translateY(-1px) rotate(0.9deg); }
+            100% { transform: scale(1.04) translateY(-1px) rotate(0deg); }
+        }
+
+        @keyframes iconJiggle {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25%      { transform: rotate(-12deg) scale(1.18); }
+            50%      { transform: rotate(12deg) scale(1.2); }
+            75%      { transform: rotate(-6deg) scale(1.12); }
+        }
+
+        @keyframes logoJiggle {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            30%      { transform: scale(1.05) rotate(-1.5deg); }
+            60%      { transform: scale(1.03) rotate(1deg); }
+        }
+
+        .fashion-floating-header-wrapper {
+            position: sticky;
+            top: 6px;
+            top: 6px !important;
+            padding-top: 18px;
+            padding-bottom: 8px;
+            z-index: 1040;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), top 0.3s ease;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), top 0.3s ease, padding 0.3s ease;
+        }
+
+        .fashion-floating-navbar {
+            pointer-events: auto;
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.85);
+            border-radius: 999px;
+            box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.03);
+            animation: levitateFloat 4s ease-in-out infinite;
+            will-change: transform, box-shadow;
+            transition: background 0.3s ease, border-color 0.3s ease, padding 0.3s ease;
+        }
+
+        /* Hover on navbar triggers gentle spring wobble */
+        .fashion-floating-navbar:hover {
+            animation: headerWobble 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            box-shadow: 0 20px 42px -10px rgba(15, 23, 42, 0.16), 0 6px 14px -2px rgba(15, 23, 42, 0.05);
+        }
+
+        /* Scrolled state: stronger levitation bobbing */
+        /* Scrolled state: comfortable offset from top of window */
+        .fashion-floating-header-wrapper.is-scrolled {
+            top: 14px !important;
+            padding-top: 10px;
+            padding-bottom: 6px;
+        }
+
+        .fashion-floating-header-wrapper.is-scrolled .fashion-floating-navbar {
+            background: rgba(255, 255, 255, 0.96);
+            border-color: rgba(203, 213, 225, 0.95);
+            animation: levitateFloatScrolled 3.5s ease-in-out infinite;
+            padding-top: 6px !important;
+            padding-bottom: 6px !important;
+        }
+
+        .fashion-floating-header-wrapper.is-scrolled .fashion-floating-navbar:hover {
+            animation: headerWobble 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        }
+
+        /* Mobile expanded state: pause bobbing to keep menu steady */
+        .fashion-floating-navbar.is-expanded {
+            border-radius: 24px !important;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.15);
+            animation: none !important;
+            transform: none !important;
+        }
+
+        /* Brand Logo */
+        .fashion-brand-logo {
+            letter-spacing: -0.02em;
+            color: #0f172a;
+            display: inline-block;
+            transition: transform 0.2s ease;
+        }
+        .navbar-brand:hover .fashion-brand-logo {
+            animation: logoJiggle 0.5s ease-in-out;
+        }
+
+        /* Soft Capsule Pill Menu */
+        .fashion-menu-list {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .fashion-nav-pill {
+            color: #475569 !important;
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 8px 18px !important;
+            border-radius: 999px;
+            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        /* Soft Capsule Hover + Jiggle */
+        .fashion-nav-pill:hover {
+            background-color: rgba(15, 23, 42, 0.06) !important;
+            color: #0f172a !important;
+            animation: pillJiggle 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        /* Active Pill */
+        .fashion-nav-pill.active {
+            background-color: #0f172a !important;
+            color: #ffffff !important;
+            box-shadow: 0 3px 12px rgba(15, 23, 42, 0.18);
+        }
+        .fashion-nav-pill.active:hover {
+            background-color: #1e293b !important;
+            color: #ffffff !important;
+        }
+
+        /* Icon Circles */
+        .nav-icon-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            color: #0f172a;
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+        .nav-icon-circle:hover {
+            background-color: rgba(15, 23, 42, 0.06);
+            color: #0f172a;
+        }
+        .nav-icon-circle:hover i {
+            animation: iconJiggle 0.45s ease-in-out;
+            display: inline-block;
+        }
+
+        /* User Profile Pill */
+        .user-pill-btn {
+            background: rgba(15, 23, 42, 0.04);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            transition: all 0.2s ease;
+        }
+        .user-pill-btn:hover {
+            background: rgba(15, 23, 42, 0.08);
+            border-color: #cbd5e1;
+            transform: scale(1.02);
+        }
+
+        /* Cart Badge */
+        .header-cart-badge {
+            font-size: 0.68rem;
+            padding: 3px 6px;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .fashion-floating-navbar {
+                animation: none !important;
+                transform: none !important;
+            }
+            .fashion-nav-pill:hover,
+            .navbar-brand:hover .fashion-brand-logo,
+            .nav-icon-circle:hover i {
+                animation: none !important;
+            }
+        }
+
         .live-search-dropdown {
             position: absolute;
             top: 100%;
@@ -440,8 +662,36 @@
         document.addEventListener('DOMContentLoaded', function() {
             initLiveSearch('inputModalSearch', 'liveSearchResults', 'liveSearchContent');
             initLiveSearch('inputMobileSearch', 'liveSearchResultsMobile', 'liveSearchContentMobile');
+
+            // Floating Header Scroll & Mobile Expand Listeners
+            (function() {
+                const headerWrapper = document.getElementById('fashionFloatingHeader');
+                const navbarEl = document.getElementById('fashionFloatingNavbar');
+                const mainNavCollapse = document.getElementById('templatemo_main_nav');
+
+                if (headerWrapper && navbarEl) {
+                    function handleScroll() {
+                        if (window.scrollY > 30) {
+                            headerWrapper.classList.add('is-scrolled');
+                        } else {
+                            headerWrapper.classList.remove('is-scrolled');
+                        }
+                    }
+
+                    window.addEventListener('scroll', handleScroll, { passive: true });
+                    handleScroll();
+
+                    if (mainNavCollapse) {
+                        mainNavCollapse.addEventListener('show.bs.collapse', function () {
+                            navbarEl.classList.add('is-expanded');
+                        });
+                        mainNavCollapse.addEventListener('hide.bs.collapse', function () {
+                            navbarEl.classList.remove('is-expanded');
+                        });
+                    }
+                }
+            })();
         });
     </script>
 
     <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
-</body>

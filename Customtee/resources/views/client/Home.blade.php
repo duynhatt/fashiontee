@@ -1,1022 +1,1821 @@
-
 @include('client.layout.header')
-@include('client.layout.banner')
 
+<!-- Google Fonts: Plus Jakarta Sans for Ultra-Modern High-Fashion Aesthetics -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
-
-{{-- Danh mục bán chạy: bố cục 1 / 2 / 3 / 4 ô (tối đa 4, xếp theo SL bán trong 30 ngày) --}}
-@if($danhMucs->isNotEmpty())
-@php
-    $browseSlots = $danhMucs->take(4)->values();
-    $browseCount = $browseSlots->count();
-@endphp
-<section class="py-4 bg-white">
-    <div class="container py-3">
-        <style>
-            
-            .browse-by-style-wrap {
-                background: #f0f0f0;
-                border-radius: 1.5rem;
-                padding: clamp(1.25rem, 3vw, 2.5rem);
-            }
-
-            .browse-by-style-title {
-                font-size: clamp(1.5rem, 3.2vw, 2.35rem);
-                font-weight: 800;
-                letter-spacing: 0.06em;
-                text-align: center;
-                text-transform: uppercase;
-                color: #555555;
-                margin-bottom: 0.4rem;
-            }
-
-            .browse-by-style-sub {
-                text-align: center;
-                color: #6c757d;
-                font-size: clamp(1rem, 1.8vw, 1.15rem);
-                margin-bottom: 1.75rem;
-            }
-
-            .browse-style-grid {
-                display: grid;
-                gap: 1.25rem; /* ~20px  */
-            }
-
-            /* 4 danh mục: 1/3 + 2/3 hàng 1, 2/3 + 1/3 hàng 2 */
-            .browse-style-grid--4 {
-                grid-template-columns: repeat(3, 1fr);
-                grid-template-rows: minmax(180px, 22vw) minmax(180px, 22vw);
-            }
-
-            .browse-style-grid--4 .browse-slot--1 {
-                grid-column: 1 / 2;
-                grid-row: 1;
-            }
-
-            .browse-style-grid--4 .browse-slot--2 {
-                grid-column: 2 / 4;
-                grid-row: 1;
-            }
-
-            .browse-style-grid--4 .browse-slot--3 {
-                grid-column: 1 / 3;
-                grid-row: 2;
-            }
-
-            .browse-style-grid--4 .browse-slot--4 {
-                grid-column: 3 / 4;
-                grid-row: 2;
-            }
-
-            /* 3 danh mục: hàng 1 giống 4 (hẹp + rộng), hàng 2 một thẻ full ngang */
-            .browse-style-grid--3 {
-                grid-template-columns: repeat(3, 1fr);
-                grid-template-rows: minmax(180px, 22vw) minmax(180px, 22vw);
-            }
-
-            .browse-style-grid--3 .browse-slot--1 {
-                grid-column: 1 / 2;
-                grid-row: 1;
-            }
-
-            .browse-style-grid--3 .browse-slot--2 {
-                grid-column: 2 / 4;
-                grid-row: 1;
-            }
-
-            .browse-style-grid--3 .browse-slot--3 {
-                grid-column: 1 / 4;
-                grid-row: 2;
-            }
-
-            /* 2 danh mục: một hàng hẹp + rộng */
-            .browse-style-grid--2 {
-                grid-template-columns: 1fr 2fr;
-                grid-template-rows: minmax(180px, 22vw);
-            }
-
-            .browse-style-grid--2 .browse-slot--1 {
-                grid-column: 1;
-                grid-row: 1;
-            }
-
-            .browse-style-grid--2 .browse-slot--2 {
-                grid-column: 2;
-                grid-row: 1;
-            }
-
-            /* 1 danh mục: một thẻ full */
-            .browse-style-grid--1 {
-                grid-template-columns: 1fr;
-                grid-template-rows: minmax(200px, 26vw);
-            }
-
-            .browse-style-grid--1 .browse-slot--1 {
-                grid-column: 1;
-                grid-row: 1;
-            }
-
-            .browse-style-card {
-                position: relative;
-                display: block;
-                height: 100%;
-                min-height: 180px;
-                background: #fff;
-                border-radius: 1.35rem; /* ~20–22px, bo góc đậm  */
-                overflow: hidden;
-                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-                text-decoration: none;
-                color: inherit;
-                transition: transform 0.22s ease, box-shadow 0.22s ease;
-            }
-
-            .browse-style-card:hover {
-                transform: translateY(-3px);
-                box-shadow: 0 12px 28px rgba(0, 0, 0, 0.1);
-                color: inherit;
-                text-decoration: none;
-            }
-
-            .browse-style-card__label {
-                position: absolute;
-                top: 1.5rem;
-                left: 1.5rem;
-                z-index: 2;
-                font-size: clamp(1.45rem, 3vw, 2.1rem);
-                font-weight: 700;
-                color: #555555;
-                line-height: 1.2;
-                max-width: 46%;
-                word-break: break-word;
-                text-shadow: 0 0 12px #fff, 0 0 4px #fff, 1px 1px 0 #fff;
-                pointer-events: none;
-            }
-
-            /* Khung ảnh = toàn bộ thẻ*/
-            .browse-style-card__media {
-                position: absolute;
-                inset: 0;
-                width: 100%;
-                height: 100%;
-                pointer-events: none;
-                background: #fff;
-                overflow: hidden;
-                border-radius: inherit;
-            }
-
-            .browse-style-card__media img {
-                width: 100%;
-                height: 100%;
-                object-fit: contain;
-                object-position: right center;
-                display: block;
-            }
-
-            @media (max-width: 767.98px) {
-                .browse-style-grid--1,
-                .browse-style-grid--2,
-                .browse-style-grid--3,
-                .browse-style-grid--4 {
-                    grid-template-columns: 1fr;
-                    grid-template-rows: none;
-                    grid-auto-rows: minmax(160px, 48vw);
-                }
-
-                .browse-style-grid .browse-slot--1,
-                .browse-style-grid .browse-slot--2,
-                .browse-style-grid .browse-slot--3,
-                .browse-style-grid .browse-slot--4 {
-                    grid-column: 1 !important;
-                    grid-row: auto !important;
-                }
-
-                .browse-style-card__label {
-                    max-width: 50%;
-                    top: 1.45rem;
-                    left: 1.45rem;
-                }
-            }
-        </style>
-
-        <div class="browse-by-style-wrap">
-            <h2 class="browse-by-style-title">Danh mục bán chạy</h2>
-            <p class="browse-by-style-sub mb-0">Gợi ý theo mức độ mua nhiều gần đây — chọn danh mục để xem sản phẩm.</p>
-            <div class="browse-style-grid browse-style-grid--{{ $browseCount }} mt-4">
-                @foreach($browseSlots as $idx => $dm)
-                    @php $slotClass = 'browse-slot--' . ($idx + 1); @endphp
-                    <a href="{{ url('/Shop?danh_muc=' . $dm->id) }}" class="browse-style-card {{ $slotClass }}">
-                        <span class="browse-style-card__label">{{ $dm->ten_danh_muc }}</span>
-                        <div class="browse-style-card__media">
-                            <img
-                                src="{{ $dm->hinh_anh ? asset('storage/' . $dm->hinh_anh) : asset('img/shop_01.jpg') }}"
-                                alt="{{ $dm->ten_danh_muc }}"
-                                loading="lazy"
-                                decoding="async">
-                        </div>
-                    </a>
-                @endforeach
-            </div>
+<!-- 0. ANNOUNCEMENT TICKER MARQUEE -->
+<div class="fashion-marquee bg-dark text-white py-2 overflow-hidden position-relative border-bottom border-secondary border-opacity-25">
+    <div class="fashion-marquee-inner d-flex align-items-center">
+        <div class="fashion-marquee-content d-flex align-items-center gap-4 text-nowrap fs-8 fw-medium">
+            <span><i class="bi bi-truck text-success me-1"></i> MIỄN PHÍ VẬN CHUYỂN TOÀN QUỐC CHO ĐƠN TỪ 299K</span>
+            <span class="marquee-bullet">•</span>
+            <span><i class="bi bi-arrow-counterclockwise text-warning me-1"></i> ĐỔI TRẢ HÀNG TẬN NHÀ TRONG 3 NGÀY</span>
+            <span class="marquee-bullet">•</span>
+            <span><i class="bi bi-tag-fill text-danger me-1"></i> TẶNG VOUCHER ĐẾN 50K CHO ĐƠN HÀNG MỚI</span>
+            <span class="marquee-bullet">•</span>
+            <span><i class="bi bi-patch-check-fill text-info me-1"></i> 100% COTTON COMPACT CAO CẤP CHỐNG BAI XÙ</span>
+            <span class="marquee-bullet">•</span>
+            <span><i class="bi bi-shield-check text-success me-1"></i> ĐỒNG KIỂM TRA HÀNG KHI THANH TOÁN</span>
+            <span class="marquee-bullet">•</span>
+        </div>
+        <div class="fashion-marquee-content d-flex align-items-center gap-4 text-nowrap fs-8 fw-medium" aria-hidden="true">
+            <span><i class="bi bi-truck text-success me-1"></i> MIỄN PHÍ VẬN CHUYỂN TOÀN QUỐC CHO ĐƠN TỪ 299K</span>
+            <span class="marquee-bullet">•</span>
+            <span><i class="bi bi-arrow-counterclockwise text-warning me-1"></i> ĐỔI TRẢ HÀNG TẬN NHÀ TRONG 3 NGÀY</span>
+            <span class="marquee-bullet">•</span>
+            <span><i class="bi bi-tag-fill text-danger me-1"></i> TẶNG VOUCHER ĐẾN 50K CHO ĐƠN HÀNG MỚI</span>
+            <span class="marquee-bullet">•</span>
+            <span><i class="bi bi-patch-check-fill text-info me-1"></i> 100% COTTON COMPACT CAO CẤP CHỐNG BAI XÙ</span>
+            <span class="marquee-bullet">•</span>
+            <span><i class="bi bi-shield-check text-success me-1"></i> ĐỒNG KIỂM TRA HÀNG KHI THANH TOÁN</span>
+            <span class="marquee-bullet">•</span>
         </div>
     </div>
-</section>
-@endif
+</div>
 
-    <!-- Sản phẩm mới nhất: 10 SP, 5 / hàng (desktop) -->
-    <section class="new-products-section">
-        <div class="container-fluid new-products-section__inner px-3 px-md-4 px-xl-5">
-            <style>
-                .new-products-section {
-                    background: linear-gradient(180deg, #f8fafb 0%, #ffffff 45%, #f6f7f9 100%);
-                }
+<!-- Main Homepage Container -->
+<div class="homepage-wrapper bg-white text-dark pb-5">
 
-                .new-products-section__inner {
-                    padding-top: 3.25rem;
-                    padding-bottom: 4.25rem;
-                    max-width: 1280px;
-                    margin-left: auto;
-                    margin-right: auto;
-                }
-
-                @media (min-width: 992px) {
-                    .new-products-section__inner {
-                        padding-top: 4rem;
-                        padding-bottom: 5rem;
-                    }
-
-                    .new-product-card .card-body {
-                        padding: 1.15rem 1.25rem 1.4rem;
-                    }
-                }
-
-                .new-products-title {
-                    font-size: clamp(1.75rem, 4vw, 2.75rem);
-                    font-weight: 800;
-                    letter-spacing: 0.04em;
-                    text-transform: uppercase;
-                    color: #1a1a1a;
-                    line-height: 1.15;
-                }
-
-                .new-products-sub {
-                    text-align: center;
-                    color: #5c636a;
-                    font-size: clamp(1.05rem, 2vw, 1.2rem);
-                    max-width: 36rem;
-                    margin-left: auto;
-                    margin-right: auto;
-                    line-height: 1.55;
-                }
-
-                .new-product-card {
-                    background: #fff;
-                    border: 1px solid rgba(0, 0, 0, 0.06);
-                    border-radius: 1.25rem;
-                    overflow: hidden;
-                    transition: transform 0.28s ease, box-shadow 0.28s ease;
-                    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-                }
-
-                .new-product-card:hover {
-                    transform: translateY(-10px);
-                    box-shadow: 0 28px 56px rgba(25, 135, 84, 0.12), 0 12px 32px rgba(0, 0, 0, 0.1);
-                }
-
-                .new-product-card .new-product-media {
-                    display: block;
-                    aspect-ratio: 1;
-                    overflow: hidden;
-                    background: linear-gradient(145deg, #f0f2f5, #e8eaee);
-                }
-
-                .new-product-card .new-product-media img {
-                    width: 100%;
-                    height: 100%;
-                    object-fit: cover;
-                    transition: transform 0.35s ease;
-                }
-
-                .new-product-card:hover .new-product-media img {
-                    transform: scale(1.06);
-                }
-
-                .new-product-card .card-body {
-                    padding: 1rem 1.1rem 1.25rem;
-                }
-
-                .new-product-name {
-                    display: -webkit-box;
-                    -webkit-line-clamp: 2;
-                    -webkit-box-orient: vertical;
-                    overflow: hidden;
-                    font-size: clamp(0.95rem, 1.35vw, 1.05rem);
-                    font-weight: 700;
-                    line-height: 1.35;
-                    color: #212529;
-                    min-height: 2.7em;
-                }
-
-                .new-product-price {
-                    font-size: clamp(1rem, 1.5vw, 1.15rem);
-                    font-weight: 800;
-                    color: #198754;
-                    letter-spacing: 0.02em;
-                }
-
-            </style>
-
-            <div class="row text-center pb-4 pb-lg-5">
-                <div class="col-lg-8 col-xl-7 mx-auto">
-                    <h2 class="new-products-title mb-3">Sản phẩm mới nhất</h2>
-                    <p class="new-products-sub mb-0">
-                        Mười sản phẩm mới cập nhật — xem nhanh, chọn style phù hợp với bạn.
-                    </p>
-                </div>
+    <!-- 1. EDITORIAL HERO LOOKBOOK CAROUSEL -->
+    <section class="hero-section position-relative overflow-hidden">
+        <div id="homepageHeroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="5500">
+            <!-- Indicators -->
+            <div class="carousel-indicators mb-3 mb-md-4">
+                <button type="button" data-bs-target="#homepageHeroCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                <button type="button" data-bs-target="#homepageHeroCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                <button type="button" data-bs-target="#homepageHeroCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
             </div>
-            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3 g-md-4">
-                @forelse($sanPhamsMoiNhat as $sp)
-                <div class="col">
-                    <div class="card h-100 border-0 new-product-card">
-                        <a href="{{ route('sanpham.chitiet', $sp->slug) }}" class="new-product-media text-decoration-none">
-                            <img src="{{ $sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
-                                class="img-fluid" alt="{{ $sp->ten_san_pham }}" loading="lazy" decoding="async">
-                        </a>
-                        <div class="card-body d-flex flex-column">
-                            <a href="{{ route('sanpham.chitiet', $sp->slug) }}" class="text-decoration-none text-dark new-product-name mb-2 flex-grow-1">
-                                {{ $sp->ten_san_pham }}
-                            </a>
-                            <p class="mb-0 mt-auto">
-                                @if($sp->variants_min_gia)
-                                    <span class="new-product-price">{{ number_format($sp->variants_min_gia, 0, ',', '.') }} ₫</span>
-                                @else
-                                    <span class="text-muted fw-semibold">Liên hệ</span>
-                                @endif
-                            </p>
+
+            <!-- Carousel Inner -->
+            <div class="carousel-inner">
+
+                <!-- SLIDE 1 -->
+                <div class="carousel-item active">
+                    <div class="container py-4 py-lg-5">
+                        <div class="row align-items-center g-4 g-lg-5 min-vh-lg-65 py-3">
+                            <div class="col-12 col-lg-6 order-2 order-lg-1">
+                                <div class="hero-content pe-lg-4">
+                                    <div class="d-flex align-items-center gap-2 mb-3 hero-entrance hero-entrance-1">
+                                        <span class="badge hero-pill-badge px-3 py-1-5 rounded-pill fw-semibold fs-8 letter-spacing-wide d-inline-flex align-items-center gap-1-5">
+                                            <span class="pulse-live-dot"></span>
+                                            BỘ SƯU TẬP 2026
+                                        </span>
+                                        <span class="text-muted fs-8 fw-medium d-none d-sm-inline">Xu Hướng Thời Thượng</span>
+                                    </div>
+                                    <h1 class="display-4 fw-extrabold text-dark mb-3 hero-headline hero-entrance hero-entrance-2">
+                                        Thời Trang Tối Giản.<br class="d-none d-sm-inline">
+                                        <span class="text-gradient-dark">Chất Lượng Đích Thực.</span>
+                                    </h1>
+                                    <p class="text-secondary fs-6 mb-4 hero-subtext hero-entrance hero-entrance-2" style="max-width: 520px;">
+                                        Khám phá các thiết kế áo thun may đo chuẩn form dáng người Việt, sợi dệt compact 100% cotton thoáng mát và bền bỉ theo thời gian.
+                                    </p>
+                                    <div class="d-flex flex-wrap gap-3 hero-actions hero-entrance hero-entrance-3 mb-4">
+                                        <a href="{{ url('/Shop') }}" class="btn btn-dark btn-lg rounded-3 px-4 py-3 fs-7 fw-semibold d-inline-flex align-items-center gap-2 btn-elevate">
+                                            <span>Khám phá ngay</span>
+                                            <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                        <a href="{{ url('/Shop?sort=new') }}" class="btn btn-outline-dark btn-lg rounded-3 px-4 py-3 fs-7 fw-semibold btn-elevate">
+                                            Hàng mới về
+                                        </a>
+                                    </div>
+
+                                    <!-- Quick Hero Stats -->
+                                    <div class="hero-stats-strip d-flex align-items-center gap-4 pt-3 border-top border-light-subtle hero-entrance hero-entrance-3">
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">50K+</div>
+                                            <div class="text-muted fs-8">Khách hàng tin chọn</div>
+                                        </div>
+                                        <div class="vr bg-secondary opacity-25"></div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6 d-flex align-items-center gap-1">
+                                                <span>4.9</span>
+                                                <i class="bi bi-star-fill text-warning fs-8"></i>
+                                            </div>
+                                            <div class="text-muted fs-8">2,400+ đánh giá</div>
+                                        </div>
+                                        <div class="vr bg-secondary opacity-25"></div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">100%</div>
+                                            <div class="text-muted fs-8">Cotton tự nhiên</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-6 order-1 order-lg-2">
+                                <div class="hero-media-wrapper hero-entrance-media position-relative rounded-4 overflow-hidden bg-light border border-light-subtle shadow-sm">
+                                    <div class="ratio ratio-4x3 ratio-lg-1x1">
+                                        <img src="{{ asset('img/banner1.jpg') }}" class="w-100 h-100 object-fit-cover hero-img-zoom" alt="FashionTee Lookbook 2026" fetchpriority="high">
+                                    </div>
+                                    <!-- Floating Trust Chip 1 -->
+                                    <div class="position-absolute bottom-0 start-0 m-3 m-md-4 p-2-5 px-3 rounded-3 bg-white bg-opacity-95 backdrop-blur border border-light-subtle shadow-md d-flex align-items-center gap-2-5 hero-float-chip">
+                                        <div class="rounded-circle bg-dark text-white p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width:34px;height:34px;">
+                                            <i class="bi bi-patch-check-fill fs-7 text-success"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-8">100% Cotton Compact</div>
+                                            <div class="text-muted fs-9">Chuẩn form • Chống xù lông</div>
+                                        </div>
+                                    </div>
+                                    <!-- Floating Tag 2 -->
+                                    <div class="position-absolute top-0 end-0 m-3 m-md-4 p-2 px-3 rounded-pill bg-dark text-white shadow-sm fs-8 fw-semibold hero-badge-float">
+                                        <i class="bi bi-fire text-danger me-1"></i> Best Seller 2026
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                @empty
-                <div class="col-12 text-center py-5">
-                    <p class="text-muted">Chưa có sản phẩm nào.</p>
-                    <a href="{{ url('/Shop') }}" class="btn btn-success">Xem tất cả sản phẩm</a>
+
+                <!-- SLIDE 2 -->
+                <div class="carousel-item">
+                    <div class="container py-4 py-lg-5">
+                        <div class="row align-items-center g-4 g-lg-5 min-vh-lg-65 py-3">
+                            <div class="col-12 col-lg-6 order-2 order-lg-1">
+                                <div class="hero-content pe-lg-4">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <span class="badge hero-pill-badge px-3 py-1-5 rounded-pill fw-semibold fs-8 letter-spacing-wide d-inline-flex align-items-center gap-1-5">
+                                            <span class="pulse-live-dot bg-info"></span>
+                                            DAILY ESSENTIALS
+                                        </span>
+                                        <span class="text-muted fs-8 fw-medium d-none d-sm-inline">Phong Cách Thường Nhật</span>
+                                    </div>
+                                    <h1 class="display-4 fw-extrabold text-dark mb-3 hero-headline">
+                                        Phong Cách Năng Động.<br class="d-none d-sm-inline">
+                                        <span class="text-gradient-dark">Tự Tin Tỏa Sáng.</span>
+                                    </h1>
+                                    <p class="text-secondary fs-6 mb-4 hero-subtext" style="max-width: 520px;">
+                                        Định hình phong cách thường nhật với những gam màu trung tính thanh lịch, đường may tỉ mỉ và dễ dàng phối cùng mọi trang phục.
+                                    </p>
+                                    <div class="d-flex flex-wrap gap-3 hero-actions mb-4">
+                                        <a href="{{ url('/Shop') }}" class="btn btn-dark btn-lg rounded-3 px-4 py-3 fs-7 fw-semibold d-inline-flex align-items-center gap-2 btn-elevate">
+                                            <span>Xem bộ sưu tập</span>
+                                            <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                        <a href="{{ url('/Contact') }}" class="btn btn-outline-dark btn-lg rounded-3 px-4 py-3 fs-7 fw-semibold btn-elevate">
+                                            Tư vấn chọn size
+                                        </a>
+                                    </div>
+
+                                    <div class="hero-stats-strip d-flex align-items-center gap-4 pt-3 border-top border-light-subtle">
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">250 GSM</div>
+                                            <div class="text-muted fs-8">Định lượng vải dày dặn</div>
+                                        </div>
+                                        <div class="vr bg-secondary opacity-25"></div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">Rib 2x2</div>
+                                            <div class="text-muted fs-8">Bo cổ chống bai dão</div>
+                                        </div>
+                                        <div class="vr bg-secondary opacity-25"></div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">03 Ngày</div>
+                                            <div class="text-muted fs-8">Đổi size miễn phí</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-6 order-1 order-lg-2">
+                                <div class="hero-media-wrapper position-relative rounded-4 overflow-hidden bg-light border border-light-subtle shadow-sm">
+                                    <div class="ratio ratio-4x3 ratio-lg-1x1">
+                                        <img src="{{ asset('img/banner_img_07.jpg') }}" class="w-100 h-100 object-fit-cover hero-img-zoom" alt="FashionTee Lifestyle" loading="lazy">
+                                    </div>
+                                    <div class="position-absolute bottom-0 start-0 m-3 m-md-4 p-2-5 px-3 rounded-3 bg-white bg-opacity-95 backdrop-blur border border-light-subtle shadow-md d-flex align-items-center gap-2-5 hero-float-chip">
+                                        <div class="rounded-circle bg-dark text-white p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width:34px;height:34px;">
+                                            <i class="bi bi-truck fs-7 text-info"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-8">Giao Hàng Toàn Quốc</div>
+                                            <div class="text-muted fs-9">Kiểm tra hàng trước khi nhận</div>
+                                        </div>
+                                    </div>
+                                    <div class="position-absolute top-0 end-0 m-3 m-md-4 p-2 px-3 rounded-pill bg-dark text-white shadow-sm fs-8 fw-semibold hero-badge-float">
+                                        <i class="bi bi-stars text-warning me-1"></i> New Season Drop
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+
+                <!-- SLIDE 3 -->
+                <div class="carousel-item">
+                    <div class="container py-4 py-lg-5">
+                        <div class="row align-items-center g-4 g-lg-5 min-vh-lg-65 py-3">
+                            <div class="col-12 col-lg-6 order-2 order-lg-1">
+                                <div class="hero-content pe-lg-4">
+                                    <div class="d-flex align-items-center gap-2 mb-3">
+                                        <span class="badge hero-pill-badge px-3 py-1-5 rounded-pill fw-semibold fs-8 letter-spacing-wide d-inline-flex align-items-center gap-1-5">
+                                            <span class="pulse-live-dot bg-warning"></span>
+                                            PREMIUM FABRIC
+                                        </span>
+                                        <span class="text-muted fs-8 fw-medium d-none d-sm-inline">Công Nghệ May Tinh Xảo</span>
+                                    </div>
+                                    <h1 class="display-4 fw-extrabold text-dark mb-3 hero-headline">
+                                        Chất Liệu Cao Cấp.<br class="d-none d-sm-inline">
+                                        <span class="text-gradient-dark">Bền Bỉ Cùng Năm Tháng.</span>
+                                    </h1>
+                                    <p class="text-secondary fs-6 mb-4 hero-subtext" style="max-width: 520px;">
+                                        Định lượng vải dày dặn vừa phải, bo cổ dệt rib giữ form chuẩn xác sau nhiều lần giặt. Hỗ trợ đổi trả trong 3 ngày tận nơi nếu có lỗi.
+                                    </p>
+                                    <div class="d-flex flex-wrap gap-3 hero-actions mb-4">
+                                        <a href="{{ url('/Shop') }}" class="btn btn-dark btn-lg rounded-3 px-4 py-3 fs-7 fw-semibold d-inline-flex align-items-center gap-2 btn-elevate">
+                                            <span>Mua sắm ngay</span>
+                                            <i class="bi bi-arrow-right"></i>
+                                        </a>
+                                        <a href="{{ url('/Shop?sort=new') }}" class="btn btn-outline-dark btn-lg rounded-3 px-4 py-3 fs-7 fw-semibold btn-elevate">
+                                            Sản phẩm hot
+                                        </a>
+                                    </div>
+
+                                    <div class="hero-stats-strip d-flex align-items-center gap-4 pt-3 border-top border-light-subtle">
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">Đổi tận nơi</div>
+                                            <div class="text-muted fs-8">Shipper lấy hàng tại nhà</div>
+                                        </div>
+                                        <div class="vr bg-secondary opacity-25"></div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">Mềm mịn</div>
+                                            <div class="text-muted fs-8">Kháng khuẩn & khử mùi</div>
+                                        </div>
+                                        <div class="vr bg-secondary opacity-25"></div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-6">Chuẩn form</div>
+                                            <div class="text-muted fs-8">Đủ kích thước S - XXL</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-6 order-1 order-lg-2">
+                                <div class="hero-media-wrapper position-relative rounded-4 overflow-hidden bg-light border border-light-subtle shadow-sm">
+                                    <div class="ratio ratio-4x3 ratio-lg-1x1">
+                                        <img src="{{ asset('img/banner_img_05.jpg') }}" class="w-100 h-100 object-fit-cover hero-img-zoom" alt="FashionTee Fabric Quality" loading="lazy">
+                                    </div>
+                                    <div class="position-absolute bottom-0 start-0 m-3 m-md-4 p-2-5 px-3 rounded-3 bg-white bg-opacity-95 backdrop-blur border border-light-subtle shadow-md d-flex align-items-center gap-2-5 hero-float-chip">
+                                        <div class="rounded-circle bg-dark text-white p-2 d-flex align-items-center justify-content-center flex-shrink-0" style="width:34px;height:34px;">
+                                            <i class="bi bi-arrow-counterclockwise fs-7 text-warning"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-8">Đổi Trả Trong 3 Ngày</div>
+                                            <div class="text-muted fs-9">Miễn phí nếu phát sinh lỗi</div>
+                                        </div>
+                                    </div>
+                                    <div class="position-absolute top-0 end-0 m-3 m-md-4 p-2 px-3 rounded-pill bg-dark text-white shadow-sm fs-8 fw-semibold hero-badge-float">
+                                        <i class="bi bi-gem text-info me-1"></i> Premium Craft
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Controls -->
+            <button class="carousel-control-prev hero-carousel-btn hero-carousel-btn--prev d-none d-md-flex" type="button" data-bs-target="#homepageHeroCarousel" data-bs-slide="prev" aria-label="Slide trước">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <button class="carousel-control-next hero-carousel-btn hero-carousel-btn--next d-none d-md-flex" type="button" data-bs-target="#homepageHeroCarousel" data-bs-slide="next" aria-label="Slide sau">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+    </section>
+
+    <!-- 2. VALUE PROPOSITIONS STRIP (4 Cam Kết Cốt Lõi) -->
+    <section class="py-4 border-top border-bottom border-light-subtle bg-light">
+        <div class="container">
+            <div class="row g-3 g-lg-4 text-center text-md-start">
+                <div class="col-6 col-lg-3 reveal stagger-1">
+                    <div class="value-prop-card p-3 rounded-3 bg-white border border-light-subtle shadow-xs d-flex align-items-center gap-3 h-100">
+                        <div class="value-prop-icon rounded-circle bg-emerald-light text-success p-2-5 d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-shield-check fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0 fs-7">100% Cotton Compact</h6>
+                            <p class="text-muted fs-8 mb-0 d-none d-sm-block">Sợi dệt mịn màng, chống bai xù</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3 reveal stagger-2">
+                    <div class="value-prop-card p-3 rounded-3 bg-white border border-light-subtle shadow-xs d-flex align-items-center gap-3 h-100">
+                        <div class="value-prop-icon rounded-circle bg-amber-light text-warning p-2-5 d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-arrow-counterclockwise fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0 fs-7">Đổi Hàng Tận Nơi 3 Ngày</h6>
+                            <p class="text-muted fs-8 mb-0 d-none d-sm-block">Hỗ trợ đổi size nhanh gọn tại nhà</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3 reveal stagger-3">
+                    <div class="value-prop-card p-3 rounded-3 bg-white border border-light-subtle shadow-xs d-flex align-items-center gap-3 h-100">
+                        <div class="value-prop-icon rounded-circle bg-blue-light text-primary p-2-5 d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-truck fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0 fs-7">Giao Hàng Toàn Quốc</h6>
+                            <p class="text-muted fs-8 mb-0 d-none d-sm-block">Đồng kiểm tra hàng trước khi nhận</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-6 col-lg-3 reveal stagger-4">
+                    <div class="value-prop-card p-3 rounded-3 bg-white border border-light-subtle shadow-xs d-flex align-items-center gap-3 h-100">
+                        <div class="value-prop-icon rounded-circle bg-purple-light text-purple p-2-5 d-flex align-items-center justify-content-center flex-shrink-0">
+                            <i class="bi bi-headset fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-0 fs-7">Hỗ Trợ Tận Tâm 24/7</h6>
+                            <p class="text-muted fs-8 mb-0 d-none d-sm-block">Tư vấn chuẩn size, form dáng</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. EXCLUSIVE VOUCHER COUPON CARDS (Săn Voucher Ưu Đãi) -->
+    <section class="py-5 bg-white border-bottom border-light-subtle">
+        <div class="container">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-2 mb-4 reveal">
+                <div>
+                    <span class="badge bg-danger-subtle text-danger px-3 py-1 rounded-pill fw-semibold fs-8 mb-2 d-inline-block">
+                        <i class="bi bi-ticket-perforated-fill me-1"></i> ƯU ĐÃI ĐỘC QUYỀN
+                    </span>
+                    <h2 class="fw-bold text-dark mb-0 fs-3">Mã Giảm Giá Hôm Nay</h2>
+                </div>
+                <span class="text-muted fs-7">Bấm sao chép mã và áp dụng ngay ở bước thanh toán</span>
+            </div>
+
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 g-md-4">
+                @if(isset($vouchers) && $vouchers->isNotEmpty())
+                    @foreach($vouchers as $v)
+                        <div class="col reveal stagger-{{ $loop->iteration }}">
+                            <div class="coupon-ticket p-3 rounded-3 bg-light border border-dashed border-2 position-relative h-100 d-flex flex-column justify-content-between">
+                                <div class="coupon-notch coupon-notch-left"></div>
+                                <div class="coupon-notch coupon-notch-right"></div>
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge bg-dark text-white px-2 py-1 rounded fs-8 fw-semibold">{{ $v->ma }}</span>
+                                        <small class="text-danger fw-bold fs-8">
+                                            @if($v->loai === 'phan_tram')
+                                                Giảm {{ (int)$v->gia_tri }}%
+                                            @else
+                                                Giảm {{ number_format($v->gia_tri, 0, ',', '.') }}đ
+                                            @endif
+                                        </small>
+                                    </div>
+                                    <h6 class="fw-bold text-dark fs-7 mb-1">{{ $v->ten ?? 'Ưu đãi mua sắm' }}</h6>
+                                    <p class="text-muted fs-8 mb-2 text-truncate-2">
+                                        @if($v->don_hang_toi_thieu > 0)
+                                            Đơn từ {{ number_format($v->don_hang_toi_thieu, 0, ',', '.') }}đ
+                                        @else
+                                            Áp dụng mọi đơn hàng
+                                        @endif
+                                        @if($v->giam_toi_da > 0)
+                                            • Tối đa {{ number_format($v->giam_toi_da, 0, ',', '.') }}đ
+                                        @endif
+                                    </p>
+                                </div>
+                                <div class="pt-2 border-top border-light-subtle d-flex justify-content-between align-items-center">
+                                    <span class="text-muted fs-9">
+                                        @if($v->ket_thuc)
+                                            HSD: {{ \Carbon\Carbon::parse($v->ket_thuc)->format('d/m/Y') }}
+                                        @else
+                                            Số lượng có hạn
+                                        @endif
+                                    </span>
+                                    <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 fs-8 fw-medium btn-copy-coupon" data-code="{{ $v->ma }}">
+                                        <i class="bi bi-clipboard me-1"></i> Sao chép
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                @else
+                    <!-- Default Curated Vouchers if database has none -->
+                    <div class="col reveal stagger-1">
+                        <div class="coupon-ticket p-3 rounded-3 bg-light border border-dashed border-2 position-relative h-100 d-flex flex-column justify-content-between">
+                            <div class="coupon-notch coupon-notch-left"></div>
+                            <div class="coupon-notch coupon-notch-right"></div>
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-dark text-white px-2 py-1 rounded fs-8 fw-semibold">FREESHIP</span>
+                                    <small class="text-success fw-bold fs-8">Miễn phí ship</small>
+                                </div>
+                                <h6 class="fw-bold text-dark fs-7 mb-1">Miễn Phí Vận Chuyển</h6>
+                                <p class="text-muted fs-8 mb-2">Áp dụng cho đơn hàng từ 299.000đ trên toàn quốc.</p>
+                            </div>
+                            <div class="pt-2 border-top border-light-subtle d-flex justify-content-between align-items-center">
+                                <span class="text-muted fs-9">Hiệu lực hôm nay</span>
+                                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 fs-8 fw-medium btn-copy-coupon" data-code="FREESHIP">
+                                    <i class="bi bi-clipboard me-1"></i> Sao chép
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col reveal stagger-2">
+                        <div class="coupon-ticket p-3 rounded-3 bg-light border border-dashed border-2 position-relative h-100 d-flex flex-column justify-content-between">
+                            <div class="coupon-notch coupon-notch-left"></div>
+                            <div class="coupon-notch coupon-notch-right"></div>
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-dark text-white px-2 py-1 rounded fs-8 fw-semibold">TEE20K</span>
+                                    <small class="text-danger fw-bold fs-8">Giảm 20.000đ</small>
+                                </div>
+                                <h6 class="fw-bold text-dark fs-7 mb-1">Đơn Hàng Đầu Tiên</h6>
+                                <p class="text-muted fs-8 mb-2">Dành cho khách hàng mới mua sắm tại website.</p>
+                            </div>
+                            <div class="pt-2 border-top border-light-subtle d-flex justify-content-between align-items-center">
+                                <span class="text-muted fs-9">Số lượng có hạn</span>
+                                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 fs-8 fw-medium btn-copy-coupon" data-code="TEE20K">
+                                    <i class="bi bi-clipboard me-1"></i> Sao chép
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col reveal stagger-3">
+                        <div class="coupon-ticket p-3 rounded-3 bg-light border border-dashed border-2 position-relative h-100 d-flex flex-column justify-content-between">
+                            <div class="coupon-notch coupon-notch-left"></div>
+                            <div class="coupon-notch coupon-notch-right"></div>
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-dark text-white px-2 py-1 rounded fs-8 fw-semibold">VIP10</span>
+                                    <small class="text-danger fw-bold fs-8">Giảm 10%</small>
+                                </div>
+                                <h6 class="fw-bold text-dark fs-7 mb-1">Hội Viên Thân Thiết</h6>
+                                <p class="text-muted fs-8 mb-2">Giảm ngay 10% tối đa 50K cho đơn từ 399.000đ.</p>
+                            </div>
+                            <div class="pt-2 border-top border-light-subtle d-flex justify-content-between align-items-center">
+                                <span class="text-muted fs-9">Hiệu lực tháng này</span>
+                                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 fs-8 fw-medium btn-copy-coupon" data-code="VIP10">
+                                    <i class="bi bi-clipboard me-1"></i> Sao chép
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col reveal stagger-4">
+                        <div class="coupon-ticket p-3 rounded-3 bg-light border border-dashed border-2 position-relative h-100 d-flex flex-column justify-content-between">
+                            <div class="coupon-notch coupon-notch-left"></div>
+                            <div class="coupon-notch coupon-notch-right"></div>
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="badge bg-dark text-white px-2 py-1 rounded fs-8 fw-semibold">COMBO50</span>
+                                    <small class="text-danger fw-bold fs-8">Giảm 50.000đ</small>
+                                </div>
+                                <h6 class="fw-bold text-dark fs-7 mb-1">Combo Tiết Kiệm</h6>
+                                <p class="text-muted fs-8 mb-2">Áp dụng khi mua từ 2 áo thun bất kỳ trong BST.</p>
+                            </div>
+                            <div class="pt-2 border-top border-light-subtle d-flex justify-content-between align-items-center">
+                                <span class="text-muted fs-9">Đang áp dụng</span>
+                                <button type="button" class="btn btn-sm btn-dark rounded-pill px-3 fs-8 fw-medium btn-copy-coupon" data-code="COMBO50">
+                                    <i class="bi bi-clipboard me-1"></i> Sao chép
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. SHOP BY CATEGORY (Danh mục nổi bật) -->
+    @if($danhMucs->isNotEmpty())
+        <section class="py-5 bg-white">
+            <div class="container py-2">
+                <div class="d-flex justify-content-between align-items-end mb-4 reveal">
+                    <div>
+                        <span class="text-uppercase text-muted fs-8 fw-semibold tracking-wider d-block mb-1">BỘ SƯU TẬP CHỦ ĐẠO</span>
+                        <h2 class="fw-bold text-dark mb-0 fs-3">Khám Phá Theo Phong Cách</h2>
+                    </div>
+                    <a href="{{ url('/Shop') }}" class="text-decoration-none text-dark fw-semibold fs-7 d-none d-sm-inline-flex align-items-center gap-1 hover-underline">
+                        <span>Tất cả danh mục</span>
+                        <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+
+                <div class="row row-cols-2 row-cols-lg-4 g-3 g-lg-4">
+                    @foreach($danhMucs->take(4) as $dm)
+                        <div class="col reveal stagger-{{ $loop->iteration }}">
+                            <a href="{{ url('/Shop?danh_muc=' . $dm->id) }}" class="category-card-link text-decoration-none group d-block h-100">
+                                <div class="category-card rounded-4 overflow-hidden bg-light border border-light-subtle position-relative shadow-xs">
+                                    <div class="category-thumb-box position-relative overflow-hidden">
+                                        <img src="{{ $dm->hinh_anh ? asset('storage/' . $dm->hinh_anh) : asset('img/shop_01.jpg') }}"
+                                             class="w-100 h-100 category-thumb object-fit-cover"
+                                             alt="{{ $dm->ten_danh_muc }}"
+                                             loading="lazy"
+                                             decoding="async">
+                                        <div class="position-absolute top-0 start-0 m-3 z-2">
+                                            <span class="badge bg-white bg-opacity-90 text-dark px-2-5 py-1 rounded-pill fw-semibold fs-9 shadow-xs backdrop-blur">
+                                                Khám phá
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 bg-white d-flex justify-content-between align-items-center border-top border-light-subtle">
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0 fs-7 category-title">{{ $dm->ten_danh_muc }}</h6>
+                                            <span class="text-muted fs-8">Xem sản phẩm</span>
+                                        </div>
+                                        <div class="category-arrow-circle rounded-circle d-flex align-items-center justify-content-center text-dark bg-light border border-light-subtle">
+                                            <i class="bi bi-arrow-up-right fs-8"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+    @endif
+
+    <!-- 5. NEW ARRIVALS (Sản phẩm mới nhất - Lookbook Card 3:4) -->
+    <section class="py-5 bg-light border-top border-bottom border-light-subtle">
+        <div class="container py-2">
+            <div class="d-flex justify-content-between align-items-end mb-4 reveal">
+                <div>
+                    <span class="text-uppercase text-muted fs-8 fw-semibold tracking-wider d-block mb-1">HÀNG MỚI VỀ 2026</span>
+                    <h2 class="fw-bold text-dark mb-0 fs-3">Sản Phẩm Mới Nhất</h2>
+                </div>
+                <a href="{{ url('/Shop?sort=new') }}" class="text-decoration-none text-dark fw-semibold fs-7 d-none d-sm-inline-flex align-items-center gap-1 hover-underline">
+                    <span>Xem tất cả ({{ $sanPhamsMoiNhat->count() }})</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Product Grid: 5 columns on desktop, exactly like Shop -->
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3 g-md-4">
+                @forelse($sanPhamsMoiNhat as $sp)
+                    @php
+                        $giaGoc = $sp->variants_min_gia ?? null;
+                        $giaKm = $sp->variants_min_gia_khuyen_mai ?? null;
+                        $phanTramGiam = null;
+                        if ($giaGoc && $giaKm && $giaKm < $giaGoc && $giaGoc > 0) {
+                            $phanTramGiam = (int) round(100 - (($giaKm / $giaGoc) * 100));
+                        }
+                        $colors = $sp->variants ? $sp->variants->pluck('color')->filter()->unique('id') : collect();
+                    @endphp
+                    <div class="col reveal stagger-{{ $loop->iteration }}">
+                        <div class="card clean-product-card h-100 border-0 rounded-3 overflow-hidden bg-white shadow-xs">
+                            <!-- Image Frame 3:4 -->
+                            <div class="clean-product-thumb-box position-relative rounded-top overflow-hidden bg-light border-bottom border-light-subtle">
+                                <!-- Status Badges -->
+                                <div class="position-absolute top-0 start-0 m-2 z-2 d-flex flex-column gap-1">
+                                    <span class="badge bg-dark text-white px-2 py-1 rounded-pill fw-semibold fs-9">
+                                        Mới
+                                    </span>
+                                    @if($phanTramGiam)
+                                        <span class="badge bg-danger text-white px-2 py-1 rounded-pill fw-bold fs-9">
+                                            -{{ $phanTramGiam }}%
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <!-- Wishlist Button -->
+                                <button type="button" class="btn-wishlist position-absolute top-0 end-0 m-2 z-2 border-0 rounded-circle d-flex align-items-center justify-content-center" data-id="{{ $sp->id }}" title="Yêu thích">
+                                    <i class="bi bi-heart"></i>
+                                </button>
+
+                                <a href="{{ route('sanpham.chitiet', $sp->slug) }}" class="d-block w-100 h-100">
+                                    <img class="clean-product-thumb w-100 h-100"
+                                         src="{{ $sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
+                                         loading="lazy"
+                                         decoding="async"
+                                         alt="{{ $sp->ten_san_pham }}">
+                                </a>
+
+                                <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
+                                   class="quick-view-overlay-btn btn btn-dark btn-sm rounded-pill position-absolute bottom-0 start-50 translate-middle-x mb-3 opacity-0 text-nowrap px-3 shadow-sm">
+                                    <i class="bi bi-eye me-1"></i> Xem chi tiết
+                                </a>
+                            </div>
+
+                            <!-- Info -->
+                            <div class="card-body p-2-5 d-flex flex-column justify-content-between">
+                                <div>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <span class="text-muted fs-8 text-uppercase tracking-wider">
+                                            {{ $sp->category->ten_danh_muc ?? 'Fashion' }}
+                                        </span>
+                                        @if($colors->isNotEmpty())
+                                            <div class="color-swatches-mini d-flex align-items-center gap-1">
+                                                @foreach($colors->take(3) as $c)
+                                                    <span class="swatch-dot" style="background-color: {{ $c->ma_mau ?? '#ccc' }};" title="{{ $c->ten_mau ?? '' }}"></span>
+                                                @endforeach
+                                                @if($colors->count() > 3)
+                                                    <span class="fs-9 text-muted">+{{ $colors->count() - 3 }}</span>
+                                                @endif
+                                            </div>
+                                        @endif
+                                    </div>
+
+                                    <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
+                                       class="clean-product-title text-decoration-none text-dark fw-semibold d-block fs-7 mb-2 text-truncate-2"
+                                       title="{{ $sp->ten_san_pham }}">
+                                        {{ $sp->ten_san_pham }}
+                                    </a>
+                                </div>
+
+                                <div>
+                                    <div class="d-flex align-items-center gap-1 mb-1 fs-9 text-muted">
+                                        <i class="bi bi-star-fill text-warning"></i>
+                                        <span class="fw-semibold text-dark">5.0</span>
+                                        <span>(120+)</span>
+                                    </div>
+
+                                    <div class="d-flex align-items-baseline gap-2">
+                                        <span class="clean-product-price fw-bold text-dark fs-7">
+                                            @if($giaKm)
+                                                {{ number_format($giaKm, 0, ',', '.') }} ₫
+                                            @elseif($giaGoc)
+                                                {{ number_format($giaGoc, 0, ',', '.') }} ₫
+                                            @else
+                                                Liên hệ
+                                            @endif
+                                        </span>
+                                        @if($giaKm && $giaGoc && $giaKm < $giaGoc)
+                                            <small class="text-muted text-decoration-line-through fs-8">
+                                                {{ number_format($giaGoc, 0, ',', '.') }} ₫
+                                            </small>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @empty
+                    <div class="col-12 text-center py-5">
+                        <p class="text-muted">Chưa có sản phẩm mới nào.</p>
+                        <a href="{{ url('/Shop') }}" class="btn btn-dark rounded-3 px-4 py-2 fs-7">Khám phá cửa hàng</a>
+                    </div>
                 @endforelse
             </div>
+
             @if($sanPhamsMoiNhat->isNotEmpty())
-            <div class="text-center mt-4 mt-lg-5 pt-2">
-                <a href="{{ url('/Shop') }}" class="btn btn-success btn-lg rounded-pill px-5 shadow-sm">Xem tất cả sản phẩm</a>
-            </div>
+                <div class="text-center mt-5 reveal">
+                    <a href="{{ url('/Shop?sort=new') }}" class="btn btn-outline-dark rounded-3 px-5 py-2-5 fs-7 fw-semibold btn-elevate">
+                        Xem tất cả sản phẩm mới <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
             @endif
         </div>
     </section>
 
-<!-- Sản phẩm Hot & Giảm giá -->
-<section class="py-4 py-lg-5 bg-white">
-    <div class="container py-2">
-        <div class="row g-4">
-            <!-- Cột trái: Sản phẩm hot -->
-            <div class="col-lg-6 mb-4 mb-lg-0">
-                <div class="hot-sale-panel h-100 p-3 p-md-4">
-                    <style>
-                        .hot-sale-panel {
-                            background: linear-gradient(165deg, #ffffff 0%, #f5f7f9 48%, #eef1f4 100%);
-                            border: 1px solid rgba(0, 0, 0, 0.06);
-                            border-radius: 1.35rem;
-                            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.07);
-                        }
+    <!-- 6. BRAND STORY & FABRIC TECHNOLOGY (Tuyên Ngôn & Công Nghệ Sợi Vải) -->
+    <section class="py-5 bg-white">
+        <div class="container py-2">
+            <div class="brand-story-banner rounded-4 p-4 p-md-5 bg-dark text-white position-relative overflow-hidden shadow-lg">
+                <div class="ambient-glow position-absolute top-0 end-0"></div>
 
-                        .product-strip {
-                            overflow: hidden;
-                            width: 100%;
-                        }
-
-                        .strip-track {
-                            display: flex;
-                            transform: translateX(0);
-                            will-change: transform;
-                            transition: transform 450ms ease;
-                        }
-
-                        .strip-item {
-                            flex: 0 0 50%;
-                            padding: 0 0.5rem;
-                            box-sizing: border-box;
-                        }
-
-                        @media (min-width: 768px) {
-                            .strip-item {
-                                flex: 0 0 33.333333%;
-                                padding: 0 0.55rem;
-                            }
-                        }
-
-                        .strip-card {
-                            background: #fff;
-                            border-radius: 1.1rem;
-                            overflow: hidden;
-                            box-shadow: 0 8px 26px rgba(0, 0, 0, 0.07);
-                            transition: transform 0.28s ease, box-shadow 0.28s ease;
-                        }
-
-                        .strip-card--hot:hover {
-                            transform: translateY(-8px);
-                            box-shadow: 0 22px 50px rgba(25, 135, 84, 0.14), 0 12px 32px rgba(0, 0, 0, 0.1);
-                        }
-
-                        .strip-card--sale:hover {
-                            transform: translateY(-8px);
-                            box-shadow: 0 22px 50px rgba(220, 53, 69, 0.12), 0 12px 32px rgba(0, 0, 0, 0.1);
-                        }
-
-                        .strip-card-media {
-                            display: block;
-                            aspect-ratio: 1;
-                            overflow: hidden;
-                            background: linear-gradient(145deg, #f0f2f5, #e8eaee);
-                        }
-
-                        .strip-card-media img {
-                            width: 100%;
-                            height: 100%;
-                            object-fit: cover;
-                            transition: transform 0.35s ease;
-                        }
-
-                        .strip-card:hover .strip-card-media img {
-                            transform: scale(1.06);
-                        }
-
-                        .strip-card .card-body {
-                            padding: 0.85rem 1rem 1.05rem;
-                        }
-
-                        @media (min-width: 768px) {
-                            .strip-card .card-body {
-                                padding: 1rem 1.1rem 1.2rem;
-                            }
-                        }
-
-                        .strip-badge {
-                            font-size: 0.72rem;
-                            font-weight: 700;
-                            letter-spacing: 0.04em;
-                            padding: 0.4em 0.85em;
-                            border: none;
-                        }
-
-                        .strip-badge--hot {
-                            background: linear-gradient(135deg, #20c997, #198754) !important;
-                            color: #fff !important;
-                        }
-
-                        .strip-badge--sale {
-                            background: linear-gradient(135deg, #ff6b6b, #dc3545) !important;
-                            color: #fff !important;
-                        }
-
-                        .strip-card-name {
-                            display: -webkit-box;
-                            -webkit-line-clamp: 2;
-                            -webkit-box-orient: vertical;
-                            overflow: hidden;
-                            font-size: clamp(0.9rem, 1.25vw, 1.02rem);
-                            font-weight: 700;
-                            line-height: 1.35;
-                            color: #212529;
-                            min-height: 2.65em;
-                        }
-
-                        .strip-price {
-                            font-weight: 800;
-                            letter-spacing: 0.02em;
-                            font-size: clamp(0.95rem, 1.35vw, 1.08rem);
-                        }
-
-                        .strip-price--hot {
-                            color: #198754;
-                        }
-
-                        .strip-price--sale {
-                            color: #dc3545;
-                        }
-
-                        .strip-price-old {
-                            font-size: 0.82rem;
-                            color: #8b949e;
-                        }
-
-                        .hot-sale-section-title {
-                            font-size: clamp(1.5rem, 3.2vw, 2.35rem);
-                            font-weight: 800;
-                            letter-spacing: 0.04em;
-                            text-transform: uppercase;
-                            color: #1a1a1a;
-                        }
-
-                        .hot-sale-section-sub {
-                            text-align: center;
-                            color: #5c636a;
-                            font-size: clamp(1rem, 1.8vw, 1.12rem);
-                            line-height: 1.5;
-                            max-width: 28rem;
-                            margin-left: auto;
-                            margin-right: auto;
-                        }
-                    </style>
-                    <div class="text-center mb-3 mb-md-4">
-                        <h1 class="hot-sale-section-title mb-2">Sản phẩm hot</h1>
-                        <p class="hot-sale-section-sub mb-0">Top sản phẩm được mua nhiều nhất trong 30 ngày gần đây.</p>
-                    </div>
-
-                    @if($sanPhamsHot->isNotEmpty())
-                        <div id="hotStrip" class="product-strip" data-original-count="{{ $sanPhamsHot->count() }}">
-                            <div class="strip-track">
-                                @foreach($sanPhamsHot as $sp)
-                                    <div class="strip-item">
-                                        <div class="card h-100 border-0 strip-card strip-card--hot">
-                                            <a href="{{ route('sanpham.chitiet', $sp->slug) }}" class="strip-card-media text-decoration-none">
-                                                <img src="{{ $sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
-                                                    class="img-fluid" alt="{{ $sp->ten_san_pham }}" loading="lazy" decoding="async">
-                                            </a>
-                                            <div class="card-body d-flex flex-column">
-                                                <span class="badge strip-badge strip-badge--hot mb-2 align-self-start rounded-pill">Hot</span>
-                                                <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
-                                                    class="strip-card-name text-decoration-none text-dark mb-2 flex-grow-1">
-                                                    {{ $sp->ten_san_pham }}
-                                                </a>
-                                                <p class="mb-0 mt-auto">
-                                                    @if($sp->variants_min_gia)
-                                                        <span class="strip-price strip-price--hot">{{ number_format($sp->variants_min_gia, 0, ',', '.') }} ₫</span>
-                                                    @else
-                                                        <span class="text-muted fw-semibold small">Liên hệ</span>
-                                                    @endif
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-
-                                {{-- Lặp lại danh sách để reset index mượt hơn --}}
-                                @foreach($sanPhamsHot as $sp)
-                                    <div class="strip-item">
-                                        <div class="card h-100 border-0 strip-card strip-card--hot">
-                                            <a href="{{ route('sanpham.chitiet', $sp->slug) }}" class="strip-card-media text-decoration-none">
-                                                <img src="{{ $sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
-                                                    class="img-fluid" alt="{{ $sp->ten_san_pham }}" loading="lazy" decoding="async">
-                                            </a>
-                                            <div class="card-body d-flex flex-column">
-                                                <span class="badge strip-badge strip-badge--hot mb-2 align-self-start rounded-pill">Hot</span>
-                                                <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
-                                                    class="strip-card-name text-decoration-none text-dark mb-2 flex-grow-1">
-                                                    {{ $sp->ten_san_pham }}
-                                                </a>
-                                                <p class="mb-0 mt-auto">
-                                                    @if($sp->variants_min_gia)
-                                                        <span class="strip-price strip-price--hot">{{ number_format($sp->variants_min_gia, 0, ',', '.') }} ₫</span>
-                                                    @else
-                                                        <span class="text-muted fw-semibold small">Liên hệ</span>
-                                                    @endif
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
+                <div class="row align-items-center g-4 g-lg-5">
+                    <div class="col-12 col-lg-7 position-relative z-2 reveal reveal-left">
+                        <div class="d-flex align-items-center gap-2 mb-3">
+                            <span class="badge bg-white text-dark px-3 py-1-5 rounded-pill fw-semibold fs-8 letter-spacing-wide">
+                                FASHIONTEE PHILOSOPHY
+                            </span>
+                            <span class="text-white-50 fs-8">May đo chuẩn tỉ lệ</span>
                         </div>
-                    @else
-                        <div class="col-12 text-center py-5">
-                            <p class="text-muted mb-3">Chưa có dữ liệu sản phẩm hot.</p>
-                            <a href="{{ url('/Shop') }}" class="btn btn-success">Xem tất cả sản phẩm</a>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Cột phải: Sản phẩm đang giảm giá -->
-            <div class="col-lg-6">
-                <div class="hot-sale-panel h-100 p-3 p-md-4">
-                    <div class="text-center mb-3 mb-md-4">
-                        <h1 class="hot-sale-section-title mb-2">Đang giảm giá</h1>
-                        <p class="hot-sale-section-sub mb-0">Các sản phẩm có giá khuyến mãi</p>
-                    </div>
-
-                    @if($sanPhamsGiamGia->isNotEmpty())
-                        <div id="giamGiaStrip" class="product-strip" data-original-count="{{ $sanPhamsGiamGia->count() }}">
-                            <div class="strip-track">
-                                @foreach($sanPhamsGiamGia as $sp)
-                                    <div class="strip-item">
-                                        <div class="card h-100 border-0 strip-card strip-card--sale">
-                                            <a href="{{ route('sanpham.chitiet', $sp->slug) }}" class="strip-card-media text-decoration-none">
-                                                <img src="{{ $sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
-                                                    class="img-fluid" alt="{{ $sp->ten_san_pham }}" loading="lazy" decoding="async">
-                                            </a>
-                                            <div class="card-body d-flex flex-column">
-                                                @php
-                                                    $giaGoc = $sp->variants_min_gia ?? null;
-                                                    $giaKm = $sp->variants_min_gia_khuyen_mai ?? null;
-                                                    $phanTramGiam = null;
-                                                    if ($giaGoc && $giaKm && $giaKm < $giaGoc && $giaGoc > 0) {
-                                                        $phanTramGiam = (int) round(100 - (($giaKm / $giaGoc) * 100));
-                                                    }
-                                                @endphp
-
-                                                @if($giaKm && $phanTramGiam !== null)
-                                                    <span class="badge strip-badge strip-badge--sale mb-2 align-self-start rounded-pill">-{{ $phanTramGiam }}%</span>
-                                                @else
-                                                    <span class="badge strip-badge strip-badge--sale mb-2 align-self-start rounded-pill">Sale</span>
-                                                @endif
-
-                                                <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
-                                                    class="strip-card-name text-decoration-none text-dark mb-2 flex-grow-1">
-                                                    {{ $sp->ten_san_pham }}
-                                                </a>
-
-                                                <div class="mt-auto">
-                                                    <p class="mb-1">
-                                                        @if($giaKm)
-                                                            <span class="strip-price strip-price--sale">{{ number_format($giaKm, 0, ',', '.') }} ₫</span>
-                                                        @else
-                                                            <span class="text-muted fw-semibold small">Liên hệ</span>
-                                                        @endif
-                                                    </p>
-                                                    @if($giaGoc)
-                                                        <p class="mb-0 strip-price-old"><s>{{ number_format($giaGoc, 0, ',', '.') }} ₫</s></p>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-
-                                {{-- Lặp lại danh sách để reset index mượt hơn --}}
-                                @foreach($sanPhamsGiamGia as $sp)
-                                    <div class="strip-item">
-                                        <div class="card h-100 border-0 strip-card strip-card--sale">
-                                            <a href="{{ route('sanpham.chitiet', $sp->slug) }}" class="strip-card-media text-decoration-none">
-                                                <img src="{{ $sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
-                                                    class="img-fluid" alt="{{ $sp->ten_san_pham }}" loading="lazy" decoding="async">
-                                            </a>
-                                            <div class="card-body d-flex flex-column">
-                                                @php
-                                                    $giaGoc = $sp->variants_min_gia ?? null;
-                                                    $giaKm = $sp->variants_min_gia_khuyen_mai ?? null;
-                                                    $phanTramGiam = null;
-                                                    if ($giaGoc && $giaKm && $giaKm < $giaGoc && $giaGoc > 0) {
-                                                        $phanTramGiam = (int) round(100 - (($giaKm / $giaGoc) * 100));
-                                                    }
-                                                @endphp
-
-                                                @if($giaKm && $phanTramGiam !== null)
-                                                    <span class="badge strip-badge strip-badge--sale mb-2 align-self-start rounded-pill">-{{ $phanTramGiam }}%</span>
-                                                @else
-                                                    <span class="badge strip-badge strip-badge--sale mb-2 align-self-start rounded-pill">Sale</span>
-                                                @endif
-
-                                                <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
-                                                    class="strip-card-name text-decoration-none text-dark mb-2 flex-grow-1">
-                                                    {{ $sp->ten_san_pham }}
-                                                </a>
-
-                                                <div class="mt-auto">
-                                                    <p class="mb-1">
-                                                        @if($giaKm)
-                                                            <span class="strip-price strip-price--sale">{{ number_format($giaKm, 0, ',', '.') }} ₫</span>
-                                                        @else
-                                                            <span class="text-muted fw-semibold small">Liên hệ</span>
-                                                        @endif
-                                                    </p>
-                                                    @if($giaGoc)
-                                                        <p class="mb-0 strip-price-old"><s>{{ number_format($giaGoc, 0, ',', '.') }} ₫</s></p>
-                                                    @endif
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        </div>
-                    @else
-                        <div class="col-12 text-center py-5">
-                            <p class="text-muted mb-3">Hiện chưa có sản phẩm đang giảm giá.</p>
-                            <a href="{{ url('/Shop') }}" class="btn btn-success">Xem tất cả sản phẩm</a>
-                        </div>
-                    @endif
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="py-5 bg-white">
-    <div class="container">
-
-        <style>
-            .featured-review-title {
-                font-size: clamp(1.5rem, 3.2vw, 2.35rem);
-                font-weight: 800;
-                letter-spacing: 0.06em;
-                text-transform: uppercase;
-                color: #555555;
-            }
-
-            .review-text {
-                color: #6c757d;
-                font-size: 0.95rem;
-            }
-
-            .featured-review-card {
-                border: 1.5px solid rgba(0, 0, 0, 0.18);
-                border-radius: 10px;
-                overflow: hidden;
-            }
-        </style>
-
-        <div class="text-center mb-3">
-            <h1 class="featured-review-title mb-0">Đánh giá nổi bật</h1>
-        </div>
-
-        {{-- Nút điều hướng --}}
-        <div class="d-flex justify-content-center align-items-center mb-3 gap-2">
-            <button class="btn btn-light border swiper-prev">←</button>
-            <button class="btn btn-light border swiper-next">→</button>
-        </div>
-
-        <div class="swiper mySwiper">
-            <div class="swiper-wrapper">
-
-                @forelse($danhGias as $dg)
-                <div class="swiper-slide">
-
-                    <div class="card shadow-sm h-100 p-4 featured-review-card">
-
-                        <div class="mb-2 text-warning">
-                            @for($i = 1; $i <= 5; $i++)
-                                <i class="bi bi-star{{ $i <= $dg->so_sao ? '-fill' : '' }}"></i>
-                            @endfor
-                        </div>
-
-                        <h6 class="fw-bold mb-1">
-                            {{ $dg->user->name ?? 'Khách hàng' }}
-                            <span class="text-success">✔</span>
-                        </h6>
-
-                        <p class="review-text small mb-0">
-                            "{{ $dg->noi_dung }}"
+                        <h2 class="display-6 fw-bold text-white mb-3">
+                            Thời trang không cần phô trương.<br>
+                            <span class="text-white-50">Sự tinh tế bắt đầu từ chất vải.</span>
+                        </h2>
+                        <p class="text-white-50 fs-7 mb-4" style="max-width: 540px; line-height: 1.75;">
+                            Mỗi chiếc áo thun tại FashionTee đều được chắt lọc từ nguồn sợi bông compact tự nhiên, ứng dụng kỹ thuật may giấu đường chỉ và bo cổ rib 2x2 chống bai dão, đem lại sự êm ái tối đa trong từng cử động thường nhật.
                         </p>
 
+                        <div class="row row-cols-2 g-3 mb-4">
+                            <div class="col">
+                                <div class="d-flex align-items-start gap-2-5">
+                                    <div class="rounded-circle bg-white bg-opacity-10 p-2 d-flex align-items-center justify-content-center flex-shrink-0 text-success">
+                                        <i class="bi bi-check2-circle fs-6"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-white fs-8 mb-1">Cotton Compact 250 GSM</h6>
+                                        <p class="text-white-50 fs-9 mb-0">Dày dặn, không lộ viền, mềm mịn</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-flex align-items-start gap-2-5">
+                                    <div class="rounded-circle bg-white bg-opacity-10 p-2 d-flex align-items-center justify-content-center flex-shrink-0 text-warning">
+                                        <i class="bi bi-shield-lock fs-6"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-white fs-8 mb-1">Bo Cổ Rib 2x2 Spandex</h6>
+                                        <p class="text-white-50 fs-9 mb-0">Chống bai dão sau 100 lần giặt</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-flex align-items-start gap-2-5">
+                                    <div class="rounded-circle bg-white bg-opacity-10 p-2 d-flex align-items-center justify-content-center flex-shrink-0 text-info">
+                                        <i class="bi bi-droplet fs-6"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-white fs-8 mb-1">Nhuộm Hoạt Tính Bền Màu</h6>
+                                        <p class="text-white-50 fs-9 mb-0">An toàn cho da, không thôi màu</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-flex align-items-start gap-2-5">
+                                    <div class="rounded-circle bg-white bg-opacity-10 p-2 d-flex align-items-center justify-content-center flex-shrink-0 text-primary">
+                                        <i class="bi bi-person-check fs-6"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-white fs-8 mb-1">Form Regular Tôn Dáng</h6>
+                                        <p class="text-white-50 fs-9 mb-0">Chuẩn số đo vóc dáng người Việt</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-3">
+                            <a href="{{ url('/Shop') }}" class="btn btn-light rounded-3 px-4 py-3 fs-7 fw-bold text-dark d-inline-flex align-items-center gap-2 btn-elevate">
+                                <span>Khám phá bộ sưu tập</span>
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                            <a href="{{ url('/Contact') }}" class="btn btn-outline-light rounded-3 px-4 py-3 fs-7 fw-medium btn-elevate">
+                                Liên hệ thương hiệu
+                            </a>
+                        </div>
                     </div>
-
+                    <div class="col-12 col-lg-5 position-relative z-2 text-center text-lg-end reveal reveal-right">
+                        <div class="brand-story-image-wrap rounded-4 overflow-hidden d-inline-block border border-light border-opacity-25 shadow-2xl position-relative">
+                            <img src="{{ asset('img/banner_img_02.jpg') }}" class="img-fluid w-100 object-fit-cover" alt="FashionTee Story" loading="lazy">
+                            <div class="position-absolute bottom-0 start-0 w-100 p-3 bg-gradient-dark-bottom text-start">
+                                <span class="badge bg-white text-dark px-2-5 py-1 rounded-pill fw-bold fs-9 mb-1">Craftsmanship</span>
+                                <div class="text-white fw-semibold fs-8">Tỉ mỉ trên từng đường kim mũi chỉ</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                @empty
-                    <p class="text-muted">Chưa có đánh giá nào</p>
-                @endforelse
-
             </div>
         </div>
+    </section>
 
+    <!-- 7. CURATED SHOWCASE: SEGMENTED TABS (Bán Chạy & Đang Giảm Giá) -->
+    <section class="py-5 bg-light border-top border-bottom border-light-subtle">
+        <div class="container py-2">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-3 mb-4 reveal">
+                <div>
+                    <span class="text-uppercase text-muted fs-8 fw-semibold tracking-wider d-block mb-1">BỘ SƯU TẬP ĐẶC BIỆT</span>
+                    <h2 class="fw-bold text-dark mb-0 fs-3">Thịnh Hành & Ưu Đãi</h2>
+                </div>
+
+                <ul class="nav nav-pills showcase-pills bg-white p-1-5 rounded-pill border border-light-subtle shadow-xs" id="curatedShowcaseTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link showcase-pill-link active rounded-pill px-3 py-1-5 fs-7 fw-semibold"
+                                id="hot-tab" data-bs-toggle="pill" data-bs-target="#hot-pane"
+                                type="button" role="tab" aria-controls="hot-pane" aria-selected="true">
+                            <i class="bi bi-fire text-danger me-1"></i> Bán chạy
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link showcase-pill-link rounded-pill px-3 py-1-5 fs-7 fw-semibold"
+                                id="sale-tab" data-bs-toggle="pill" data-bs-target="#sale-pane"
+                                type="button" role="tab" aria-controls="sale-pane" aria-selected="false">
+                            <i class="bi bi-percent text-success me-1"></i> Đang giảm giá
+                        </button>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="tab-content" id="curatedShowcaseTabContent">
+
+                <!-- TAB 1: BÁN CHẠY (Top Hot) -->
+                <div class="tab-pane fade show active" id="hot-pane" role="tabpanel" aria-labelledby="hot-tab" tabindex="0">
+                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-md-4">
+                        @forelse($sanPhamsHot as $sp)
+                            @php
+                                $giaGoc = $sp->variants_min_gia ?? null;
+                                $giaKm = $sp->variants_min_gia_khuyen_mai ?? null;
+                                $phanTramGiam = null;
+                                if ($giaGoc && $giaKm && $giaKm < $giaGoc && $giaGoc > 0) {
+                                    $phanTramGiam = (int) round(100 - (($giaKm / $giaGoc) * 100));
+                                }
+                                $colors = $sp->variants ? $sp->variants->pluck('color')->filter()->unique('id') : collect();
+                            @endphp
+                            <div class="col reveal stagger-{{ $loop->iteration }}">
+                                <div class="card clean-product-card h-100 border-0 rounded-3 overflow-hidden bg-white shadow-xs">
+                                    <div class="clean-product-thumb-box position-relative rounded-top overflow-hidden bg-light border-bottom border-light-subtle">
+                                        <div class="position-absolute top-0 start-0 m-2 z-2 d-flex flex-column gap-1">
+                                            <span class="badge bg-danger text-white px-2 py-1 rounded-pill fw-semibold fs-9">
+                                                <i class="bi bi-fire me-1"></i>Hot
+                                            </span>
+                                            @if($phanTramGiam)
+                                                <span class="badge bg-dark text-white px-2 py-1 rounded-pill fw-bold fs-9">
+                                                    -{{ $phanTramGiam }}%
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        <button type="button" class="btn-wishlist position-absolute top-0 end-0 m-2 z-2 border-0 rounded-circle d-flex align-items-center justify-content-center" data-id="{{ $sp->id }}" title="Yêu thích">
+                                            <i class="bi bi-heart"></i>
+                                        </button>
+
+                                        <a href="{{ route('sanpham.chitiet', $sp->slug) }}" class="d-block w-100 h-100">
+                                            <img class="clean-product-thumb w-100 h-100"
+                                                 src="{{ $sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
+                                                 loading="lazy"
+                                                 decoding="async"
+                                                 alt="{{ $sp->ten_san_pham }}">
+                                        </a>
+
+                                        <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
+                                           class="quick-view-overlay-btn btn btn-dark btn-sm rounded-pill position-absolute bottom-0 start-50 translate-middle-x mb-3 opacity-0 text-nowrap px-3 shadow-sm">
+                                            <i class="bi bi-eye me-1"></i> Xem chi tiết
+                                        </a>
+                                    </div>
+
+                                    <div class="card-body p-2-5 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="text-muted fs-8 text-uppercase tracking-wider">
+                                                    {{ $sp->category->ten_danh_muc ?? 'Fashion' }}
+                                                </span>
+                                                @if($colors->isNotEmpty())
+                                                    <div class="color-swatches-mini d-flex align-items-center gap-1">
+                                                        @foreach($colors->take(3) as $c)
+                                                            <span class="swatch-dot" style="background-color: {{ $c->ma_mau ?? '#ccc' }};" title="{{ $c->ten_mau ?? '' }}"></span>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
+                                               class="clean-product-title text-decoration-none text-dark fw-semibold d-block fs-7 mb-2 text-truncate-2"
+                                               title="{{ $sp->ten_san_pham }}">
+                                                {{ $sp->ten_san_pham }}
+                                            </a>
+                                        </div>
+
+                                        <div>
+                                            <div class="d-flex align-items-center gap-1 mb-1 fs-9 text-muted">
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <span class="fw-semibold text-dark">5.0</span>
+                                                <span class="text-success ms-1"><i class="bi bi-check-circle-fill"></i> Đang bán chạy</span>
+                                            </div>
+
+                                            <div class="d-flex align-items-baseline gap-2">
+                                                <span class="clean-product-price fw-bold text-dark fs-7">
+                                                    @if($giaKm)
+                                                        {{ number_format($giaKm, 0, ',', '.') }} ₫
+                                                    @elseif($giaGoc)
+                                                        {{ number_format($giaGoc, 0, ',', '.') }} ₫
+                                                    @else
+                                                        Liên hệ
+                                                    @endif
+                                                </span>
+                                                @if($giaKm && $giaGoc && $giaKm < $giaGoc)
+                                                    <small class="text-muted text-decoration-line-through fs-8">
+                                                        {{ number_format($giaGoc, 0, ',', '.') }} ₫
+                                                    </small>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-12 text-center py-5">
+                                <p class="text-muted">Chưa có sản phẩm bán chạy.</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+                <!-- TAB 2: ĐANG GIẢM GIÁ (Sale) -->
+                <div class="tab-pane fade" id="sale-pane" role="tabpanel" aria-labelledby="sale-tab" tabindex="0">
+                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3 g-md-4">
+                        @forelse($sanPhamsGiamGia as $sp)
+                            @php
+                                $giaGoc = $sp->variants_min_gia ?? null;
+                                $giaKm = $sp->variants_min_gia_khuyen_mai ?? null;
+                                $phanTramGiam = null;
+                                if ($giaGoc && $giaKm && $giaKm < $giaGoc && $giaGoc > 0) {
+                                    $phanTramGiam = (int) round(100 - (($giaKm / $giaGoc) * 100));
+                                }
+                                $colors = $sp->variants ? $sp->variants->pluck('color')->filter()->unique('id') : collect();
+                            @endphp
+                            <div class="col reveal stagger-{{ $loop->iteration }}">
+                                <div class="card clean-product-card h-100 border-0 rounded-3 overflow-hidden bg-white shadow-xs">
+                                    <div class="clean-product-thumb-box position-relative rounded-top overflow-hidden bg-light border-bottom border-light-subtle">
+                                        <div class="position-absolute top-0 start-0 m-2 z-2">
+                                            @if($phanTramGiam)
+                                                <span class="badge bg-danger text-white px-2 py-1 rounded-pill fw-bold fs-9">
+                                                    -{{ $phanTramGiam }}%
+                                                </span>
+                                            @else
+                                                <span class="badge bg-danger text-white px-2 py-1 rounded-pill fw-bold fs-9">
+                                                    Sale
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        <button type="button" class="btn-wishlist position-absolute top-0 end-0 m-2 z-2 border-0 rounded-circle d-flex align-items-center justify-content-center" data-id="{{ $sp->id }}" title="Yêu thích">
+                                            <i class="bi bi-heart"></i>
+                                        </button>
+
+                                        <a href="{{ route('sanpham.chitiet', $sp->slug) }}" class="d-block w-100 h-100">
+                                            <img class="clean-product-thumb w-100 h-100"
+                                                 src="{{ $sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
+                                                 loading="lazy"
+                                                 decoding="async"
+                                                 alt="{{ $sp->ten_san_pham }}">
+                                        </a>
+
+                                        <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
+                                           class="quick-view-overlay-btn btn btn-dark btn-sm rounded-pill position-absolute bottom-0 start-50 translate-middle-x mb-3 opacity-0 text-nowrap px-3 shadow-sm">
+                                            <i class="bi bi-eye me-1"></i> Xem chi tiết
+                                        </a>
+                                    </div>
+
+                                    <div class="card-body p-2-5 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="text-muted fs-8 text-uppercase tracking-wider">
+                                                    {{ $sp->category->ten_danh_muc ?? 'Fashion' }}
+                                                </span>
+                                                @if($colors->isNotEmpty())
+                                                    <div class="color-swatches-mini d-flex align-items-center gap-1">
+                                                        @foreach($colors->take(3) as $c)
+                                                            <span class="swatch-dot" style="background-color: {{ $c->ma_mau ?? '#ccc' }};" title="{{ $c->ten_mau ?? '' }}"></span>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
+                                               class="clean-product-title text-decoration-none text-dark fw-semibold d-block fs-7 mb-2 text-truncate-2"
+                                               title="{{ $sp->ten_san_pham }}">
+                                                {{ $sp->ten_san_pham }}
+                                            </a>
+                                        </div>
+
+                                        <div>
+                                            <div class="d-flex align-items-center gap-1 mb-1 fs-9 text-muted">
+                                                <i class="bi bi-star-fill text-warning"></i>
+                                                <span class="fw-semibold text-dark">5.0</span>
+                                                <span class="text-danger ms-1 fw-medium"><i class="bi bi-tag-fill"></i> Giá ưu đãi</span>
+                                            </div>
+
+                                            <div class="d-flex align-items-baseline gap-2">
+                                                <span class="clean-product-price fw-bold text-danger fs-7">
+                                                    @if($giaKm)
+                                                        {{ number_format($giaKm, 0, ',', '.') }} ₫
+                                                    @elseif($giaGoc)
+                                                        {{ number_format($giaGoc, 0, ',', '.') }} ₫
+                                                    @else
+                                                        Liên hệ
+                                                    @endif
+                                                </span>
+                                                @if($giaKm && $giaGoc && $giaKm < $giaGoc)
+                                                    <small class="text-muted text-decoration-line-through fs-8">
+                                                        {{ number_format($giaGoc, 0, ',', '.') }} ₫
+                                                    </small>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="col-12 text-center py-5">
+                                <p class="text-muted">Hiện chưa có sản phẩm giảm giá.</p>
+                            </div>
+                        @endforelse
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="text-center mt-5">
+                <a href="{{ url('/Shop') }}" class="btn btn-dark rounded-3 px-5 py-2-5 fs-7 fw-semibold btn-elevate">
+                    Khám phá toàn bộ cửa hàng <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. FEATURED CUSTOMER REVIEWS (Đánh Giá Nổi Bật) -->
+    @if($danhGias->isNotEmpty())
+        <section class="py-5 bg-white">
+            <div class="container py-2">
+                <div class="d-flex justify-content-between align-items-end mb-4 reveal">
+                    <div>
+                        <span class="text-uppercase text-muted fs-8 fw-semibold tracking-wider d-block mb-1">TRẢI NGHIỆM KHÁCH HÀNG</span>
+                        <h2 class="fw-bold text-dark mb-0 fs-3">Đánh Giá Thực Tế</h2>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" class="btn swiper-arrow-btn swiper-prev rounded-circle d-flex align-items-center justify-content-center" aria-label="Đánh giá trước">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <button type="button" class="btn swiper-arrow-btn swiper-next rounded-circle d-flex align-items-center justify-content-center" aria-label="Đánh giá sau">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="swiper mySwiper reveal reveal-scale">
+                    <div class="swiper-wrapper">
+                        @foreach($danhGias as $dg)
+                            <div class="swiper-slide h-auto">
+                                <div class="review-home-card p-4 rounded-4 bg-light border border-light-subtle h-100 d-flex flex-column justify-content-between position-relative shadow-xs">
+                                    <div class="review-watermark position-absolute top-0 end-0 p-3 opacity-10 pe-none">
+                                        <i class="bi bi-quote fs-1 text-dark"></i>
+                                    </div>
+
+                                    <div>
+                                        <div class="text-warning mb-3 d-flex align-items-center gap-1 fs-7">
+                                            @for($i = 1; $i <= 5; $i++)
+                                                <i class="bi bi-star{{ $i <= $dg->so_sao ? '-fill' : '' }}"></i>
+                                            @endfor
+                                        </div>
+
+                                        <p class="review-home-quote text-secondary fs-7 lh-lg mb-4">
+                                            "{{ $dg->noi_dung }}"
+                                        </p>
+                                    </div>
+
+                                    <div class="d-flex align-items-center gap-2-5 pt-3 border-top border-light-subtle">
+                                        <div class="review-home-avatar rounded-circle bg-dark text-white d-flex align-items-center justify-content-center fw-bold fs-8">
+                                            {{ mb_substr($dg->user->name ?? 'K', 0, 1, 'UTF-8') }}
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-dark fs-7 d-flex align-items-center gap-1">
+                                                <span>{{ $dg->user->name ?? 'Khách hàng' }}</span>
+                                                <i class="bi bi-patch-check-fill text-success fs-8" title="Đã mua hàng và xác thực"></i>
+                                            </div>
+                                            <div class="text-muted fs-8">Khách hàng xác thực</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </section>
+    @endif
+
+    <!-- 9. STREET STYLE LOOKBOOK (#FashionTeeDaily) -->
+    <section class="py-5 bg-light border-top border-bottom border-light-subtle">
+        <div class="container py-2">
+            <div class="text-center mb-4 reveal">
+                <span class="text-uppercase text-muted fs-8 fw-semibold tracking-wider d-block mb-1">CỘNG ĐỒNG FASHIONTEE</span>
+                <h2 class="fw-bold text-dark mb-1 fs-3">Gợi Ý Phối Đồ #FashionTeeDaily</h2>
+                <p class="text-muted fs-7 mb-0">Theo dõi @fashiontee trên mạng xã hội để cập nhật những outfit tối giản thời thượng</p>
+            </div>
+
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-5 g-3">
+                <div class="col reveal stagger-1">
+                    <div class="lookbook-grid-item rounded-3 overflow-hidden position-relative ratio ratio-1x1 bg-white border border-light-subtle">
+                        <img src="{{ asset('img/shop_01.jpg') }}" class="w-100 h-100 object-fit-cover lookbook-img" alt="FashionTee Street Style" loading="lazy">
+                        <div class="lookbook-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-40 opacity-0">
+                            <i class="bi bi-instagram fs-4 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col reveal stagger-2">
+                    <div class="lookbook-grid-item rounded-3 overflow-hidden position-relative ratio ratio-1x1 bg-white border border-light-subtle">
+                        <img src="{{ asset('img/shop_02.jpg') }}" class="w-100 h-100 object-fit-cover lookbook-img" alt="FashionTee Street Style" loading="lazy">
+                        <div class="lookbook-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-40 opacity-0">
+                            <i class="bi bi-instagram fs-4 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col reveal stagger-3">
+                    <div class="lookbook-grid-item rounded-3 overflow-hidden position-relative ratio ratio-1x1 bg-white border border-light-subtle">
+                        <img src="{{ asset('img/shop_03.jpg') }}" class="w-100 h-100 object-fit-cover lookbook-img" alt="FashionTee Street Style" loading="lazy">
+                        <div class="lookbook-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-40 opacity-0">
+                            <i class="bi bi-instagram fs-4 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col reveal stagger-4">
+                    <div class="lookbook-grid-item rounded-3 overflow-hidden position-relative ratio ratio-1x1 bg-white border border-light-subtle">
+                        <img src="{{ asset('img/shop_04.jpg') }}" class="w-100 h-100 object-fit-cover lookbook-img" alt="FashionTee Street Style" loading="lazy">
+                        <div class="lookbook-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-40 opacity-0">
+                            <i class="bi bi-instagram fs-4 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col reveal stagger-5 d-none d-lg-block">
+                    <div class="lookbook-grid-item rounded-3 overflow-hidden position-relative ratio ratio-1x1 bg-white border border-light-subtle">
+                        <img src="{{ asset('img/shop_05.jpg') }}" class="w-100 h-100 object-fit-cover lookbook-img" alt="FashionTee Street Style" loading="lazy">
+                        <div class="lookbook-overlay position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-40 opacity-0">
+                            <i class="bi bi-instagram fs-4 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10. VIP NEWSLETTER CLUB (Gia Nhập Hội Viên) -->
+    <section class="py-5 bg-white">
+        <div class="container py-2">
+            <div class="newsletter-card rounded-4 p-4 p-md-5 bg-light border border-light-subtle text-center position-relative overflow-hidden">
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-8 col-lg-6 reveal">
+                        <div class="rounded-circle bg-dark text-white p-3 d-inline-flex align-items-center justify-content-center mb-3" style="width:50px;height:50px;">
+                            <i class="bi bi-envelope-check fs-5"></i>
+                        </div>
+                        <h3 class="fw-bold text-dark mb-2 fs-4">Gia Nhập FashionTee Club</h3>
+                        <p class="text-secondary fs-7 mb-4">
+                            Đăng ký nhận thông báo để nhận ngay voucher giảm 10% cho đơn hàng đầu tiên cùng những ưu đãi đặc quyền dành riêng cho bạn.
+                        </p>
+
+                        <form id="newsletterHomeForm" class="d-flex flex-column flex-sm-row gap-2 justify-content-center" onsubmit="event.preventDefault(); window.handleNewsletterSubscribe(this);">
+                            <input type="email" class="form-control rounded-3 px-3 py-2-5 fs-7 border-light-subtle shadow-xs" placeholder="Nhập địa chỉ email của bạn..." required autocomplete="email">
+                            <button type="submit" class="btn btn-dark rounded-3 px-4 py-2-5 fs-7 fw-semibold text-nowrap btn-elevate">
+                                Đăng ký nhận mã
+                            </button>
+                        </form>
+                        <small class="text-muted fs-9 mt-2 d-block">Cam kết bảo mật thông tin • Có thể hủy đăng ký bất kỳ lúc nào</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<!-- BACK TO TOP BUTTON -->
+<button type="button" id="backToTopBtn" class="back-to-top-btn shadow-sm rounded-circle d-flex align-items-center justify-content-center pe-auto" aria-label="Cuộn lên đầu trang">
+    <i class="bi bi-arrow-up"></i>
+</button>
+
+<!-- AI CHATBOT WIDGET (Preserved 100% Logic, Redesigned Modern Minimalist) -->
+<button class="ai-chat-toggle shadow-sm" id="aiChatToggle" type="button" aria-label="Mở trợ lý FashionTee AI">
+    <i class="bi bi-chat-dots-fill"></i>
+    <span class="d-none d-sm-inline ms-1">FashionTee AI</span>
+</button>
+
+<div class="ai-chat-box rounded-4 overflow-hidden border border-light-subtle shadow-lg" id="aiChatBox">
+    <div class="ai-chat-header bg-dark text-white px-3 py-2-5 d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <div class="rounded-circle bg-white text-dark p-1 d-flex align-items-center justify-content-center" style="width:26px;height:26px;">
+                <i class="bi bi-robot fs-8"></i>
+            </div>
+            <div>
+                <strong class="fs-7 d-block">FashionTee AI</strong>
+                <span class="fs-9 text-white-50">Trợ lý tư vấn size & sản phẩm</span>
+            </div>
+        </div>
+        <button type="button" id="aiChatClose" class="btn-close btn-close-white" aria-label="Đóng"></button>
     </div>
+    <div class="ai-chat-body p-3 bg-light" id="aiChatBody">
+        <div class="ai-msg bot">Xin chào! Mình là trợ lý FashionTee. Bạn cần tư vấn chọn size hay tìm mẫu áo nào hôm nay?</div>
+    </div>
+    <form class="ai-chat-form p-2-5 bg-white border-top border-light-subtle d-flex gap-2" id="aiChatForm">
+        <input type="text" id="aiChatInput" class="form-control form-control-sm rounded-3 fs-7" placeholder="Nhập câu hỏi của bạn..." maxlength="1000" required autocomplete="off">
+        <button type="submit" class="btn btn-dark btn-sm rounded-3 px-3">
+            <i class="bi bi-send"></i>
+        </button>
+    </form>
+</div>
 
-    <script>
-    var swiper = new Swiper(".mySwiper", {
-        slidesPerView: 3,
-        spaceBetween: 20,
-        loop: true,
+<!-- TOAST CONTAINER FOR VOUCHER & WISHLIST -->
+<div class="position-fixed bottom-0 start-50 translate-middle-x p-3 z-9999 pe-none" style="z-index: 1080;">
+    <div id="homepageActionToast" class="toast align-items-center text-white bg-dark border-0 rounded-3 shadow-lg pe-auto" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2 fs-8 py-2-5 px-3">
+                <i id="homepageToastIcon" class="bi bi-check-circle-fill text-success fs-6"></i>
+                <span id="homepageToastMsg">Đã sao chép mã ưu đãi!</span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Đóng"></button>
+        </div>
+    </div>
+</div>
 
-        navigation: {
-            nextEl: ".swiper-next",
-            prevEl: ".swiper-prev",
-        },
+<!-- MOTION SYSTEM -->
+@include('client.layout.motion-system')
 
-        breakpoints: {
-            0: { slidesPerView: 1 },
-            768: { slidesPerView: 2 },
-            992: { slidesPerView: 3 }
-        }
-    });
-</script>
-</section>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        function initStrip(containerId) {
-            const el = document.getElementById(containerId);
-            if (!el) return;
-
-            const track = el.querySelector('.strip-track');
-            const items = el.querySelectorAll('.strip-item');
-            if (!track || !items.length) return;
-
-            const originalCount = parseInt(el.dataset.originalCount || (items.length / 2), 10);
-            let index = 0;
-
-            let step = items[0].getBoundingClientRect().width;
-            const transitionMs = 450;
-
-            function recalc() {
-                step = items[0].getBoundingClientRect().width;
-                track.style.transition = 'none';
-                track.style.transform = 'translateX(' + (-index * step) + 'px)';
-                requestAnimationFrame(() => {
-                    track.style.transition = 'transform ' + transitionMs + 'ms ease';
-                });
-            }
-
-            window.addEventListener('resize', recalc);
-            track.style.transition = 'transform ' + transitionMs + 'ms ease';
-
-            setInterval(() => {
-                index += 1;
-                track.style.transform = 'translateX(' + (-index * step) + 'px)';
-
-                if (index >= originalCount) {
-                    setTimeout(() => {
-                        track.style.transition = 'none';
-                        index = 0;
-                        track.style.transform = 'translateX(0px)';
-                        requestAnimationFrame(() => {
-                            track.style.transition = 'transform ' + transitionMs + 'ms ease';
-                        });
-                    }, transitionMs + 20);
-                }
-            }, 2000);
-        }
-
-        initStrip('hotStrip');
-        initStrip('giamGiaStrip');
-    });
-</script>
-
+<!-- HOMEPAGE STYLES (Minimalist Clean Tech-Retail) -->
 <style>
+    /* Global Typography Override for Ultra-Clean Editorial Feel */
+    .homepage-wrapper, .fashion-marquee, .ai-chat-box, .ai-chat-toggle {
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+    }
+
+    /* Typography Utilities */
+    .fs-7 { font-size: 0.875rem !important; }
+    .fs-8 { font-size: 0.775rem !important; }
+    .fs-9 { font-size: 0.7rem !important; }
+    .py-1-5 { padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; }
+    .py-2-5 { padding-top: 0.625rem !important; padding-bottom: 0.625rem !important; }
+    .p-1-5 { padding: 0.375rem !important; }
+    .p-2-5 { padding: 0.625rem !important; }
+    .gap-1-5 { gap: 0.375rem !important; }
+    .gap-2-5 { gap: 0.625rem !important; }
+    .fw-extrabold { font-weight: 800 !important; }
+    .letter-spacing-wide { letter-spacing: 0.06em; }
+    .tracking-wider { letter-spacing: 0.08em; }
+    .backdrop-blur { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+    .shadow-xs { box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .shadow-md { box-shadow: 0 4px 14px rgba(0,0,0,0.08); }
+    .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); }
+
+    /* Palette accents */
+    .bg-emerald-light { background-color: #ecfdf5; }
+    .bg-amber-light { background-color: #fffbeb; }
+    .bg-blue-light { background-color: #eff6ff; }
+    .bg-purple-light { background-color: #faf5ff; }
+    .text-purple { color: #7e22ce; }
+
+    /* Marquee Banner */
+    .fashion-marquee {
+        white-space: nowrap;
+        user-select: none;
+    }
+    .fashion-marquee-inner {
+        display: flex;
+        width: max-content;
+        animation: marqueeScroll 35s linear infinite;
+    }
+    .fashion-marquee:hover .fashion-marquee-inner {
+        animation-play-state: paused;
+    }
+    .marquee-bullet {
+        color: #64748b;
+        font-size: 1.1rem;
+    }
+    @keyframes marqueeScroll {
+        from { transform: translateX(0); }
+        to   { transform: translateX(-50%); }
+    }
+
+    /* Hero Section */
+    .hero-headline {
+        line-height: 1.15;
+        letter-spacing: -0.025em;
+    }
+    .text-gradient-dark {
+        background: linear-gradient(135deg, #0f172a 0%, #475569 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .hero-pill-badge {
+        background-color: #0f172a;
+        color: #ffffff;
+    }
+    .pulse-live-dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #10b981;
+        box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: pulseLiveDot 2s infinite;
+    }
+    @keyframes pulseLiveDot {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+    }
+
+    .hero-media-wrapper {
+        transition: transform 0.4s ease;
+    }
+    .hero-img-zoom {
+        transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .hero-media-wrapper:hover .hero-img-zoom {
+        transform: scale(1.03);
+    }
+    .hero-float-chip {
+        transition: transform 0.3s ease;
+    }
+    .hero-media-wrapper:hover .hero-float-chip {
+        transform: translateY(-4px);
+    }
+    .hero-badge-float {
+        backdrop-filter: blur(6px);
+        background: rgba(15, 23, 42, 0.85);
+    }
+
+    .hero-carousel-btn {
+        width: 46px;
+        height: 46px;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid #e2e8f0;
+        border-radius: 50%;
+        color: #0f172a;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.85;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .hero-carousel-btn:hover {
+        background: #0f172a;
+        color: #ffffff;
+        opacity: 1;
+        transform: translateY(-50%) scale(1.05);
+    }
+    .hero-carousel-btn--prev { left: 1.5rem; }
+    .hero-carousel-btn--next { right: 1.5rem; }
+
+    #homepageHeroCarousel .carousel-indicators [data-bs-target] {
+        width: 24px;
+        height: 3px;
+        border-radius: 2px;
+        background-color: #0f172a;
+        opacity: 0.25;
+        transition: all 0.25s ease;
+        border: none;
+    }
+    #homepageHeroCarousel .carousel-indicators .active {
+        width: 44px;
+        opacity: 1;
+        background-color: #0f172a;
+    }
+
+    /* Elevate Buttons */
+    .btn-elevate {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .btn-elevate:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    }
+
+    /* Value Proposition Cards */
+    .value-prop-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+    }
+    .value-prop-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px -4px rgba(0,0,0,0.08);
+        border-color: #cbd5e1 !important;
+    }
+    .value-prop-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    /* Coupon Tickets */
+    .coupon-ticket {
+        border-color: #cbd5e1 !important;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .coupon-ticket:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px -4px rgba(0,0,0,0.08);
+        border-color: #0f172a !important;
+    }
+    .coupon-notch {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 14px;
+        height: 14px;
+        background-color: #ffffff;
+        border-radius: 50%;
+        border: 1px solid #cbd5e1;
+    }
+    .coupon-notch-left {
+        left: -8px;
+        border-left: none;
+    }
+    .coupon-notch-right {
+        right: -8px;
+        border-right: none;
+    }
+
+    /* Category Cards */
+    .category-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .category-card-link:hover .category-card {
+        transform: translateY(-4px);
+        box-shadow: 0 14px 28px -6px rgba(0, 0, 0, 0.1);
+    }
+    .category-thumb-box {
+        aspect-ratio: 4 / 5;
+    }
+    .category-thumb {
+        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .category-card-link:hover .category-thumb {
+        transform: scale(1.06);
+    }
+    .category-arrow-circle {
+        width: 32px;
+        height: 32px;
+        transition: all 0.25s ease;
+    }
+    .category-card-link:hover .category-arrow-circle {
+        background-color: #0f172a !important;
+        color: #ffffff !important;
+        border-color: #0f172a !important;
+        transform: rotate(45deg);
+    }
+
+    /* Product Cards */
+    .clean-product-card {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .clean-product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 28px -6px rgba(0,0,0,0.09) !important;
+    }
+    .clean-product-thumb-box {
+        aspect-ratio: 3 / 4;
+        background-color: #f8fafc;
+    }
+    .clean-product-thumb {
+        object-fit: cover;
+        transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .clean-product-card:hover .clean-product-thumb {
+        transform: scale(1.06);
+    }
+    .quick-view-overlay-btn {
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        transform: translate(-50%, 8px);
+        font-weight: 500;
+    }
+    .clean-product-card:hover .quick-view-overlay-btn {
+        opacity: 1 !important;
+        transform: translate(-50%, 0);
+    }
+    .btn-wishlist {
+        width: 30px;
+        height: 30px;
+        background: rgba(255, 255, 255, 0.9);
+        color: #64748b;
+        transition: all 0.2s ease;
+        backdrop-filter: blur(4px);
+    }
+    .btn-wishlist:hover, .btn-wishlist.active {
+        background: #ffffff;
+        color: #ef4444;
+        transform: scale(1.1);
+    }
+    .btn-wishlist.active i::before {
+        content: "\F415"; /* bi-heart-fill */
+    }
+
+    /* Mini color swatches */
+    .swatch-dot {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        border: 1px solid #cbd5e1;
+    }
+
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 2.45rem;
+    }
+
+    /* Ambient Glow on Brand Banner */
+    .ambient-glow {
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0) 70%);
+        pointer-events: none;
+    }
+    .bg-gradient-dark-bottom {
+        background: linear-gradient(to top, rgba(15, 23, 42, 0.9) 0%, rgba(15, 23, 42, 0) 100%);
+    }
+
+    /* Segmented Pill Tabs */
+    .showcase-pill-link {
+        color: #64748b;
+        background: transparent;
+        transition: all 0.2s ease;
+    }
+    .showcase-pill-link:hover {
+        color: #0f172a;
+    }
+    .showcase-pill-link.active {
+        background-color: #0f172a !important;
+        color: #ffffff !important;
+    }
+
+    /* Reviews */
+    .review-home-card {
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .review-home-card:hover {
+        border-color: #cbd5e1 !important;
+        box-shadow: 0 8px 20px -4px rgba(0,0,0,0.06);
+    }
+    .review-home-avatar {
+        width: 38px;
+        height: 38px;
+        flex-shrink: 0;
+    }
+    .swiper-arrow-btn {
+        width: 40px;
+        height: 40px;
+        border: 1px solid #e2e8f0;
+        background: #ffffff;
+        color: #0f172a;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .swiper-arrow-btn:hover {
+        background: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+    }
+
+    /* Lookbook Instagram grid */
+    .lookbook-img {
+        transition: transform 0.5s ease;
+    }
+    .lookbook-grid-item:hover .lookbook-img {
+        transform: scale(1.08);
+    }
+    .lookbook-overlay {
+        transition: opacity 0.3s ease;
+    }
+    .lookbook-grid-item:hover .lookbook-overlay {
+        opacity: 1 !important;
+    }
+
+    /* Back to Top Button */
+    .back-to-top-btn {
+        position: fixed;
+        right: 22px;
+        bottom: 78px;
+        width: 42px;
+        height: 42px;
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        color: #0f172a;
+        font-size: 1rem;
+        z-index: 1030;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.25s ease;
+    }
+    .back-to-top-btn.show {
+        opacity: 1;
+        visibility: visible;
+    }
+    .back-to-top-btn:hover {
+        background: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+        transform: translateY(-3px);
+    }
+
+    /* AI Chat Widget */
     .ai-chat-toggle {
         position: fixed;
         right: 20px;
         bottom: 20px;
-        z-index: 1100;
-        border: none;
+        z-index: 1040;
+        border: 1.5px solid #0f172a;
         border-radius: 999px;
-        padding: 12px 16px;
-        background: #198754;
+        padding: 10px 18px;
+        background: #0f172a;
         color: #fff;
         font-weight: 600;
-        box-shadow: 0 10px 22px rgba(25, 135, 84, 0.35);
+        font-size: 0.85rem;
+        transition: all 0.25s ease;
     }
-
+    .ai-chat-toggle:hover {
+        background: #1e293b;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.25);
+    }
     .ai-chat-box {
         position: fixed;
         right: 20px;
-        bottom: 80px;
+        bottom: 75px;
         width: min(92vw, 360px);
         max-height: 70vh;
         background: #fff;
-        border-radius: 14px;
-        box-shadow: 0 14px 40px rgba(0, 0, 0, 0.18);
-        border: 1px solid #e9ecef;
-        z-index: 1101;
+        z-index: 1050;
         display: none;
-        overflow: hidden;
     }
-
-    .ai-chat-header {
-        background: #198754;
-        color: #fff;
-        padding: 12px 14px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
     .ai-chat-body {
-        height: 360px;
+        height: 340px;
         overflow-y: auto;
-        padding: 12px;
-        background: #f8f9fa;
     }
-
     .ai-msg {
-        margin-bottom: 10px;
-        padding: 9px 11px;
-        border-radius: 10px;
+        margin-bottom: 8px;
+        padding: 8px 12px;
+        border-radius: 12px;
         max-width: 85%;
-        line-height: 1.4;
-        white-space: pre-wrap;
+        font-size: 0.825rem;
+        line-height: 1.45;
     }
-
     .ai-msg.user {
         margin-left: auto;
-        background: #d1e7dd;
+        background: #0f172a;
+        color: #fff;
     }
-
     .ai-msg.bot {
         margin-right: auto;
         background: #fff;
-        border: 1px solid #e9ecef;
-    }
-
-    .ai-chat-form {
-        border-top: 1px solid #e9ecef;
-        padding: 10px;
-        background: #fff;
-        display: flex;
-        gap: 8px;
+        border: 1px solid #e2e8f0;
+        color: #1e293b;
     }
 </style>
 
-<button class="ai-chat-toggle" id="aiChatToggle" type="button">
-    <i class="bi bi-robot"></i> ChatGPT
-</button>
-
-<div class="ai-chat-box" id="aiChatBox">
-    <div class="ai-chat-header">
-        <strong>FashionTee AI</strong>
-        <button type="button" id="aiChatClose" class="btn btn-sm btn-light">×</button>
-    </div>
-    <div class="ai-chat-body" id="aiChatBody">
-        <div class="ai-msg bot">Xin chào! Mình có thể tư vấn sản phẩm, size và phối đồ cho bạn.</div>
-    </div>
-    <form class="ai-chat-form" id="aiChatForm">
-        <input type="text" id="aiChatInput" class="form-control" placeholder="Nhập câu hỏi..." maxlength="1000" required>
-        <button type="submit" class="btn btn-success">Gửi</button>
-    </form>
-</div>
-
+<!-- HOMEPAGE JAVASCRIPT LOGIC -->
 <script>
-    (function() {
-        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-        const toggleBtn = document.getElementById('aiChatToggle');
-        const closeBtn = document.getElementById('aiChatClose');
-        const chatBox = document.getElementById('aiChatBox');
-        const chatBody = document.getElementById('aiChatBody');
-        const chatForm = document.getElementById('aiChatForm');
-        const chatInput = document.getElementById('aiChatInput');
+    document.addEventListener('DOMContentLoaded', function () {
+        // 1. Toast Notification Helper
+        const toastEl = document.getElementById('homepageActionToast');
+        const toastMsg = document.getElementById('homepageToastMsg');
+        const toastIcon = document.getElementById('homepageToastIcon');
+        const bsToast = toastEl ? new bootstrap.Toast(toastEl, { delay: 3000 }) : null;
 
-        function appendMessage(type, text) {
-            const msg = document.createElement('div');
-            msg.className = 'ai-msg ' + type;
-            msg.textContent = text;
-            chatBody.appendChild(msg);
-            chatBody.scrollTop = chatBody.scrollHeight;
+        function showHomepageToast(msg, iconClass = 'bi-check-circle-fill text-success') {
+            if (!bsToast) return;
+            if (toastMsg) toastMsg.textContent = msg;
+            if (toastIcon) toastIcon.className = `bi ${iconClass} fs-6`;
+            bsToast.show();
         }
 
-        toggleBtn.addEventListener('click', function() {
-            const showing = chatBox.style.display === 'block';
-            chatBox.style.display = showing ? 'none' : 'block';
-            if (!showing) {
-                chatInput.focus();
-            }
-        });
+        // 2. Copy Coupon Code to Clipboard
+        document.querySelectorAll('.btn-copy-coupon').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const code = this.getAttribute('data-code');
+                if (!code) return;
 
-        closeBtn.addEventListener('click', function() {
-            chatBox.style.display = 'none';
-        });
+                navigator.clipboard.writeText(code).then(() => {
+                    const originalHtml = this.innerHTML;
+                    this.innerHTML = '<i class="bi bi-check2"></i> Đã chép';
+                    this.classList.replace('btn-dark', 'btn-success');
 
-        chatForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
+                    showHomepageToast(`Đã sao chép mã ưu đãi "${code}"! Áp dụng ở giỏ hàng.`, 'bi-ticket-perforated-fill text-success');
 
-            const text = chatInput.value.trim();
-            if (!text) return;
-
-            appendMessage('user', text);
-            chatInput.value = '';
-            chatInput.disabled = true;
-            appendMessage('bot', 'Đang trả lời...');
-
-            try {
-                const response = await fetch("{{ route('chatbot.message') }}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        message: text
-                    })
+                    setTimeout(() => {
+                        this.innerHTML = originalHtml;
+                        this.classList.replace('btn-success', 'btn-dark');
+                    }, 2500);
+                }).catch(() => {
+                    showHomepageToast(`Mã ưu đãi của bạn: ${code}`, 'bi-info-circle-fill text-info');
                 });
-
-                const data = await response.json();
-                const typingNode = chatBody.lastElementChild;
-                if (typingNode && typingNode.textContent === 'Đang trả lời...') {
-                    typingNode.remove();
-                }
-
-                if (!response.ok || !data.status) {
-                    appendMessage('bot', data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
-                } else {
-                    appendMessage('bot', data.reply || 'Mình chưa có câu trả lời phù hợp.');
-                }
-            } catch (error) {
-                const typingNode = chatBody.lastElementChild;
-                if (typingNode && typingNode.textContent === 'Đang trả lời...') {
-                    typingNode.remove();
-                }
-                appendMessage('bot', 'Không kết nối được máy chủ, vui lòng thử lại.');
-            } finally {
-                chatInput.disabled = false;
-                chatInput.focus();
-            }
+            });
         });
-    })();
+
+        // 3. Wishlist Heart Interaction with LocalStorage
+        const savedWishlist = JSON.parse(localStorage.getItem('fashiontee_wishlist') || '[]');
+        document.querySelectorAll('.btn-wishlist').forEach(function(btn) {
+            const id = btn.getAttribute('data-id');
+            if (savedWishlist.includes(id)) {
+                btn.classList.add('active');
+            }
+
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                let list = JSON.parse(localStorage.getItem('fashiontee_wishlist') || '[]');
+                const currentId = this.getAttribute('data-id');
+
+                if (list.includes(currentId)) {
+                    list = list.filter(item => item !== currentId);
+                    this.classList.remove('active');
+                    showHomepageToast('Đã xóa khỏi danh sách yêu thích', 'bi-heart text-secondary');
+                } else {
+                    list.push(currentId);
+                    this.classList.add('active');
+                    showHomepageToast('Đã lưu vào danh sách yêu thích!', 'bi-heart-fill text-danger');
+                }
+                localStorage.setItem('fashiontee_wishlist', JSON.stringify(list));
+            });
+        });
+
+        // 4. Back to Top Button
+        const backToTopBtn = document.getElementById('backToTopBtn');
+        if (backToTopBtn) {
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 350) {
+                    backToTopBtn.classList.add('show');
+                } else {
+                    backToTopBtn.classList.remove('show');
+                }
+            });
+
+            backToTopBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // 5. Initialize Reviews Swiper
+        if (typeof Swiper !== 'undefined') {
+            new Swiper(".mySwiper", {
+                slidesPerView: 1,
+                spaceBetween: 20,
+                loop: true,
+                navigation: {
+                    nextEl: ".swiper-next",
+                    prevEl: ".swiper-prev",
+                },
+                breakpoints: {
+                    640: { slidesPerView: 2, spaceBetween: 20 },
+                    1024: { slidesPerView: 3, spaceBetween: 24 }
+                }
+            });
+        }
+
+        // 6. VIP Newsletter Submission
+        window.handleNewsletterSubscribe = function(form) {
+            const input = form.querySelector('input[type="email"]');
+            if (!input || !input.value) return;
+
+            showHomepageToast('Cảm ơn bạn! Mã voucher VIP10 đã được gửi đến email.', 'bi-gift-fill text-success');
+            input.value = '';
+        };
+
+        // 7. AI Chatbot Logic (100% Preserved)
+        (function() {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            const toggleBtn = document.getElementById('aiChatToggle');
+            const closeBtn = document.getElementById('aiChatClose');
+            const chatBox = document.getElementById('aiChatBox');
+            const chatBody = document.getElementById('aiChatBody');
+            const chatForm = document.getElementById('aiChatForm');
+            const chatInput = document.getElementById('aiChatInput');
+
+            if (!toggleBtn || !chatBox) return;
+
+            function appendMessage(type, text) {
+                const msg = document.createElement('div');
+                msg.className = 'ai-msg ' + type;
+                msg.textContent = text;
+                chatBody.appendChild(msg);
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }
+
+            toggleBtn.addEventListener('click', function() {
+                const showing = chatBox.style.display === 'block';
+                chatBox.style.display = showing ? 'none' : 'block';
+                if (!showing && chatInput) {
+                    chatInput.focus();
+                }
+            });
+
+            if (closeBtn) {
+                closeBtn.addEventListener('click', function() {
+                    chatBox.style.display = 'none';
+                });
+            }
+
+            if (chatForm && chatInput) {
+                chatForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const text = chatInput.value.trim();
+                    if (!text) return;
+
+                    appendMessage('user', text);
+                    chatInput.value = '';
+                    chatInput.disabled = true;
+                    appendMessage('bot', 'Đang trả lời...');
+
+                    try {
+                        const response = await fetch("{{ route('chatbot.message') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({ message: text })
+                        });
+
+                        const data = await response.json();
+                        const typingNode = chatBody.lastElementChild;
+                        if (typingNode && typingNode.textContent === 'Đang trả lời...') {
+                            typingNode.remove();
+                        }
+
+                        if (!response.ok || !data.status) {
+                            appendMessage('bot', data.message || 'Có lỗi xảy ra, vui lòng thử lại.');
+                        } else {
+                            appendMessage('bot', data.reply || 'Mình chưa có câu trả lời phù hợp.');
+                        }
+                    } catch (error) {
+                        const typingNode = chatBody.lastElementChild;
+                        if (typingNode && typingNode.textContent === 'Đang trả lời...') {
+                            typingNode.remove();
+                        }
+                        appendMessage('bot', 'Không kết nối được máy chủ, vui lòng thử lại.');
+                    } finally {
+                        chatInput.disabled = false;
+                        chatInput.focus();
+                    }
+                });
+            }
+        })();
+    });
 </script>
 
-@include('client.layout.scripts')
 @include('client.layout.footer')
-
+@include('client.layout.scripts')

@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\ChiTietDonHang;
 use App\Models\DonHang;
 use App\Models\SanPham;
+use App\Models\Voucher;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -47,18 +48,21 @@ class HomeController extends Controller
             ->take(4)
             ->get();
 
-        $sanPhamsMoiNhat = SanPham::with('category')
+        $sanPhamsMoiNhat = SanPham::with(['category', 'variants.color'])
             ->where('trang_thai', true)
             ->whereHas('danhMuc', fn ($q) => $q->where('trang_thai', 1))
             ->withMin(['variants' => function ($q) {
                 $q->where('trang_thai', 1);
             }], 'gia')
+            ->withMin(['variants' => function ($q) {
+                $q->where('trang_thai', 1);
+            }], 'gia_khuyen_mai')
             ->orderBy('id', 'desc')
             ->take(10)
             ->get();
 
         // -----------------------------
-        // Sản phẩm hot: top 3 theo số lượng đã mua
+        // Sản phẩm hot: top theo số lượng đã mua
         // -----------------------------
         $topHotProductIds = ChiTietDonHang::query()
             ->join('don_hangs', 'don_hang_chi_tiets.don_hang_id', '=', 'don_hangs.id')
@@ -73,7 +77,7 @@ class HomeController extends Controller
             )
             ->groupBy('don_hang_chi_tiets.san_pham_id')
             ->orderByDesc('total_quantity')
-            ->limit(6)
+            ->limit(8)
             ->pluck('san_pham_id')
             ->values();
 
@@ -81,13 +85,16 @@ class HomeController extends Controller
 
         $sanPhamsHot = collect();
         if (!empty($hotIds)) {
-            $sanPhamsHot = SanPham::with('category')
+            $sanPhamsHot = SanPham::with(['category', 'variants.color'])
                 ->where('trang_thai', true)
                 ->whereIn('id', $hotIds)
                 ->whereHas('variants', fn ($q) => $q->where('trang_thai', 1))
                 ->withMin(['variants' => function ($q) {
                     $q->where('trang_thai', 1);
                 }], 'gia')
+                ->withMin(['variants' => function ($q) {
+                    $q->where('trang_thai', 1);
+                }], 'gia_khuyen_mai')
                 ->orderByRaw('FIELD(id,' . implode(',', $hotIds) . ')')
                 ->get();
         }
@@ -101,25 +108,38 @@ class HomeController extends Controller
                 ->whereColumn('gia_khuyen_mai', '<', 'gia');
         };
 
-        $sanPhamsGiamGia = SanPham::with('category')
+        $sanPhamsGiamGia = SanPham::with(['category', 'variants.color'])
             ->where('trang_thai', true)
             ->whereHas('danhMuc', fn ($q) => $q->where('trang_thai', 1))
             ->whereHas('variants', $discountVariantsConstraint)
             ->withMin(['variants' => $discountVariantsConstraint], 'gia')
             ->withMin(['variants' => $discountVariantsConstraint], 'gia_khuyen_mai')
             ->orderBy('id', 'desc')
-            ->take(6)
+            ->take(8)
             ->get();
 
-        // Đánh giá nổi bật (ví dụ lấy 3 đánh giá mới nhất)
+        // Đánh giá nổi bật (lấy đánh giá tích cực 4-5 sao)
         $danhGias = BinhLuan::with('user')
             ->where('trang_thai', 1)
             ->where('hien_thi_trang_chu', 1)
             ->where('so_sao', '>=', 4)
             ->latest()
-            ->take(6)
+            ->take(8)
             ->get();
 
-        return view('client.Home', compact('sanPhamsMoiNhat', 'danhMucs', 'sanPhamsHot', 'sanPhamsGiamGia', 'danhGias'));
+        // Vouchers đang hiệu lực
+        $vouchers = Voucher::where('trang_thai', 1)
+            ->where(function ($q) {
+                $q->whereNull('ket_thuc')->orWhere('ket_thuc', '>=', Carbon::now());
+            })
+            ->where(function ($q) {
+                $q->whereNull('bat_dau')->orWhere('bat_dau', '<=', Carbon::now());
+            })
+            ->whereRaw('so_luong > COALESCE(da_su_dung, 0)')
+            ->orderByDesc('id')
+            ->take(4)
+            ->get();
+
+        return view('client.Home', compact('sanPhamsMoiNhat', 'danhMucs', 'sanPhamsHot', 'sanPhamsGiamGia', 'danhGias', 'vouchers'));
     }
 }

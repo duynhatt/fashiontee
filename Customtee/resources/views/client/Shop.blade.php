@@ -1,4 +1,5 @@
 @include('client.layout.header')
+
 @php
     $selectedDanhMucs = collect((array) request()->input('danh_muc', []))->map(fn($id) => (int) $id)->all();
     $selectedSizes = collect((array) request()->input('size', []))->map(fn($id) => (int) $id)->all();
@@ -9,524 +10,699 @@
         || !empty($selectedColors)
         || request()->filled('min_price')
         || request()->filled('max_price')
-        || !empty($selectedSort);
+        || !empty($selectedSort)
+        || !empty($tuKhoa);
 @endphp
-<div class="container py-5">
-    <div class="row">
-        <div class="col-lg-3">
-            <div class="card shadow-sm border-0" id="shopFilterSidebar">
-                <div class="card-body">
-                    <form action="{{ url('/Shop') }}" method="get" id="shopFilterForm">
+
+<!-- Main Shop Page Container -->
+<div class="shop-page bg-white text-dark pb-5">
+
+    <!-- Breadcrumb & Header Section -->
+    <div class="container py-3">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb shop-breadcrumb mb-0 align-items-center">
+                <li class="breadcrumb-item">
+                    <a href="{{ url('/') }}" class="text-decoration-none text-muted small">
+                        <i class="bi bi-house-door me-1"></i>Trang chủ
+                    </a>
+                </li>
+                <li class="breadcrumb-item active text-dark small fw-medium" aria-current="page">
+                    @if(!empty($tuKhoa))
+                        Tìm kiếm: "{{ $tuKhoa }}"
+                    @elseif(!empty($selectedDanhMucs) && count($selectedDanhMucs) === 1)
+                        @php
+                            $currentCat = $danhMucs->firstWhere('id', $selectedDanhMucs[0]);
+                        @endphp
+                        {{ $currentCat->ten_danh_muc ?? 'Cửa hàng' }}
+                    @else
+                        Cửa hàng thời trang
+                    @endif
+                </li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Shop Hero / Banner Strip -->
+    <div class="container mb-4">
+        <div class="shop-hero-banner reveal p-4 p-md-5 rounded-4 bg-light border border-light-subtle position-relative overflow-hidden">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <span class="badge bg-dark text-white px-3 py-1-5 rounded-pill fw-normal fs-8 letter-spacing-wide mb-2">
+                        Bộ Sưu Tập 2026
+                    </span>
+                    <h1 class="fw-bold text-dark mb-2 display-6">
                         @if(!empty($tuKhoa))
-                            <input type="hidden" name="q" value="{{ $tuKhoa }}">
+                            Kết quả tìm kiếm cho: "{{ $tuKhoa }}"
+                        @elseif(!empty($selectedDanhMucs) && count($selectedDanhMucs) === 1)
+                            {{ $currentCat->ten_danh_muc ?? 'Sản Phẩm Cao Cấp' }}
+                        @else
+                            Tất Cả Sản Phẩm
                         @endif
-
-                        {{-- DANH MỤC --}}
-                        <button class="filter-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#categoryCollapse">
-                            Danh mục
-                        </button>
-
-                        <div id="categoryCollapse" class="collapse show">
-                            <ul class="list-unstyled mt-2 mb-1">
-                                @foreach($danhMucs as $danhMuc)
-                                    @php
-                                        $isActiveCategory = in_array((int) $danhMuc->id, $selectedDanhMucs, true);
-                                        $categoryQuery = request()->query();
-                                        unset($categoryQuery['page']);
-                                        $categoryQuery['danh_muc'] = [$danhMuc->id];
-                                        $categoryUrl = url('/Shop') . '?' . http_build_query($categoryQuery);
-                                    @endphp
-                                    <li class="mb-2">
-                                        <a href="{{ $categoryUrl }}"
-                                           data-ajax-link="true"
-                                           class="category-hover-link {{ $isActiveCategory ? 'active' : '' }}">
-                                            {{ $danhMuc->ten_danh_muc }}
-                                        </a>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-
-                        {{-- KHOẢNG GIÁ --}}
-                        <button class="filter-toggle mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#priceCollapse">
-                            Khoảng giá
-                        </button>
-
-                        <div id="priceCollapse" class="collapse show">
-                            <div class="mb-2">
-                                <label for="min_price" class="form-label small mb-1">Giá từ</label>
-                                <input type="number"
-                                       id="min_price"
-                                       name="min_price"
-                                       min="0"
-                                       step="1"
-                                       class="form-control form-control-sm"
-                                       value="{{ request('min_price') }}"
-                                       placeholder="{{ (int) $minPrice }}">
-                            </div>
-
-                            <div class="mb-2">
-                                <label for="max_price" class="form-label small mb-1">Đến</label>
-                                <input type="number"
-                                       id="max_price"
-                                       name="max_price"
-                                       min="0"
-                                       step="1"
-                                       class="form-control form-control-sm"
-                                       value="{{ request('max_price') }}"
-                                       placeholder="{{ (int) $maxPrice }}">
-                            </div>
-                        </div>
-
-                        {{-- SIZE --}}
-                        <button class="filter-toggle mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#sizeCollapse">
-                            Kích thước
-                        </button>
-
-                        <div id="sizeCollapse" class="collapse show">
-                            <ul class="list-unstyled mt-2 mb-1">
-                                @foreach($sizes as $size)
-                                    <li class="mb-2">
-                                        <label class="d-flex align-items-center gap-2 mb-0 filter-check-label">
-                                            <input type="checkbox"
-                                                   class="form-check-input m-0"
-                                                   name="size[]"
-                                                   value="{{ $size->id }}"
-                                                   {{ in_array((int) $size->id, $selectedSizes, true) ? 'checked' : '' }}>
-                                            <span>{{ $size->ten_kich_thuoc }}</span>
-                                        </label>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-
-                        {{-- MÀU --}}
-                        <button class="filter-toggle mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#colorCollapse">
-                            Màu sắc
-                        </button>
-
-                        <div id="colorCollapse" class="collapse show">
-                            <ul class="list-unstyled mt-2 mb-1">
-                                @foreach($colors as $color)
-                                    <li class="mb-2">
-                                        <label class="d-flex align-items-center gap-2 mb-0 filter-check-label">
-                                            <input type="checkbox"
-                                                   class="form-check-input m-0"
-                                                   name="color[]"
-                                                   value="{{ $color->id }}"
-                                                   {{ in_array((int) $color->id, $selectedColors, true) ? 'checked' : '' }}>
-                                            <span>{{ $color->ten_mau }}</span>
-                                        </label>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-
-                        {{-- SẮP XẾP --}}
-                        <button class="filter-toggle mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#sortCollapse">
-                            Sắp xếp
-                        </button>
-
-                        <div id="sortCollapse" class="collapse show">
-                            <select name="sort" class="form-select form-select-sm mt-2">
-                                <option value="">Mặc định</option>
-                                <option value="giá tăng dần" {{ $selectedSort === 'price_asc' ? 'selected' : '' }}>Giá tăng dần</option>
-                                <option value="giá giảm dần" {{ $selectedSort === 'price_desc' ? 'selected' : '' }}>Giá giảm dần</option>
-                                <option value="mới nhất" {{ $selectedSort === 'new' ? 'selected' : '' }}>Mới nhất</option>
-                            </select>
-                        </div>
-
-                        <div class="d-grid gap-2 mt-3">
-                            <button type="submit" class="btn btn-success btn-sm">Áp dụng bộ lọc</button>
-                            @if($hasAnyFilter)
-                                <a href="{{ url('/Shop') . (!empty($tuKhoa) ? '?q=' . urlencode($tuKhoa) : '') }}"
-                                   class="btn btn-outline-secondary btn-sm"
-                                   data-ajax-link="true">Xóa bộ lọc</a>
-                            @endif
-                        </div>
-                    </form>
+                    </h1>
+                    <p class="text-muted fs-7 mb-0" style="max-width: 600px;">
+                        Khám phá các thiết kế áo thun may đo chuẩn form, chất liệu cotton thoáng mát và phong cách tối giản thời thượng.
+                    </p>
                 </div>
             </div>
         </div>
+    </div>
 
-        <style>
-            .filter-toggle {
-                width: 100%;
-                text-align: left;
-                background: none;
-                border: none;
-                font-weight: 600;
-                padding: 8px 0;
-                border-bottom: 1px solid #eee;
-                position: relative;
-            }
+    <!-- Main Content Layout -->
+    <div class="container">
+        <div class="row g-4">
 
-            .filter-toggle::after {
-                content: "▾";
-                position: absolute;
-                right: 0;
-                transition: transform 0.3s;
-            }
+            <!-- FILTER SIDEBAR (Desktop Sticky + Mobile Drawer) -->
+            <div class="col-lg-3">
 
-            .filter-toggle[aria-expanded="true"]::after {
-                transform: rotate(180deg);
-            }
+                <!-- Mobile Backdrop Overlay -->
+                <div class="shop-filter-backdrop d-lg-none" id="shopFilterBackdrop"></div>
 
-            .filter-link {
-                display: block;
-                padding: 5px 8px;
-                border-radius: 6px;
-                color: #333;
-                text-decoration: none;
-            }
+                <!-- Filter Panel -->
+                <aside class="shop-filter-sidebar" id="shopFilterSidebar">
+                    <div class="shop-filter-inner reveal reveal-left p-3 p-lg-4 rounded-4 bg-white border border-light-subtle shadow-xs">
 
-            .filter-link:hover {
-                background: #f1f1f1;
-            }
-
-            .filter-check-label {
-                cursor: pointer;
-                font-size: 14px;
-            }
-
-            .filter-check-label span {
-                line-height: 1.2;
-            }
-
-            .active-filter-chip {
-                background: #f3f8f4;
-                border: 1px solid #d3e9d6;
-                color: #1f5130;
-                padding: 4px 10px;
-                border-radius: 999px;
-                font-size: 13px;
-                text-decoration: none;
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-            }
-
-            .active-filter-chip:hover {
-                background: #e7f5ea;
-                color: #0f3c21;
-            }
-
-            .shop-loading {
-                opacity: 0.55;
-                pointer-events: none;
-                transition: opacity 0.2s ease;
-            }
-
-
-            .category-link {
-                color: #000000 !important;
-                display: block !important;
-                transition: all 0.3s ease;
-                font-size: 24px !important;
-            }
-
-            .category-link:hover {
-                color: #28a745 !important;
-                padding-left: 10px !important;
-            }
-
-            .category-hover-link {
-                display: block;
-                color: #333;
-                text-decoration: none;
-                border-radius: 8px;
-                padding: 8px 10px;
-                transition: all 0.2s ease;
-                border: 1px solid transparent;
-            }
-
-            .category-hover-link:hover {
-                background: #f3f8f4;
-                border-color: #d3e9d6;
-                color: #1f5130;
-                transform: translateX(4px);
-            }
-
-            .category-hover-link.active {
-                background: #eaf6ec;
-                border-color: #bde0c4;
-                color: #1b5e20;
-                font-weight: 600;
-            }
-
-            /* Đồng bộ chiều cao card sản phẩm */
-            .product-wap {
-                display: flex;
-                flex-direction: column;
-                height: 100%;
-            }
-
-            .product-wap > .card {
-                border: 0;
-            }
-
-            .product-wap .card-body {
-                flex: 1;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-            }
-
-            .product-wap .product-title {
-                min-height: 56px; /* giữ phần tên 2 dòng cho đều */
-                display: -webkit-box;
-                -webkit-line-clamp: 2;
-                -webkit-box-orient: vertical;
-                overflow: hidden;
-            }
-        </style>
-
-        <div class="col-lg-9" id="shopContent">
-            <div class="row">
-                <div class="col-md-6">
-                    <ul class="list-inline shop-top-menu pb-3 pt-1">
-                        <li class="list-inline-item">
-                            <a class="h3 text-dark text-decoration-none mr-3" href="{{ url('/Shop') }}">Tất cả</a>
-                        </li>
-                    </ul>
-                    @if(!empty($tuKhoa))
-                        <p class="mb-0 text-muted">Kết quả tìm kiếm cho: <strong>"{{ $tuKhoa }}"</strong></p>
-                    @endif
-                </div>
-                <div class="col-md-6 pb-4">
-                    <form action="{{ url('/Shop') }}" method="get" class="d-flex justify-content-end" id="shopSearchForm">
-                        @foreach(request()->except(['q', 'page']) as $key => $value)
-                            @if(is_array($value))
-                                @foreach($value as $item)
-                                    <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
-                                @endforeach
-                            @else
-                                <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                            @endif
-                        @endforeach
-                        <div class="input-group" style="max-width: 280px;">
-                            <input type="text" name="q" class="form-control" placeholder="Tìm sản phẩm..."
-value="{{ old('q', $tuKhoa ?? request('q')) }}">
-                            <button type="submit" class="btn btn-success">
-                                Tìm
-                            </button>
+                        <!-- Mobile Drawer Header -->
+                        <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom border-light-subtle d-lg-none">
+                            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                <i class="bi bi-funnel"></i> Bộ lọc sản phẩm
+                            </h6>
+                            <button type="button" class="btn-close" id="closeFilterMobileBtn" aria-label="Đóng bộ lọc"></button>
                         </div>
-                    </form>
-                </div>
+
+                        <form action="{{ url('/Shop') }}" method="get" id="shopFilterForm">
+                            @if(!empty($tuKhoa))
+                                <input type="hidden" name="q" value="{{ $tuKhoa }}">
+                            @endif
+
+                            <!-- 1. CATEGORIES -->
+                            <div class="filter-section mb-4">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="filter-title fw-bold text-dark fs-7 mb-0">Danh mục</h6>
+                                </div>
+                                <ul class="list-unstyled mb-0 d-flex flex-column gap-1 category-filter-list">
+                                    <li>
+                                        @php
+                                            $allQuery = request()->except(['danh_muc', 'page']);
+                                            $allUrl = url('/Shop') . ($allQuery ? '?' . http_build_query($allQuery) : '');
+                                        @endphp
+                                        <a href="{{ $allUrl }}"
+                                           data-ajax-link="true"
+                                           class="category-filter-item d-flex justify-content-between align-items-center py-2 px-2-5 rounded-3 text-decoration-none {{ empty($selectedDanhMucs) ? 'active' : '' }}">
+                                            <span class="fs-7">Tất cả sản phẩm</span>
+                                            <i class="bi bi-chevron-right fs-8"></i>
+                                        </a>
+                                    </li>
+                                    @foreach($danhMucs as $danhMuc)
+                                        @php
+                                            $isActiveCategory = in_array((int) $danhMuc->id, $selectedDanhMucs, true);
+                                            $categoryQuery = request()->query();
+                                            unset($categoryQuery['page']);
+                                            $categoryQuery['danh_muc'] = [$danhMuc->id];
+                                            $categoryUrl = url('/Shop') . '?' . http_build_query($categoryQuery);
+                                        @endphp
+                                        <li>
+                                            <a href="{{ $categoryUrl }}"
+                                               data-ajax-link="true"
+                                               class="category-filter-item d-flex justify-content-between align-items-center py-2 px-2-5 rounded-3 text-decoration-none {{ $isActiveCategory ? 'active' : '' }}">
+                                                <span class="fs-7">{{ $danhMuc->ten_danh_muc }}</span>
+                                                <i class="bi bi-chevron-right fs-8"></i>
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </div>
+
+                            <hr class="border-light-subtle my-3">
+
+                            <!-- 2. PRICE RANGE -->
+                            <div class="filter-section mb-4">
+                                <h6 class="filter-title fw-bold text-dark fs-7 mb-2">Khoảng giá (₫)</h6>
+                                <div class="row g-2 mb-2">
+                                    <div class="col-6">
+                                        <label for="min_price" class="form-label fs-8 text-muted mb-1">Từ</label>
+                                        <input type="number"
+                                               id="min_price"
+                                               name="min_price"
+                                               min="0"
+                                               step="1000"
+                                               class="form-control form-control-sm rounded-2 fs-7"
+                                               value="{{ request('min_price') }}"
+                                               placeholder="{{ $minPrice ? number_format($minPrice, 0, ',', '.') : '0' }}">
+                                    </div>
+                                    <div class="col-6">
+                                        <label for="max_price" class="form-label fs-8 text-muted mb-1">Đến</label>
+                                        <input type="number"
+                                               id="max_price"
+                                               name="max_price"
+                                               min="0"
+                                               step="1000"
+                                               class="form-control form-control-sm rounded-2 fs-7"
+                                               value="{{ request('max_price') }}"
+                                               placeholder="{{ $maxPrice ? number_format($maxPrice, 0, ',', '.') : 'Tối đa' }}">
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-dark btn-sm w-100 rounded-2 py-1-5 fs-7 fw-medium">
+                                    Áp dụng giá
+                                </button>
+                            </div>
+
+                            <hr class="border-light-subtle my-3">
+
+                            <!-- 3. SIZES (Styled Tiles) -->
+                            <div class="filter-section mb-4">
+                                <h6 class="filter-title fw-bold text-dark fs-7 mb-2">Kích thước</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach($sizes as $size)
+                                        @php
+                                            $isSizeChecked = in_array((int) $size->id, $selectedSizes, true);
+                                        @endphp
+                                        <label class="size-filter-label cursor-pointer mb-0">
+                                            <input type="checkbox"
+                                                   class="d-none size-filter-checkbox"
+                                                   name="size[]"
+                                                   value="{{ $size->id }}"
+                                                   {{ $isSizeChecked ? 'checked' : '' }}>
+                                            <span class="size-filter-tile rounded-3 px-3 py-1-5 fs-7 fw-medium d-inline-flex align-items-center justify-content-center">
+                                                {{ $size->ten_kich_thuoc }}
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <hr class="border-light-subtle my-3">
+
+                            <!-- 4. COLORS (Styled Swatches) -->
+                            <div class="filter-section mb-4">
+                                <h6 class="filter-title fw-bold text-dark fs-7 mb-2">Màu sắc</h6>
+                                <div class="d-flex flex-wrap gap-2">
+                                    @foreach($colors as $color)
+                                        @php
+                                            $isColorChecked = in_array((int) $color->id, $selectedColors, true);
+                                        @endphp
+                                        <label class="color-filter-label cursor-pointer mb-0">
+                                            <input type="checkbox"
+                                                   class="d-none color-filter-checkbox"
+                                                   name="color[]"
+                                                   value="{{ $color->id }}"
+                                                   {{ $isColorChecked ? 'checked' : '' }}>
+                                            <span class="color-filter-pill rounded-pill px-2-5 py-1 d-inline-flex align-items-center gap-2 border">
+                                                <span class="color-swatch-circle" style="background-color: {{ $color->ma_mau ?? '#000000' }};"></span>
+                                                <span class="color-filter-name fs-8">{{ $color->ten_mau }}</span>
+                                            </span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+
+                            <!-- Hidden Sort Input to preserve sort on filter change -->
+                            @if(!empty($selectedSort))
+                                <input type="hidden" name="sort" value="{{ $selectedSort }}">
+                            @endif
+
+                            <!-- RESET FILTER BUTTON -->
+                            @if($hasAnyFilter)
+                                <div class="pt-2">
+                                    <a href="{{ url('/Shop') . (!empty($tuKhoa) ? '?q=' . urlencode($tuKhoa) : '') }}"
+                                       class="btn btn-outline-secondary btn-sm w-100 rounded-3 py-2 fs-7 d-flex align-items-center justify-content-center gap-2"
+                                       data-ajax-link="true">
+                                        <i class="bi bi-x-circle"></i> Xóa tất cả bộ lọc
+                                    </a>
+                                </div>
+                            @endif
+
+                        </form>
+
+                    </div>
+                </aside>
             </div>
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                {{-- <p class="mb-0 text-muted small" id="shopResultsCount">Hiển thị {{ $sanPhams->count() }} / {{ $sanPhams->total() }} sản phẩm</p> --}}
-                <div class="d-flex flex-wrap gap-2" id="shopActiveFilters">
-                    @if($hasAnyFilter)
+
+            <!-- RIGHT: MAIN PRODUCT GRID & TOOLBAR -->
+            <div class="col-lg-9" id="shopContent">
+                <!-- Toolbar (Search + Sort + Results Count + Mobile Filter Trigger) -->
+                <div class="shop-toolbar reveal p-3 rounded-4 bg-light border border-light-subtle mb-4" id="shopToolbar">
+                    <div class="row g-3 align-items-center justify-content-between">
+
+                        <!-- Left: Results count & Mobile Trigger -->
+                        <div class="col-12 col-md-5 d-flex align-items-center gap-2">
+                            <!-- Mobile Filter Drawer Toggle Button -->
+                            <button type="button" class="btn btn-dark btn-sm rounded-3 py-2 px-3 d-lg-none d-inline-flex align-items-center gap-2 flex-shrink-0" id="openFilterMobileBtn">
+                                <i class="bi bi-funnel"></i>
+                                <span>Bộ lọc</span>
+                                @if($hasAnyFilter)
+                                    <span class="badge bg-white text-dark rounded-pill px-1-5 py-0-5 fs-8">!</span>
+                                @endif
+                            </button>
+
+                            <div class="text-muted fs-7">
+                                Hiển thị <strong class="text-dark">{{ $sanPhams->total() }}</strong> sản phẩm
+                            </div>
+                        </div>
+
+                        <!-- Right: Search Bar & Sort Dropdown -->
+                        <div class="col-12 col-md-7">
+                            <div class="d-flex align-items-center gap-2 justify-content-md-end flex-wrap flex-sm-nowrap">
+
+                                <!-- Search Form -->
+                                <form action="{{ url('/Shop') }}" method="get" class="flex-grow-1 flex-sm-grow-0" id="shopSearchForm" style="min-width: 200px;">
+                                    @foreach(request()->except(['q', 'page']) as $key => $value)
+                                        @if(is_array($value))
+                                            @foreach($value as $item)
+                                                <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
+                                            @endforeach
+                                        @else
+                                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                        @endif
+                                    @endforeach
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" name="q" class="form-control rounded-start-3 border-secondary-subtle"
+                                               placeholder="Tìm sản phẩm..."
+                                               value="{{ old('q', $tuKhoa ?? request('q')) }}"
+                                               aria-label="Tìm kiếm">
+                                        <button type="submit" class="btn btn-dark rounded-end-3 px-3" aria-label="Tìm kiếm">
+                                            <i class="bi bi-search"></i>
+                                        </button>
+                                    </div>
+                                </form>
+
+                                <!-- Sort Dropdown -->
+                                <div class="sort-select-wrapper flex-shrink-0">
+                                    <select class="form-select form-select-sm rounded-3 border-secondary-subtle fs-7 fw-medium" id="shopSortSelect" aria-label="Sắp xếp sản phẩm">
+                                        <option value="" {{ empty($selectedSort) ? 'selected' : '' }}>Mặc định</option>
+                                        <option value="new" {{ $selectedSort === 'new' ? 'selected' : '' }}>Mới nhất</option>
+                                        <option value="price_asc" {{ $selectedSort === 'price_asc' ? 'selected' : '' }}>Giá tăng dần</option>
+                                        <option value="price_desc" {{ $selectedSort === 'price_desc' ? 'selected' : '' }}>Giá giảm dần</option>
+                                    </select>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Active Filter Tags Chips -->
+                @if($hasAnyFilter)
+                    <div class="shop-active-filters d-flex flex-wrap align-items-center gap-2 mb-4" id="shopActiveFilters">
+                        <span class="fs-8 text-muted fw-medium me-1">Đang lọc theo:</span>
+
+                        @if(!empty($tuKhoa))
+                            <a class="active-filter-chip chip-pop-in"
+                               data-ajax-link="true"
+                               href="{{ request()->fullUrlWithQuery(['q' => null, 'page' => null]) }}">
+                                Từ khóa: "{{ $tuKhoa }}" <i class="bi bi-x"></i>
+                            </a>
+                        @endif
+
                         @foreach($danhMucs as $danhMuc)
                             @if(in_array((int) $danhMuc->id, $selectedDanhMucs, true))
-                                <a class="active-filter-chip"
+                                <a class="active-filter-chip chip-pop-in"
                                    data-ajax-link="true"
                                    href="{{ request()->fullUrlWithQuery(['danh_muc' => array_values(array_diff($selectedDanhMucs, [(int) $danhMuc->id])), 'page' => null]) }}">
-                                    Danh mục: {{ $danhMuc->ten_danh_muc }} <span>&times;</span>
+                                    {{ $danhMuc->ten_danh_muc }} <i class="bi bi-x"></i>
                                 </a>
                             @endif
                         @endforeach
 
                         @foreach($sizes as $size)
                             @if(in_array((int) $size->id, $selectedSizes, true))
-                                <a class="active-filter-chip"
+                                <a class="active-filter-chip chip-pop-in"
                                    data-ajax-link="true"
                                    href="{{ request()->fullUrlWithQuery(['size' => array_values(array_diff($selectedSizes, [(int) $size->id])), 'page' => null]) }}">
-                                    Size: {{ $size->ten_kich_thuoc }} <span>&times;</span>
+                                    Size {{ $size->ten_kich_thuoc }} <i class="bi bi-x"></i>
                                 </a>
                             @endif
                         @endforeach
 
                         @foreach($colors as $color)
                             @if(in_array((int) $color->id, $selectedColors, true))
-                                <a class="active-filter-chip"
+                                <a class="active-filter-chip chip-pop-in"
                                    data-ajax-link="true"
                                    href="{{ request()->fullUrlWithQuery(['color' => array_values(array_diff($selectedColors, [(int) $color->id])), 'page' => null]) }}">
-                                    Màu: {{ $color->ten_mau }} <span>&times;</span>
+                                    Màu {{ $color->ten_mau }} <i class="bi bi-x"></i>
                                 </a>
                             @endif
                         @endforeach
 
                         @if(request()->filled('min_price') || request()->filled('max_price'))
-                            <a class="active-filter-chip"
+                            <a class="active-filter-chip chip-pop-in"
                                data-ajax-link="true"
                                href="{{ request()->fullUrlWithQuery(['min_price' => null, 'max_price' => null, 'page' => null]) }}">
-                                Giá: {{ request('min_price', 0) }} - {{ request('max_price', '...') }} <span>&times;</span>
+                                Giá: {{ number_format((int) request('min_price', 0), 0, ',', '.') }}đ - {{ request('max_price') ? number_format((int) request('max_price'), 0, ',', '.') . 'đ' : 'Tối đa' }} <i class="bi bi-x"></i>
                             </a>
                         @endif
 
                         @if(!empty($selectedSort))
-                            <a class="active-filter-chip"
+                            <a class="active-filter-chip chip-pop-in"
                                data-ajax-link="true"
                                href="{{ request()->fullUrlWithQuery(['sort' => null, 'page' => null]) }}">
-                                Sắp xếp: {{ $selectedSort }} <span>&times;</span>
+                                Sắp xếp: {{ $selectedSort === 'price_asc' ? 'Giá tăng dần' : ($selectedSort === 'price_desc' ? 'Giá giảm dần' : 'Mới nhất') }} <i class="bi bi-x"></i>
                             </a>
                         @endif
-                    @endif
-                </div>
-            </div>
-            <div class="row" id="shopProductsGrid">
-                @forelse($sanPhams as $sp)
-                <div class="col-md-4 mb-4">
-                    <div class="card product-wap rounded-0">
-                        <div class="card rounded-0">
-                            <img class="card-img rounded-0 img-fluid" src="{{ $sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg') }}" alt="{{ $sp->ten_san_pham }}">
-                            <div class="card-img-overlay rounded-0 product-overlay d-flex align-items-center justify-content-center">
-                                <ul class="list-unstyled">
-                                    <li><a class="btn btn-success text-white"  href="{{ route('sanpham.chitiet', $sp->slug) }}"><i class="far fa-heart"></i></a></li>
-                                    <li>
-                                        <a class="btn btn-success text-white mt-2"
-                                            href="{{ route('sanpham.chitiet', $sp->slug) }}">
-                                            <i class="far fa-eye"></i>
+
+                        <a href="{{ url('/Shop') . (!empty($tuKhoa) ? '?q=' . urlencode($tuKhoa) : '') }}"
+                           class="text-decoration-none text-danger small ms-2 fw-medium fs-8"
+                           data-ajax-link="true">
+                            Xóa hết
+                        </a>
+                    </div>
+                @endif
+
+                <!-- PRODUCT GRID -->
+                <div class="row row-cols-2 row-cols-md-3 g-3 g-md-4" id="shopProductsGrid">
+                    @forelse($sanPhams as $sp)
+                        <div class="col reveal stagger-{{ (($loop->iteration - 1) % 6) + 1 }}">
+                            <div class="card clean-product-card h-100 border-0 rounded-3 overflow-hidden bg-transparent">
+
+                                <!-- Image Showcase Frame -->
+                                <div class="clean-product-thumb-box position-relative rounded-3 overflow-hidden bg-light border border-light-subtle">
+                                    <!-- Badges -->
+                                    <div class="position-absolute top-0 start-0 m-2 z-2">
+                                        <span class="badge bg-dark text-white px-2 py-1 rounded-pill fw-normal fs-8">
+                                            Chính hãng
+                                        </span>
+                                    </div>
+
+                                    <a href="{{ route('sanpham.chitiet', $sp->slug) }}" class="d-block w-100 h-100">
+                                        <img class="clean-product-thumb w-100 h-100"
+                                             src="{{ $sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
+                                             loading="lazy"
+                                             decoding="async"
+                                             alt="{{ $sp->ten_san_pham }}">
+                                    </a>
+
+                                    <!-- Quick Detail Hover Action Button -->
+                                    <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
+                                       class="quick-view-overlay-btn btn btn-dark btn-sm rounded-pill position-absolute bottom-0 start-50 translate-middle-x mb-3 opacity-0 text-nowrap px-3 shadow-sm">
+                                        Xem chi tiết
+                                    </a>
+                                </div>
+
+                                <!-- Product Info -->
+                                <div class="card-body p-2 pt-3 d-flex flex-column justify-content-between">
+                                    <div>
+                                        <span class="text-muted fs-8 text-uppercase d-block mb-1 tracking-wider">
+                                            {{ $sp->category->ten_danh_muc ?? 'Fashion' }}
+                                        </span>
+                                        <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
+                                           class="clean-product-title text-decoration-none text-dark fw-medium d-block fs-7 mb-2 text-truncate-2">
+                                            {{ $sp->ten_san_pham }}
                                         </a>
-                                    </li>
-                                    <li><a class="btn btn-success text-white mt-2"  href="{{ route('sanpham.chitiet', $sp->slug) }}"><i class="fas fa-cart-plus"></i></a></li>
-                                </ul>
+                                    </div>
+                                    <div class="clean-product-price fw-bold text-dark fs-7">
+                                        @if($sp->variants_min_gia)
+                                            {{ number_format($sp->variants_min_gia, 0, ',', '.') }} ₫
+                                        @else
+                                            Liên hệ
+                                        @endif
+                                    </div>
+                                </div>
+
                             </div>
                         </div>
-                        <div class="card-body">
-                            <a  href="{{ route('sanpham.chitiet', $sp->slug) }}" class="h3 text-decoration-none product-title">{{ $sp->ten_san_pham }}</a>
-                            {{-- <ul class="w-100 list-unstyled d-flex justify-content-between mb-0">
-                                    <li class="text-muted small">{{ $sp->category->ten_danh_muc ?? '' }}</li>
-                            </ul> --}}
-                            <p class="text-center mb-0 mt-2">
-                                @if($sp->variants_min_gia)
-                                {{ number_format($sp->variants_min_gia, 0, ',', '.') }}đ
-                                @else
-                                Liên hệ
-                                @endif
+                    @empty
+                        <!-- Empty State -->
+                        <div class="col-12 text-center py-5 my-4">
+                            <div class="text-muted mb-3 fs-1">
+                                <i class="bi bi-search"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark mb-2">Không tìm thấy sản phẩm nào</h5>
+                            <p class="text-muted fs-7 mb-4" style="max-width: 420px; margin: 0 auto;">
+                                Hãy thử thay đổi từ khóa tìm kiếm hoặc bỏ bớt các tiêu chí lọc để xem thêm các mẫu áo khác.
                             </p>
+                            <a href="{{ url('/Shop') }}" class="btn btn-dark rounded-3 px-4 py-2 fs-7 fw-semibold" data-ajax-link="true">
+                                Xem tất cả sản phẩm
+                            </a>
                         </div>
+                    @endforelse
+                </div>
+
+                <!-- PAGINATION -->
+                <div class="row mt-5 reveal reveal-fade" id="shopPaginationWrap">
+                    <div class="col-12 d-flex justify-content-center">
+                        {{ $sanPhams->links('pagination::bootstrap-5') }}
                     </div>
                 </div>
-             @empty
-                <div class="col-12 text-center py-5">
-                    <p class="text-muted">Chưa có sản phẩm nào trong danh mục này.</p>
-                    <a href="{{ url('/Shop') }}" class="btn btn-success">Xem tất cả sản phẩm</a>
-                </div>
-                @endforelse
+
             </div>
-<div class="row mt-5" id="shopPaginationWrap">
-                <div class="col-12 d-flex justify-content-center">
-                    {{ $sanPhams->links('pagination::bootstrap-4') }}
-                </div>
-            </div>
+
         </div>
-
     </div>
-</div>
 
-<section class="bg-light py-5">
-    <div class="container my-4">
-        <div class="row text-center py-3">
-            <div class="col-lg-6 m-auto">
-                <h1 class="h1">Our Brands</h1>
-            </div>
-            <div class="col-lg-9 m-auto tempaltemo-carousel">
-                <div class="row d-flex flex-row">
-                    <!--Controls-->
-                    <div class="col-1 align-self-center">
-                        <a class="h1" href="#multi-item-example" role="button" data-bs-slide="prev">
-                            <i class="text-light fas fa-chevron-left"></i>
-                        </a>
-                    </div>
-                    <!--End Controls-->
-
-                    <!--Carousel Wrapper-->
-                    <div class="col">
-                        <div class="carousel slide carousel-multi-item pt-2 pt-md-0" id="multi-item-example" data-bs-ride="carousel">
-                            <!--Slides-->
-                            <div class="carousel-inner product-links-wap" role="listbox">
-
-                                <!--First slide-->
-                                <div class="carousel-item active">
-                                    <div class="row">
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_01.png" alt="Brand Logo"></a>
-                                        </div>
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_02.png" alt="Brand Logo"></a>
-                                        </div>
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_03.png" alt="Brand Logo"></a>
-                                        </div>
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_04.png" alt="Brand Logo"></a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--End First slide-->
-
-                                <!--Second slide-->
-                                <div class="carousel-item">
-                                    <div class="row">
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_01.png" alt="Brand Logo"></a>
-</div>
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_02.png" alt="Brand Logo"></a>
-                                        </div>
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_03.png" alt="Brand Logo"></a>
-                                        </div>
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_04.png" alt="Brand Logo"></a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--End Second slide-->
-
-                                <!--Third slide-->
-                                <div class="carousel-item">
-                                    <div class="row">
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_01.png" alt="Brand Logo"></a>
-                                        </div>
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_02.png" alt="Brand Logo"></a>
-                                        </div>
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_03.png" alt="Brand Logo"></a>
-                                        </div>
-                                        <div class="col-3 p-md-5">
-                                            <a href="#"><img class="img-fluid brand-img" src=" /img/brand_04.png" alt="Brand Logo"></a>
-                                        </div>
-                                    </div>
-                                </div>
-                                <!--End Third slide-->
-
-                            </div>
-                            <!--End Slides-->
+    <!-- VALUE PROPOSITIONS STRIP (Thay thế Our Brands) -->
+    <div class="container mt-5 pt-4">
+        <div class="p-4 p-md-5 rounded-4 bg-light border border-light-subtle">
+            <div class="row g-4 text-center text-md-start">
+                <div class="col-12 col-sm-6 col-lg-3 reveal stagger-1">
+                    <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
+                        <div class="rounded-circle bg-white p-3 border border-light-subtle shadow-xs text-dark fs-5">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1 fs-7">100% Cotton Cao Cấp</h6>
+                            <p class="text-muted small mb-0">Chất vải tự nhiên thoáng mát</p>
                         </div>
                     </div>
-                    <!--End Carousel Wrapper-->
-
-                    <!--Controls-->
-                    <div class="col-1 align-self-center">
-                        <a class="h1" href="#multi-item-example" role="button" data-bs-slide="next">
-                            <i class="text-light fas fa-chevron-right"></i>
-                        </a>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3 reveal stagger-2">
+                    <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
+                        <div class="rounded-circle bg-white p-3 border border-light-subtle shadow-xs text-dark fs-5">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1 fs-7">Đổi Hàng Tận Nơi 3 Ngày</h6>
+                            <p class="text-muted small mb-0">Hỗ trợ đổi size nhanh gọn</p>
+                        </div>
                     </div>
-                    <!--End Controls-->
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3 reveal stagger-3">
+                    <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
+                        <div class="rounded-circle bg-white p-3 border border-light-subtle shadow-xs text-dark fs-5">
+                            <i class="bi bi-truck"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1 fs-7">Giao Hàng Toàn Quốc</h6>
+                            <p class="text-muted small mb-0">Kiểm tra trước khi trả tiền</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-sm-6 col-lg-3 reveal stagger-4">
+                    <div class="d-flex align-items-center gap-3 justify-content-center justify-content-md-start">
+                        <div class="rounded-circle bg-white p-3 border border-light-subtle shadow-xs text-dark fs-5">
+                            <i class="bi bi-headset"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold text-dark mb-1 fs-7">Hỗ Trợ Tận Tâm 24/7</h6>
+                            <p class="text-muted small mb-0">Tư vấn chuẩn size chuẩn form</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</section>
 
+</div>
+
+<!-- SHOP STYLES (Đồng bộ 100% với Product Detail) -->
+@include('client.layout.motion-system')
+<style>
+    /* Typography Utilities */
+    .fs-7 { font-size: 0.875rem !important; }
+    .fs-8 { font-size: 0.775rem !important; }
+    .py-0-5 { padding-top: 0.125rem !important; padding-bottom: 0.125rem !important; }
+    .py-1-5 { padding-top: 0.375rem !important; padding-bottom: 0.375rem !important; }
+    .px-1-5 { padding-left: 0.375rem !important; padding-right: 0.375rem !important; }
+    .px-2-5 { padding-left: 0.625rem !important; padding-right: 0.625rem !important; }
+    .letter-spacing-wide { letter-spacing: 0.05em; }
+    .tracking-wider { letter-spacing: 0.08em; }
+    .cursor-pointer { cursor: pointer; }
+
+    /* Breadcrumb */
+    .shop-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+        content: "/";
+        color: #cbd5e1;
+        font-weight: 300;
+        padding: 0 0.5rem;
+    }
+
+    /* Category Filter List */
+    .category-filter-item {
+        color: #475569;
+        transition: all 0.2s ease;
+    }
+    .category-filter-item:hover {
+        background-color: #f1f5f9;
+        color: #0f172a;
+        transform: translateX(2px);
+    }
+    .category-filter-item.active {
+        background-color: #0f172a;
+        color: #ffffff !important;
+        font-weight: 600;
+    }
+
+    /* Size Filter Tiles */
+    .size-filter-tile {
+        min-width: 44px;
+        height: 38px;
+        background-color: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        color: #0f172a;
+        transition: all 0.2s ease;
+    }
+    .size-filter-tile:hover {
+        border-color: #0f172a;
+        background-color: #f8fafc;
+    }
+    .size-filter-checkbox:checked + .size-filter-tile {
+        background-color: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+        box-shadow: 0 2px 6px rgba(15, 23, 42, 0.15);
+    }
+
+    /* Color Filter Pills */
+    .color-filter-pill {
+        background-color: #ffffff;
+        border-color: #e2e8f0 !important;
+        color: #1e293b;
+        transition: all 0.2s ease;
+    }
+    .color-filter-pill:hover {
+        border-color: #0f172a !important;
+        background-color: #f8fafc;
+    }
+    .color-filter-checkbox:checked + .color-filter-pill {
+        border-color: #0f172a !important;
+        background-color: #0f172a;
+        color: #ffffff;
+    }
+    .color-swatch-circle {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        display: inline-block;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+    }
+    .color-filter-checkbox:checked + .color-filter-pill .color-swatch-circle {
+        box-shadow: 0 0 0 2px #ffffff;
+    }
+
+    /* Active Filter Chips */
+    .active-filter-chip {
+        background-color: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #0f172a;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        transition: all 0.15s ease;
+    }
+    .active-filter-chip:hover {
+        background-color: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+    }
+
+    /* Product Cards */
+    .clean-product-thumb-box {
+        aspect-ratio: 3 / 4;
+        background-color: #f8fafc;
+    }
+    .clean-product-thumb {
+        object-fit: cover;
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .clean-product-card:hover .clean-product-thumb {
+        transform: scale(1.05);
+    }
+    .quick-view-overlay-btn {
+        transition: opacity 0.25s ease, transform 0.25s ease;
+        transform: translate(-50%, 8px);
+        font-weight: 500;
+    }
+    .clean-product-card:hover .quick-view-overlay-btn {
+        opacity: 1 !important;
+        transform: translate(-50%, 0);
+    }
+    .text-truncate-2 {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 2.45rem;
+    }
+
+    /* Loading Overlay */
+    .shop-loading {
+        opacity: 0.55;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+    }
+
+    /* Mobile Filter Drawer Styles */
+    @media (max-width: 991.98px) {
+        .shop-filter-sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 320px;
+            max-width: 85vw;
+            z-index: 1060;
+            background: #ffffff;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        .shop-filter-sidebar.is-open {
+            transform: translateX(0);
+        }
+        .shop-filter-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            z-index: 1055;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .shop-filter-backdrop.is-visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    }
+
+    @media (min-width: 992px) {
+        .shop-filter-sidebar {
+            position: sticky;
+            top: 85px;
+        }
+    }
+</style>
+
+<!-- JAVASCRIPT LOGIC (100% Preserved AJAX Navigation & Mobile Drawer) -->
 <script>
     (function () {
-        const sidebar = document.getElementById('shopFilterSidebar');
-        const content = document.getElementById('shopContent');
-        if (!sidebar || !content) return;
-
         let loading = false;
 
         const setLoading = (isLoading) => {
             loading = isLoading;
-            sidebar.classList.toggle('shop-loading', isLoading);
-            content.classList.toggle('shop-loading', isLoading);
+            const sidebar = document.getElementById('shopFilterSidebar');
+            const content = document.getElementById('shopContent');
+            if (sidebar) sidebar.classList.toggle('shop-loading', isLoading);
+            if (content) content.classList.toggle('shop-loading', isLoading);
         };
 
         const updateFromHtml = (html, nextUrl, pushState = true) => {
@@ -534,17 +710,22 @@ value="{{ old('q', $tuKhoa ?? request('q')) }}">
             const doc = parser.parseFromString(html, 'text/html');
             const nextSidebar = doc.getElementById('shopFilterSidebar');
             const nextContent = doc.getElementById('shopContent');
-            if (!nextSidebar || !nextContent) {
+            const currentSidebar = document.getElementById('shopFilterSidebar');
+            const currentContent = document.getElementById('shopContent');
+
+            if (!nextSidebar || !nextContent || !currentSidebar || !currentContent) {
                 window.location.href = nextUrl;
                 return;
             }
 
-            sidebar.outerHTML = nextSidebar.outerHTML;
-            content.outerHTML = nextContent.outerHTML;
+            currentSidebar.outerHTML = nextSidebar.outerHTML;
+            currentContent.outerHTML = nextContent.outerHTML;
 
             if (pushState) {
                 window.history.pushState({}, '', nextUrl);
             }
+
+            closeMobileDrawer();
             bindAjaxEvents();
         };
 
@@ -583,11 +764,37 @@ value="{{ old('q', $tuKhoa ?? request('q')) }}">
             return query ? `${action}?${query}` : action;
         };
 
+        function openMobileDrawer() {
+            const sidebar = document.getElementById('shopFilterSidebar');
+            const backdrop = document.getElementById('shopFilterBackdrop');
+            if (sidebar) sidebar.classList.add('is-open');
+            if (backdrop) backdrop.classList.add('is-visible');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMobileDrawer() {
+            const sidebar = document.getElementById('shopFilterSidebar');
+            const backdrop = document.getElementById('shopFilterBackdrop');
+            if (sidebar) sidebar.classList.remove('is-open');
+            if (backdrop) backdrop.classList.remove('is-visible');
+            document.body.style.overflow = '';
+        }
+
         function bindAjaxEvents() {
             const filterForm = document.getElementById('shopFilterForm');
             const searchForm = document.getElementById('shopSearchForm');
             const paginationWrap = document.getElementById('shopPaginationWrap');
             const ajaxLinks = document.querySelectorAll('a[data-ajax-link="true"]');
+            const sortSelect = document.getElementById('shopSortSelect');
+
+            // Mobile drawer buttons
+            const openBtn = document.getElementById('openFilterMobileBtn');
+            const closeBtn = document.getElementById('closeFilterMobileBtn');
+            const backdrop = document.getElementById('shopFilterBackdrop');
+
+            if (openBtn) openBtn.addEventListener('click', openMobileDrawer);
+            if (closeBtn) closeBtn.addEventListener('click', closeMobileDrawer);
+            if (backdrop) backdrop.addEventListener('click', closeMobileDrawer);
 
             if (filterForm) {
                 filterForm.addEventListener('submit', function (event) {
@@ -595,7 +802,7 @@ value="{{ old('q', $tuKhoa ?? request('q')) }}">
                     ajaxNavigate(buildUrlFromForm(filterForm));
                 });
 
-                const autoSubmitInputs = filterForm.querySelectorAll('input[type="checkbox"], select[name="sort"]');
+                const autoSubmitInputs = filterForm.querySelectorAll('input[type="checkbox"]');
                 autoSubmitInputs.forEach((input) => {
                     input.addEventListener('change', () => {
                         ajaxNavigate(buildUrlFromForm(filterForm));
@@ -610,11 +817,29 @@ value="{{ old('q', $tuKhoa ?? request('q')) }}">
                 });
             }
 
+            if (sortSelect) {
+                sortSelect.addEventListener('change', function () {
+                    const sortVal = this.value;
+                    const url = new URL(window.location.href);
+                    if (sortVal) {
+                        url.searchParams.set('sort', sortVal);
+                    } else {
+                        url.searchParams.delete('sort');
+                    }
+                    url.searchParams.delete('page');
+                    ajaxNavigate(url.toString());
+                });
+            }
+
             if (paginationWrap) {
                 paginationWrap.querySelectorAll('a').forEach((link) => {
                     link.addEventListener('click', function (event) {
                         event.preventDefault();
                         ajaxNavigate(this.href);
+                        const content = document.getElementById('shopContent');
+                        if (content) {
+                            content.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
                     });
                 });
             }
@@ -625,14 +850,32 @@ value="{{ old('q', $tuKhoa ?? request('q')) }}">
                     ajaxNavigate(this.href);
                 });
             });
+
+            // Re-initialize motion system for new DOM elements
+            if (window.MotionSystem) {
+                var shopContent = document.getElementById('shopContent');
+                if (shopContent) {
+                    // Stagger-reveal product cards immediately after AJAX (user is already viewing)
+                    window.MotionSystem.staggerRevealImmediate(shopContent, '.reveal:not(.is-revealed)', 30, 60);
+                }
+                // Re-observe any other reveal elements (sidebar, pagination)
+                var sidebar = document.getElementById('shopFilterSidebar');
+                if (sidebar) {
+                    sidebar.querySelectorAll('.reveal:not(.is-revealed)').forEach(function(el) {
+                        el.classList.add('is-revealed');
+                    });
+                }
+            }
         }
 
         window.addEventListener('popstate', () => {
             ajaxNavigate(window.location.href, false);
         });
 
+        document.addEventListener('DOMContentLoaded', bindAjaxEvents);
         bindAjaxEvents();
     })();
 </script>
-@include('client.layout.scripts')
+
 @include('client.layout.footer')
+@include('client.layout.scripts')
