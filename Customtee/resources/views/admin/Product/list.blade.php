@@ -60,7 +60,7 @@
                                         @foreach ($danhMucs as $dm)
                                             <option value="{{ $dm->id }}"
                                                 {{ request('danh_muc_id') == $dm->id ? 'selected' : '' }}>
-                                                {{ $dm->ten_danh_muc }}
+                                                {{ $dm->display_name ?? $dm->ten_danh_muc }}
                                             </option>
                                         @endforeach
                                     </select>
@@ -98,7 +98,7 @@
                             <th width="5%">#</th>
                             <th>Hình ảnh</th>
                             <th>Tên sản phẩm</th>
-                            <th>Danh mục</th>
+                            <th width="18%">Danh mục</th>
                             {{-- <th>màu</th>
                         <th>kích cỡ</th>
                         <th>số lượng</th>
@@ -121,7 +121,29 @@
                                     @endif
                                 </td>
                                 <td class="text-center">{{ $sp->ten_san_pham }}</td>
-                                <td>{{ $sp->danhMuc->ten_danh_muc ?? '—' }}</td>
+                                <td class="text-left" style="padding-left: 15px; vertical-align: middle;">
+                                    @if ($sp->danhMuc)
+                                        @php
+                                            $ancestors = $sp->danhMuc->getAncestors();
+                                        @endphp
+                                        @if ($ancestors->isNotEmpty())
+                                            <div class="text-muted" style="font-size: 11px; margin-bottom: 2px;">
+                                                @foreach ($ancestors as $anc)
+                                                    <span>{{ $anc->ten_danh_muc }}</span> <i class="fas fa-angle-right text-muted mx-1" style="font-size: 9px;"></i>
+                                                @endforeach
+                                            </div>
+                                            <strong class="text-dark" style="font-size: 13px;">
+                                                <i class="fas fa-tag text-info mr-1" style="font-size: 11px;"></i>{{ $sp->danhMuc->ten_danh_muc }}
+                                            </strong>
+                                        @else
+                                            <strong class="text-dark" style="font-size: 13px;">
+                                                <i class="fas fa-folder text-warning mr-1" style="font-size: 12px;"></i>{{ $sp->danhMuc->ten_danh_muc }}
+                                            </strong>
+                                        @endif
+                                    @else
+                                        <span class="text-muted">—</span>
+                                    @endif
+                                </td>
                                 <td>
                                     @if ($sp->trang_thai)
                                         <span class="badge badge-success">Hiển thị</span>
@@ -182,7 +204,7 @@
                                     <select name="danh_muc_id" class="form-control" required>
                                         <option value="">--- Chọn danh mục ---</option>
                                         @foreach ($danhMucs as $dm)
-                                            <option value="{{ $dm->id }}">{{ $dm->ten_danh_muc }}</option>
+                                            <option value="{{ $dm->id }}">{{ $dm->display_name ?? $dm->ten_danh_muc }}</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -715,7 +737,7 @@
                         select.append('<option value="">--- Chọn danh mục ---</option>');
                         res.danh_mucs.forEach(dm => {
                             let option =
-                                `<option value="${dm.id}" ${dm.id == sp.danh_muc_id ? 'selected' : ''}>${dm.ten_danh_muc}</option>`;
+                                `<option value="${dm.id}" ${dm.id == sp.danh_muc_id ? 'selected' : ''}>${dm.display_name || dm.ten_danh_muc}</option>`;
                             select.append(option);
                         });
 

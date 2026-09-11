@@ -1,6 +1,4 @@
-@extends('admin.layout.AdminLayout')
-
-@section('AdminContent')
+<?php $__env->startSection('AdminContent'); ?>
 <style>
     /* Tổng quan bảng cây */
     .table-category-tree {
@@ -174,8 +172,8 @@
 
 <div class="container-fluid" style="margin-top: 25px;">
 
-    {{-- Form Tìm kiếm & Lọc --}}
-    <form method="GET" action="{{ route('admin.danh-muc.index') }}" class="mb-4">
+    
+    <form method="GET" action="<?php echo e(route('admin.danh-muc.index')); ?>" class="mb-4">
         <div class="panel panel-default" style="border: 1px solid #e2e8f0; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
             <div class="panel-body" style="padding: 15px 20px;">
                 <div class="row">
@@ -183,15 +181,15 @@
                         <label class="font-weight-bold text-dark">Tên danh mục</label>
                         <input type="text" name="keyword" class="form-control"
                             placeholder="Tìm kiếm danh mục..."
-                            value="{{ request('keyword') }}" style="border-radius: 6px;">
+                            value="<?php echo e(request('keyword')); ?>" style="border-radius: 6px;">
                     </div>
 
                     <div class="col-md-4 col-sm-6 mb-2">
                         <label class="font-weight-bold text-dark">Trạng thái</label>
                         <select name="trang_thai" class="form-control" style="border-radius: 6px;">
                             <option value="">Tất cả</option>
-                            <option value="1" {{ request('trang_thai') === '1' ? 'selected' : '' }}>Hiển thị</option>
-                            <option value="0" {{ request('trang_thai') === '0' ? 'selected' : '' }}>Ẩn</option>
+                            <option value="1" <?php echo e(request('trang_thai') === '1' ? 'selected' : ''); ?>>Hiển thị</option>
+                            <option value="0" <?php echo e(request('trang_thai') === '0' ? 'selected' : ''); ?>>Ẩn</option>
                         </select>
                     </div>
 
@@ -201,7 +199,7 @@
                             <button type="submit" class="btn btn-primary font-weight-bold" style="flex: 1; border-radius: 6px;">
                                 <i class="fas fa-search mr-1"></i> Tìm
                             </button>
-                            <a href="{{ route('admin.danh-muc.index') }}" class="btn btn-default" style="flex: 1; border-radius: 6px; border: 1px solid #cbd5e1;">
+                            <a href="<?php echo e(route('admin.danh-muc.index')); ?>" class="btn btn-default" style="flex: 1; border-radius: 6px; border: 1px solid #cbd5e1;">
                                 <i class="fas fa-undo mr-1"></i> Reset
                             </a>
                         </div>
@@ -211,7 +209,7 @@
         </div>
     </form>
 
-    {{-- Thanh công cụ & Thao tác nhanh --}}
+    
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
         <div>
             <button class="btn btn-primary font-weight-bold" data-toggle="modal" data-target="#modalAdd" onclick="$('#formAdd')[0].reset(); $('#modalAdd select[name=\'parent_id\']').val('');" style="border-radius: 6px; padding: 7px 16px;">
@@ -226,12 +224,12 @@
                 <i class="fas fa-angle-double-up text-muted mr-1"></i> Thu gọn tất cả
             </button>
             <span class="text-muted small" style="background: #f8fafc; padding: 5px 12px; border-radius: 15px; border: 1px solid #e2e8f0; font-size: 12px;">
-                Tổng: <strong class="text-primary">{{ $totalRoots ?? count($danhMucs) }}</strong> gốc • <strong class="text-info">{{ $totalSubcategories ?? 0 }}</strong> mục con
+                Tổng: <strong class="text-primary"><?php echo e($totalRoots ?? count($danhMucs)); ?></strong> gốc • <strong class="text-info"><?php echo e($totalSubcategories ?? 0); ?></strong> mục con
             </span>
         </div>
     </div>
 
-    {{-- Bảng Cây Danh Mục Hợp Nhất --}}
+    
     <div class="panel panel-default" style="border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
         <div class="table-responsive">
             <table class="table table-bordered table-hover text-center table-category-tree">
@@ -247,124 +245,127 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($danhMucs as $key => $dm)
-                    @php
+                    <?php $__empty_1 = true; $__currentLoopData = $danhMucs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $dm): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <?php
                         $descendants = $dm->descendants_list ?? [];
                         $childCount = count($descendants);
-                    @endphp
-                    {{-- Dòng danh mục gốc --}}
-                    <tr class="root-category-row" id="row-cat-{{ $dm->id }}">
-                        <td class="text-center font-weight-bold text-muted">{{ $key + 1 }}</td>
+                    ?>
+                    
+                    <tr class="root-category-row" id="row-cat-<?php echo e($dm->id); ?>">
+                        <td class="text-center font-weight-bold text-muted"><?php echo e($key + 1); ?></td>
                         <td class="text-left" style="padding-left: 15px !important;">
                             <div style="display: flex; align-items: center;">
-                                @if($childCount > 0)
-                                    <button type="button" class="btn-tree-toggle {{ request('keyword') ? 'is-open' : '' }}" 
-                                            data-id="{{ $dm->id }}"
-                                            title="Nhấn để xem {{ $childCount }} danh mục con">
+                                <?php if($childCount > 0): ?>
+                                    <button type="button" class="btn-tree-toggle <?php echo e(request('keyword') ? 'is-open' : ''); ?>" 
+                                            data-id="<?php echo e($dm->id); ?>"
+                                            title="Nhấn để xem <?php echo e($childCount); ?> danh mục con">
                                         <i class="fas fa-chevron-right tree-icon"></i>
                                     </button>
-                                @else
+                                <?php else: ?>
                                     <span style="display: inline-block; width: 26px; margin-right: 6px; text-align: center; color: #cbd5e1;">
                                         <i class="fas fa-minus" style="font-size: 10px;"></i>
                                     </span>
-                                @endif
+                                <?php endif; ?>
 
                                 <i class="fas fa-folder text-warning" style="font-size: 18px; margin-right: 8px;"></i>
 
-                                <span class="font-weight-bold text-dark category-name-toggle" data-id="{{ $dm->id }}" style="font-size: 14.5px; cursor: pointer;" title="Nhấn để mở / đóng danh mục con">{{ $dm->ten_danh_muc }}</span>
+                                <span class="font-weight-bold text-dark category-name-toggle" data-id="<?php echo e($dm->id); ?>" style="font-size: 14.5px; cursor: pointer;" title="Nhấn để mở / đóng danh mục con"><?php echo e($dm->ten_danh_muc); ?></span>
 
-                                @if($childCount > 0)
+                                <?php if($childCount > 0): ?>
                                     <span class="subcat-count-badge" 
-                                          data-id="{{ $dm->id }}" 
-                                          title="Nhấn để mở / đóng {{ $childCount }} danh mục con">
-                                        {{ $childCount }} mục con
+                                          data-id="<?php echo e($dm->id); ?>" 
+                                          title="Nhấn để mở / đóng <?php echo e($childCount); ?> danh mục con">
+                                        <?php echo e($childCount); ?> mục con
                                     </span>
-                                @else
+                                <?php else: ?>
                                     <span class="badge badge-light border text-muted" style="margin-left: 6px; font-weight: normal; font-size: 10px;">
                                         Gốc (Cấp 1)
                                     </span>
-                                @endif
+                                <?php endif; ?>
                             </div>
                         </td>
-                        <td class="text-center"><code>{{ $dm->slug }}</code></td>
+                        <td class="text-center"><code><?php echo e($dm->slug); ?></code></td>
                         <td class="text-center">
-                            <img src="{{ $dm->hinh_anh ? asset('storage/' . $dm->hinh_anh) : asset('img/shop_01.jpg') }}"
-                                 alt="{{ $dm->ten_danh_muc }}"
+                            <img src="<?php echo e($dm->hinh_anh ? asset('storage/' . $dm->hinh_anh) : asset('img/shop_01.jpg')); ?>"
+                                 alt="<?php echo e($dm->ten_danh_muc); ?>"
                                  class="category-thumbnail">
                         </td>
                         <td class="text-center">
                             <span class="badge badge-pill badge-primary" style="font-size: 12px; padding: 4px 9px;">
-                                {{ $dm->san_phams_count }}
+                                <?php echo e($dm->san_phams_count); ?>
+
                             </span>
                         </td>
                         <td class="text-center">
-                            @if($dm->trang_thai == 1)
+                            <?php if($dm->trang_thai == 1): ?>
                                 <span class="status-badge-active">Hiển thị</span>
-                            @else
+                            <?php else: ?>
                                 <span class="status-badge-hidden">Ẩn</span>
-                            @endif
+                            <?php endif; ?>
                         </td>
                         <td class="text-center">
-                            <button type="button" class="btn btn-primary btn-action-sm" onclick="openAddSubcategory({{ $dm->id }})" title="Thêm danh mục con vào đây">
+                            <button type="button" class="btn btn-primary btn-action-sm" onclick="openAddSubcategory(<?php echo e($dm->id); ?>)" title="Thêm danh mục con vào đây">
                                 <i class="fas fa-plus mr-1"></i> Con
                             </button>
-                            <button type="button" class="btn btn-warning btn-action-sm btn-edit" data-id="{{ $dm->id }}" title="Sửa danh mục">
+                            <button type="button" class="btn btn-warning btn-action-sm btn-edit" data-id="<?php echo e($dm->id); ?>" title="Sửa danh mục">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button type="button" class="btn btn-danger btn-action-sm btn-delete" data-id="{{ $dm->id }}" title="Xóa danh mục">
+                            <button type="button" class="btn btn-danger btn-action-sm btn-delete" data-id="<?php echo e($dm->id); ?>" title="Xóa danh mục">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
                     </tr>
 
-                    {{-- Render các danh mục con trực tiếp dưới dòng cha (N cấp) --}}
-                    @foreach($descendants as $cIdx => $child)
-                    <tr class="child-category-row child-of-{{ $dm->id }} {{ request('keyword') ? '' : 'hidden-row' }}">
+                    
+                    <?php $__currentLoopData = $descendants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cIdx => $child): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <tr class="child-category-row child-of-<?php echo e($dm->id); ?> <?php echo e(request('keyword') ? '' : 'hidden-row'); ?>">
                         <td class="text-center text-muted" style="font-size: 11px;">
-                            {{ $key + 1 }}.{{ $cIdx + 1 }}
+                            <?php echo e($key + 1); ?>.<?php echo e($cIdx + 1); ?>
+
                         </td>
-                        <td class="text-left" style="padding-left: {{ 15 + ($child->depth * 24) }}px !important;">
+                        <td class="text-left" style="padding-left: <?php echo e(15 + ($child->depth * 24)); ?>px !important;">
                             <div style="display: flex; align-items: center;">
                                 <span class="tree-branch-symbol">└──</span>
                                 <i class="fas fa-tag text-info" style="font-size: 12px; margin-right: 6px;"></i>
-                                <span class="text-dark font-weight-bold" style="font-size: 13.5px;">{{ $child->ten_danh_muc }}</span>
-                                @if($child->depth > 1)
-                                    <span class="badge badge-light border text-muted ml-1" style="font-size: 10px;">Cấp {{ $child->depth + 1 }}</span>
-                                @endif
+                                <span class="text-dark font-weight-bold" style="font-size: 13.5px;"><?php echo e($child->ten_danh_muc); ?></span>
+                                <?php if($child->depth > 1): ?>
+                                    <span class="badge badge-light border text-muted ml-1" style="font-size: 10px;">Cấp <?php echo e($child->depth + 1); ?></span>
+                                <?php endif; ?>
                             </div>
                         </td>
-                        <td class="text-center"><code>{{ $child->slug }}</code></td>
+                        <td class="text-center"><code><?php echo e($child->slug); ?></code></td>
                         <td class="text-center">
-                            <img src="{{ $child->hinh_anh ? asset('storage/' . $child->hinh_anh) : asset('img/shop_01.jpg') }}"
-                                 alt="{{ $child->ten_danh_muc }}"
+                            <img src="<?php echo e($child->hinh_anh ? asset('storage/' . $child->hinh_anh) : asset('img/shop_01.jpg')); ?>"
+                                 alt="<?php echo e($child->ten_danh_muc); ?>"
                                  class="category-thumbnail-child">
                         </td>
                         <td class="text-center">
                             <span class="badge badge-pill badge-secondary" style="font-size: 11px; padding: 3px 7px;">
-                                {{ $child->san_phams_count }}
+                                <?php echo e($child->san_phams_count); ?>
+
                             </span>
                         </td>
                         <td class="text-center">
-                            @if($child->trang_thai == 1)
+                            <?php if($child->trang_thai == 1): ?>
                                 <span class="status-badge-active" style="font-size: 10.5px; padding: 2px 7px;">Hiển thị</span>
-                            @else
+                            <?php else: ?>
                                 <span class="status-badge-hidden" style="font-size: 10.5px; padding: 2px 7px;">Ẩn</span>
-                            @endif
+                            <?php endif; ?>
                         </td>
                         <td class="text-center">
-                            <button type="button" class="btn btn-default btn-action-xs" onclick="openAddSubcategory({{ $child->id }})" title="Thêm danh mục con cấp tiếp theo" style="border: 1px solid #cbd5e1;">
+                            <button type="button" class="btn btn-default btn-action-xs" onclick="openAddSubcategory(<?php echo e($child->id); ?>)" title="Thêm danh mục con cấp tiếp theo" style="border: 1px solid #cbd5e1;">
                                 <i class="fas fa-plus text-primary"></i>
                             </button>
-                            <button type="button" class="btn btn-warning btn-action-xs btn-edit" data-id="{{ $child->id }}" title="Sửa mục con">
+                            <button type="button" class="btn btn-warning btn-action-xs btn-edit" data-id="<?php echo e($child->id); ?>" title="Sửa mục con">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button type="button" class="btn btn-danger btn-action-xs btn-delete" data-id="{{ $child->id }}" title="Xóa mục con">
+                            <button type="button" class="btn btn-danger btn-action-xs btn-delete" data-id="<?php echo e($child->id); ?>" title="Xóa mục con">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </td>
                     </tr>
-                    @endforeach
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                     <tr>
                         <td colspan="7" class="text-center py-5">
                             <div style="padding: 30px 0;">
@@ -373,7 +374,7 @@
                             </div>
                         </td>
                     </tr>
-                    @endforelse
+                    <?php endif; ?>
                 </tbody>
             </table>
         </div>
@@ -381,11 +382,11 @@
 
 </div>
 
-{{-- ================= MODAL ADD ================= --}}
+
 <div class="modal fade" id="modalAdd">
     <div class="modal-dialog">
         <form id="formAdd">
-            @csrf
+            <?php echo csrf_field(); ?>
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title">Thêm danh mục</h5>
@@ -403,9 +404,9 @@
                         <label>Danh mục cha</label>
                         <select name="parent_id" class="form-control">
                             <option value="">-- Là danh mục gốc (Cấp 1) --</option>
-                            @foreach($parentCategories as $pCat)
-                                <option value="{{ $pCat->id }}">{{ $pCat->display_name }}</option>
-                            @endforeach
+                            <?php $__currentLoopData = $parentCategories; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $pCat): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <option value="<?php echo e($pCat->id); ?>"><?php echo e($pCat->display_name); ?></option>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </select>
                         <small class="text-muted">Chọn nếu muốn tạo danh mục con thuộc danh mục cha</small>
                     </div>
@@ -440,11 +441,11 @@
     </div>
 </div>
 
-{{-- ================= MODAL EDIT ================= --}}
+
 <div class="modal fade" id="modalEdit">
     <div class="modal-dialog">
         <form id="formEdit">
-            @csrf
+            <?php echo csrf_field(); ?>
             <input type="hidden" id="edit_id">
             <div class="modal-content">
                 <div class="modal-header">
@@ -478,7 +479,7 @@
                         <div class="mb-2">
                             <img
                                 id="edit_category_image_preview"
-                                src="{{ asset('img/shop_01.jpg') }}"
+                                src="<?php echo e(asset('img/shop_01.jpg')); ?>"
                                 alt="Ảnh danh mục"
                                 style="width: 130px; height: 80px; object-fit: cover; border-radius: 6px;"
                             >
@@ -567,7 +568,7 @@
             let formData = new FormData(this);
 
             $.ajax({
-                url: "{{ route('admin.danh-muc.store') }}",
+                url: "<?php echo e(route('admin.danh-muc.store')); ?>",
                 type: "POST",
                 data: formData,
                 processData: false,
@@ -594,7 +595,7 @@
             e.stopPropagation();
             let id = $(this).data('id');
 
-            $.get("{{ url('admin/danh-muc') }}/" + id, function(res) {
+            $.get("<?php echo e(url('admin/danh-muc')); ?>/" + id, function(res) {
                 if (res.status) {
                     $('#edit_id').val(res.data.id);
                     $('#edit_ten_danh_muc').val(res.data.ten_danh_muc);
@@ -612,8 +613,8 @@
                         });
                     }
 
-                    const placeholderImg = '{{ asset('img/shop_01.jpg') }}';
-                    const storageBase = '{{ asset('storage') }}';
+                    const placeholderImg = '<?php echo e(asset('img/shop_01.jpg')); ?>';
+                    const storageBase = '<?php echo e(asset('storage')); ?>';
                     $('#edit_category_image_preview').attr(
                         'src',
                         res.data.hinh_anh ? (storageBase + '/' + res.data.hinh_anh) : placeholderImg
@@ -638,7 +639,7 @@
             formData.append('_method', 'PUT');
 
             $.ajax({
-                url: "{{ url('admin/danh-muc') }}/" + id,
+                url: "<?php echo e(url('admin/danh-muc')); ?>/" + id,
                 type: "POST",
                 data: formData,
                 processData: false,
@@ -668,10 +669,10 @@
             let id = $(this).data('id');
 
             $.ajax({
-                url: "{{ url('admin/danh-muc') }}/" + id,
+                url: "<?php echo e(url('admin/danh-muc')); ?>/" + id,
                 type: 'DELETE',
                 data: {
-                    _token: "{{ csrf_token() }}"
+                    _token: "<?php echo e(csrf_token()); ?>"
                 },
                 success: function(res) {
                     if (res.status) {
@@ -693,4 +694,5 @@
 
     });
 </script>
-@endsection
+<?php $__env->stopSection(); ?>
+<?php echo $__env->make('admin.layout.AdminLayout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\e7\laragon\www\DATN\DATN-CustomTee\Customtee\resources\views/admin/Category/list.blade.php ENDPATH**/ ?>

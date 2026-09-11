@@ -17,12 +17,19 @@ class SanPhamController extends Controller
     public function index(Request $request)
     {
         $query = SanPham::with('danhMuc');
+        $query = SanPham::with(['danhMuc.parent']);
         if ($request->keyword) {
             $query->where('ten_san_pham', 'like', '%' . $request->keyword . '%');
         }
 
         if ($request->danh_muc_id) {
-            $query->where('danh_muc_id', $request->danh_muc_id);
+            $cat = Category::find($request->danh_muc_id);
+            if ($cat) {
+                $targetCatIds = array_merge([$cat->id], $cat->getAllChildrenIds());
+                $query->whereIn('danh_muc_id', $targetCatIds);
+            } else {
+                $query->where('danh_muc_id', $request->danh_muc_id);
+            }
         }
 
         if ($request->trang_thai !== null && $request->trang_thai !== '') {
@@ -31,16 +38,17 @@ class SanPhamController extends Controller
 
         $sanPhams = $query->orderBy('id', 'desc')->get();
 
-        $danhMucs = Category::where('trang_thai', 1)->get();
+        $danhMucs = Category::getFlatTree(null, true);
         $colors = MauSac::all();
         $sizes = KichThuoc::all();
 
-        return view('admin.product.list', compact('sanPhams', 'danhMucs', 'colors', 'sizes'));
+        return view('admin.Product.list', compact('sanPhams', 'danhMucs', 'colors', 'sizes'));
     }
 
     public function create()
     {
         $danhMucs = Category::where('trang_thai', 1)->get();
+        $danhMucs = Category::getFlatTree(null, true);
         return view('admin.san-pham.create', compact('danhMucs'));
     }
 
@@ -135,7 +143,7 @@ class SanPhamController extends Controller
     public function edit($id)
     {
         $sanPham = SanPham::findOrFail($id);
-        $danhMucs = Category::where('trang_thai', 1)->get();
+        $danhMucs = Category::getFlatTree(null, true);
 
         return response()->json([
             'status' => true,

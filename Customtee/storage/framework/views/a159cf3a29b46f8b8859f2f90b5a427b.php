@@ -1,6 +1,6 @@
-@include('client.layout.header')
+<?php echo $__env->make('client.layout.header', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-@php
+<?php
     $selectedDanhMucs = $selectedDanhMucs ?? collect((array) request()->input('danh_muc', []))->map(fn($id) => (int) $id)->all();
     $selectedSizes = collect((array) request()->input('size', []))->map(fn($id) => (int) $id)->all();
     $selectedColors = collect((array) request()->input('color', []))->map(fn($id) => (int) $id)->all();
@@ -12,7 +12,7 @@
         || request()->filled('max_price')
         || !empty($selectedSort)
         || !empty($tuKhoa);
-@endphp
+?>
 
 <!-- Main Shop Page Container -->
 <div class="shop-page bg-white text-dark pb-5">
@@ -22,21 +22,22 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb shop-breadcrumb mb-0 align-items-center">
                 <li class="breadcrumb-item">
-                    <a href="{{ url('/') }}" class="text-decoration-none text-muted small">
+                    <a href="<?php echo e(url('/')); ?>" class="text-decoration-none text-muted small">
                         <i class="bi bi-house-door me-1"></i>Trang chủ
                     </a>
                 </li>
                 <li class="breadcrumb-item active text-dark small fw-medium" aria-current="page">
-                    @if(!empty($tuKhoa))
-                        Tìm kiếm: "{{ $tuKhoa }}"
-                    @elseif(!empty($selectedDanhMucs) && count($selectedDanhMucs) === 1)
-                        @php
+                    <?php if(!empty($tuKhoa)): ?>
+                        Tìm kiếm: "<?php echo e($tuKhoa); ?>"
+                    <?php elseif(!empty($selectedDanhMucs) && count($selectedDanhMucs) === 1): ?>
+                        <?php
                             $currentCat = $danhMucs->firstWhere('id', $selectedDanhMucs[0]);
-                        @endphp
-                        {{ $currentCat->ten_danh_muc ?? 'Cửa hàng' }}
-                    @else
+                        ?>
+                        <?php echo e($currentCat->ten_danh_muc ?? 'Cửa hàng'); ?>
+
+                    <?php else: ?>
                         Cửa hàng thời trang
-                    @endif
+                    <?php endif; ?>
                 </li>
             </ol>
         </nav>
@@ -51,13 +52,14 @@
                         Bộ Sưu Tập 2026
                     </span>
                     <h1 class="fw-bold text-dark mb-2 display-6">
-                        @if(!empty($tuKhoa))
-                            Kết quả tìm kiếm cho: "{{ $tuKhoa }}"
-                        @elseif(!empty($selectedDanhMucs) && count($selectedDanhMucs) === 1)
-                            {{ $currentCat->ten_danh_muc ?? 'Sản Phẩm Cao Cấp' }}
-                        @else
+                        <?php if(!empty($tuKhoa)): ?>
+                            Kết quả tìm kiếm cho: "<?php echo e($tuKhoa); ?>"
+                        <?php elseif(!empty($selectedDanhMucs) && count($selectedDanhMucs) === 1): ?>
+                            <?php echo e($currentCat->ten_danh_muc ?? 'Sản Phẩm Cao Cấp'); ?>
+
+                        <?php else: ?>
                             Tất Cả Sản Phẩm
-                        @endif
+                        <?php endif; ?>
                     </h1>
                     <p class="text-muted fs-7 mb-0" style="max-width: 600px;">
                         Khám phá các thiết kế áo thun may đo chuẩn form, chất liệu cotton thoáng mát và phong cách tối giản thời thượng.
@@ -89,10 +91,10 @@
                             <button type="button" class="btn-close" id="closeFilterMobileBtn" aria-label="Đóng bộ lọc"></button>
                         </div>
 
-                        <form action="{{ url('/Shop') }}" method="get" id="shopFilterForm">
-                            @if(!empty($tuKhoa))
-                                <input type="hidden" name="q" value="{{ $tuKhoa }}">
-                            @endif
+                        <form action="<?php echo e(url('/Shop')); ?>" method="get" id="shopFilterForm">
+                            <?php if(!empty($tuKhoa)): ?>
+                                <input type="hidden" name="q" value="<?php echo e($tuKhoa); ?>">
+                            <?php endif; ?>
 
                             <!-- 1. CATEGORIES -->
                             <div class="filter-section mb-4">
@@ -101,24 +103,24 @@
                                 </div>
                                 <ul class="list-unstyled mb-0 d-flex flex-column gap-1 category-filter-list">
                                     <li>
-                                        @php
+                                        <?php
                                             $allQuery = request()->except(['danh_muc', 'page']);
                                             $allUrl = url('/Shop') . ($allQuery ? '?' . http_build_query($allQuery) : '');
-                                        @endphp
-                                        <a href="{{ $allUrl }}"
+                                        ?>
+                                        <a href="<?php echo e($allUrl); ?>"
                                            data-ajax-link="true"
-                                           class="category-filter-item d-flex justify-content-between align-items-center py-2 px-2-5 rounded-3 text-decoration-none {{ empty($selectedDanhMucs) ? 'active' : '' }}">
+                                           class="category-filter-item d-flex justify-content-between align-items-center py-2 px-2-5 rounded-3 text-decoration-none <?php echo e(empty($selectedDanhMucs) ? 'active' : ''); ?>">
                                             <span class="fs-7">Tất cả sản phẩm</span>
                                             <i class="bi bi-chevron-right fs-8"></i>
                                         </a>
                                     </li>
-                                    @foreach($danhMucsTree ?? [] as $rootCategory)
-                                        @include('client.partials.shop-category-item', [
+                                    <?php $__currentLoopData = $danhMucsTree ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rootCategory): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php echo $__env->make('client.partials.shop-category-item', [
                                             'category' => $rootCategory,
                                             'depth' => 0,
                                             'selectedDanhMucs' => $selectedDanhMucs
-                                        ])
-                                    @endforeach
+                                        ], array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </ul>
                             </div>
 
@@ -136,8 +138,8 @@
                                                min="0"
                                                step="1000"
                                                class="form-control form-control-sm rounded-2 fs-7"
-                                               value="{{ request('min_price') }}"
-                                               placeholder="{{ $minPrice ? number_format($minPrice, 0, ',', '.') : '0' }}">
+                                               value="<?php echo e(request('min_price')); ?>"
+                                               placeholder="<?php echo e($minPrice ? number_format($minPrice, 0, ',', '.') : '0'); ?>">
                                     </div>
                                     <div class="col-6">
                                         <label for="max_price" class="form-label fs-8 text-muted mb-1">Đến</label>
@@ -147,8 +149,8 @@
                                                min="0"
                                                step="1000"
                                                class="form-control form-control-sm rounded-2 fs-7"
-                                               value="{{ request('max_price') }}"
-                                               placeholder="{{ $maxPrice ? number_format($maxPrice, 0, ',', '.') : 'Tối đa' }}">
+                                               value="<?php echo e(request('max_price')); ?>"
+                                               placeholder="<?php echo e($maxPrice ? number_format($maxPrice, 0, ',', '.') : 'Tối đa'); ?>">
                                     </div>
                                 </div>
                                 <button type="submit" class="btn btn-dark btn-sm w-100 rounded-2 py-1-5 fs-7 fw-medium">
@@ -162,21 +164,22 @@
                             <div class="filter-section mb-4">
                                 <h6 class="filter-title fw-bold text-dark fs-7 mb-2">Kích thước</h6>
                                 <div class="d-flex flex-wrap gap-2">
-                                    @foreach($sizes as $size)
-                                        @php
+                                    <?php $__currentLoopData = $sizes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $size): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php
                                             $isSizeChecked = in_array((int) $size->id, $selectedSizes, true);
-                                        @endphp
+                                        ?>
                                         <label class="size-filter-label cursor-pointer mb-0">
                                             <input type="checkbox"
                                                    class="d-none size-filter-checkbox"
                                                    name="size[]"
-                                                   value="{{ $size->id }}"
-                                                   {{ $isSizeChecked ? 'checked' : '' }}>
+                                                   value="<?php echo e($size->id); ?>"
+                                                   <?php echo e($isSizeChecked ? 'checked' : ''); ?>>
                                             <span class="size-filter-tile rounded-3 px-3 py-1-5 fs-7 fw-medium d-inline-flex align-items-center justify-content-center">
-                                                {{ $size->ten_kich_thuoc }}
+                                                <?php echo e($size->ten_kich_thuoc); ?>
+
                                             </span>
                                         </label>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
                             </div>
 
@@ -186,40 +189,40 @@
                             <div class="filter-section mb-4">
                                 <h6 class="filter-title fw-bold text-dark fs-7 mb-2">Màu sắc</h6>
                                 <div class="d-flex flex-wrap gap-2">
-                                    @foreach($colors as $color)
-                                        @php
+                                    <?php $__currentLoopData = $colors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $color): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php
                                             $isColorChecked = in_array((int) $color->id, $selectedColors, true);
-                                        @endphp
+                                        ?>
                                         <label class="color-filter-label cursor-pointer mb-0">
                                             <input type="checkbox"
                                                    class="d-none color-filter-checkbox"
                                                    name="color[]"
-                                                   value="{{ $color->id }}"
-                                                   {{ $isColorChecked ? 'checked' : '' }}>
+                                                   value="<?php echo e($color->id); ?>"
+                                                   <?php echo e($isColorChecked ? 'checked' : ''); ?>>
                                             <span class="color-filter-pill rounded-pill px-2-5 py-1 d-inline-flex align-items-center gap-2 border">
-                                                <span class="color-swatch-circle" style="background-color: {{ $color->ma_mau ?? '#000000' }};"></span>
-                                                <span class="color-filter-name fs-8">{{ $color->ten_mau }}</span>
+                                                <span class="color-swatch-circle" style="background-color: <?php echo e($color->ma_mau ?? '#000000'); ?>;"></span>
+                                                <span class="color-filter-name fs-8"><?php echo e($color->ten_mau); ?></span>
                                             </span>
                                         </label>
-                                    @endforeach
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </div>
                             </div>
 
                             <!-- Hidden Sort Input to preserve sort on filter change -->
-                            @if(!empty($selectedSort))
-                                <input type="hidden" name="sort" value="{{ $selectedSort }}">
-                            @endif
+                            <?php if(!empty($selectedSort)): ?>
+                                <input type="hidden" name="sort" value="<?php echo e($selectedSort); ?>">
+                            <?php endif; ?>
 
                             <!-- RESET FILTER BUTTON -->
-                            @if($hasAnyFilter)
+                            <?php if($hasAnyFilter): ?>
                                 <div class="pt-2">
-                                    <a href="{{ url('/Shop') . (!empty($tuKhoa) ? '?q=' . urlencode($tuKhoa) : '') }}"
+                                    <a href="<?php echo e(url('/Shop') . (!empty($tuKhoa) ? '?q=' . urlencode($tuKhoa) : '')); ?>"
                                        class="btn btn-outline-secondary btn-sm w-100 rounded-3 py-2 fs-7 d-flex align-items-center justify-content-center gap-2"
                                        data-ajax-link="true">
                                         <i class="bi bi-x-circle"></i> Xóa tất cả bộ lọc
                                     </a>
                                 </div>
-                            @endif
+                            <?php endif; ?>
 
                         </form>
 
@@ -239,13 +242,13 @@
                             <button type="button" class="btn btn-dark btn-sm rounded-3 py-2 px-3 d-lg-none d-inline-flex align-items-center gap-2 flex-shrink-0" id="openFilterMobileBtn">
                                 <i class="bi bi-funnel"></i>
                                 <span>Bộ lọc</span>
-                                @if($hasAnyFilter)
+                                <?php if($hasAnyFilter): ?>
                                     <span class="badge bg-white text-dark rounded-pill px-1-5 py-0-5 fs-8">!</span>
-                                @endif
+                                <?php endif; ?>
                             </button>
 
                             <div class="text-muted fs-7">
-                                Hiển thị <strong class="text-dark">{{ $sanPhams->total() }}</strong> sản phẩm
+                                Hiển thị <strong class="text-dark"><?php echo e($sanPhams->total()); ?></strong> sản phẩm
                             </div>
                         </div>
 
@@ -254,20 +257,20 @@
                             <div class="d-flex align-items-center gap-2 justify-content-md-end flex-wrap flex-sm-nowrap">
 
                                 <!-- Search Form -->
-                                <form action="{{ url('/Shop') }}" method="get" class="flex-grow-1 flex-sm-grow-0" id="shopSearchForm" style="min-width: 200px;">
-                                    @foreach(request()->except(['q', 'page']) as $key => $value)
-                                        @if(is_array($value))
-                                            @foreach($value as $item)
-                                                <input type="hidden" name="{{ $key }}[]" value="{{ $item }}">
-                                            @endforeach
-                                        @else
-                                            <input type="hidden" name="{{ $key }}" value="{{ $value }}">
-                                        @endif
-                                    @endforeach
+                                <form action="<?php echo e(url('/Shop')); ?>" method="get" class="flex-grow-1 flex-sm-grow-0" id="shopSearchForm" style="min-width: 200px;">
+                                    <?php $__currentLoopData = request()->except(['q', 'page']); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $value): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <?php if(is_array($value)): ?>
+                                            <?php $__currentLoopData = $value; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                <input type="hidden" name="<?php echo e($key); ?>[]" value="<?php echo e($item); ?>">
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                        <?php else: ?>
+                                            <input type="hidden" name="<?php echo e($key); ?>" value="<?php echo e($value); ?>">
+                                        <?php endif; ?>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     <div class="input-group input-group-sm">
                                         <input type="text" name="q" class="form-control rounded-start-3 border-secondary-subtle"
                                                placeholder="Tìm sản phẩm..."
-                                               value="{{ old('q', $tuKhoa ?? request('q')) }}"
+                                               value="<?php echo e(old('q', $tuKhoa ?? request('q'))); ?>"
                                                aria-label="Tìm kiếm">
                                         <button type="submit" class="btn btn-dark rounded-end-3 px-3" aria-label="Tìm kiếm">
                                             <i class="bi bi-search"></i>
@@ -278,10 +281,10 @@
                                 <!-- Sort Dropdown -->
                                 <div class="sort-select-wrapper flex-shrink-0">
                                     <select class="form-select form-select-sm rounded-3 border-secondary-subtle fs-7 fw-medium" id="shopSortSelect" aria-label="Sắp xếp sản phẩm">
-                                        <option value="" {{ empty($selectedSort) ? 'selected' : '' }}>Mặc định</option>
-                                        <option value="new" {{ $selectedSort === 'new' ? 'selected' : '' }}>Mới nhất</option>
-                                        <option value="price_asc" {{ $selectedSort === 'price_asc' ? 'selected' : '' }}>Giá tăng dần</option>
-                                        <option value="price_desc" {{ $selectedSort === 'price_desc' ? 'selected' : '' }}>Giá giảm dần</option>
+                                        <option value="" <?php echo e(empty($selectedSort) ? 'selected' : ''); ?>>Mặc định</option>
+                                        <option value="new" <?php echo e($selectedSort === 'new' ? 'selected' : ''); ?>>Mới nhất</option>
+                                        <option value="price_asc" <?php echo e($selectedSort === 'price_asc' ? 'selected' : ''); ?>>Giá tăng dần</option>
+                                        <option value="price_desc" <?php echo e($selectedSort === 'price_desc' ? 'selected' : ''); ?>>Giá giảm dần</option>
                                     </select>
                                 </div>
 
@@ -292,76 +295,76 @@
                 </div>
 
                 <!-- Active Filter Tags Chips -->
-                @if($hasAnyFilter)
+                <?php if($hasAnyFilter): ?>
                     <div class="shop-active-filters d-flex flex-wrap align-items-center gap-2 mb-4" id="shopActiveFilters">
                         <span class="fs-8 text-muted fw-medium me-1">Đang lọc theo:</span>
 
-                        @if(!empty($tuKhoa))
+                        <?php if(!empty($tuKhoa)): ?>
                             <a class="active-filter-chip chip-pop-in"
                                data-ajax-link="true"
-                               href="{{ request()->fullUrlWithQuery(['q' => null, 'page' => null]) }}">
-                                Từ khóa: "{{ $tuKhoa }}" <i class="bi bi-x"></i>
+                               href="<?php echo e(request()->fullUrlWithQuery(['q' => null, 'page' => null])); ?>">
+                                Từ khóa: "<?php echo e($tuKhoa); ?>" <i class="bi bi-x"></i>
                             </a>
-                        @endif
+                        <?php endif; ?>
 
-                        @foreach($danhMucs as $danhMuc)
-                            @if(in_array((int) $danhMuc->id, $selectedDanhMucs, true))
+                        <?php $__currentLoopData = $danhMucs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $danhMuc): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if(in_array((int) $danhMuc->id, $selectedDanhMucs, true)): ?>
                                 <a class="active-filter-chip chip-pop-in"
                                    data-ajax-link="true"
-                                   href="{{ request()->fullUrlWithQuery(['danh_muc' => array_values(array_diff($selectedDanhMucs, [(int) $danhMuc->id])), 'page' => null]) }}">
-                                    {{ $danhMuc->ten_danh_muc }} <i class="bi bi-x"></i>
+                                   href="<?php echo e(request()->fullUrlWithQuery(['danh_muc' => array_values(array_diff($selectedDanhMucs, [(int) $danhMuc->id])), 'page' => null])); ?>">
+                                    <?php echo e($danhMuc->ten_danh_muc); ?> <i class="bi bi-x"></i>
                                 </a>
-                            @endif
-                        @endforeach
+                            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                        @foreach($sizes as $size)
-                            @if(in_array((int) $size->id, $selectedSizes, true))
+                        <?php $__currentLoopData = $sizes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $size): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if(in_array((int) $size->id, $selectedSizes, true)): ?>
                                 <a class="active-filter-chip chip-pop-in"
                                    data-ajax-link="true"
-                                   href="{{ request()->fullUrlWithQuery(['size' => array_values(array_diff($selectedSizes, [(int) $size->id])), 'page' => null]) }}">
-                                    Size {{ $size->ten_kich_thuoc }} <i class="bi bi-x"></i>
+                                   href="<?php echo e(request()->fullUrlWithQuery(['size' => array_values(array_diff($selectedSizes, [(int) $size->id])), 'page' => null])); ?>">
+                                    Size <?php echo e($size->ten_kich_thuoc); ?> <i class="bi bi-x"></i>
                                 </a>
-                            @endif
-                        @endforeach
+                            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                        @foreach($colors as $color)
-                            @if(in_array((int) $color->id, $selectedColors, true))
+                        <?php $__currentLoopData = $colors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $color): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                            <?php if(in_array((int) $color->id, $selectedColors, true)): ?>
                                 <a class="active-filter-chip chip-pop-in"
                                    data-ajax-link="true"
-                                   href="{{ request()->fullUrlWithQuery(['color' => array_values(array_diff($selectedColors, [(int) $color->id])), 'page' => null]) }}">
-                                    Màu {{ $color->ten_mau }} <i class="bi bi-x"></i>
+                                   href="<?php echo e(request()->fullUrlWithQuery(['color' => array_values(array_diff($selectedColors, [(int) $color->id])), 'page' => null])); ?>">
+                                    Màu <?php echo e($color->ten_mau); ?> <i class="bi bi-x"></i>
                                 </a>
-                            @endif
-                        @endforeach
+                            <?php endif; ?>
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-                        @if(request()->filled('min_price') || request()->filled('max_price'))
+                        <?php if(request()->filled('min_price') || request()->filled('max_price')): ?>
                             <a class="active-filter-chip chip-pop-in"
                                data-ajax-link="true"
-                               href="{{ request()->fullUrlWithQuery(['min_price' => null, 'max_price' => null, 'page' => null]) }}">
-                                Giá: {{ number_format((int) request('min_price', 0), 0, ',', '.') }}đ - {{ request('max_price') ? number_format((int) request('max_price'), 0, ',', '.') . 'đ' : 'Tối đa' }} <i class="bi bi-x"></i>
+                               href="<?php echo e(request()->fullUrlWithQuery(['min_price' => null, 'max_price' => null, 'page' => null])); ?>">
+                                Giá: <?php echo e(number_format((int) request('min_price', 0), 0, ',', '.')); ?>đ - <?php echo e(request('max_price') ? number_format((int) request('max_price'), 0, ',', '.') . 'đ' : 'Tối đa'); ?> <i class="bi bi-x"></i>
                             </a>
-                        @endif
+                        <?php endif; ?>
 
-                        @if(!empty($selectedSort))
+                        <?php if(!empty($selectedSort)): ?>
                             <a class="active-filter-chip chip-pop-in"
                                data-ajax-link="true"
-                               href="{{ request()->fullUrlWithQuery(['sort' => null, 'page' => null]) }}">
-                                Sắp xếp: {{ $selectedSort === 'price_asc' ? 'Giá tăng dần' : ($selectedSort === 'price_desc' ? 'Giá giảm dần' : 'Mới nhất') }} <i class="bi bi-x"></i>
+                               href="<?php echo e(request()->fullUrlWithQuery(['sort' => null, 'page' => null])); ?>">
+                                Sắp xếp: <?php echo e($selectedSort === 'price_asc' ? 'Giá tăng dần' : ($selectedSort === 'price_desc' ? 'Giá giảm dần' : 'Mới nhất')); ?> <i class="bi bi-x"></i>
                             </a>
-                        @endif
+                        <?php endif; ?>
 
-                        <a href="{{ url('/Shop') . (!empty($tuKhoa) ? '?q=' . urlencode($tuKhoa) : '') }}"
+                        <a href="<?php echo e(url('/Shop') . (!empty($tuKhoa) ? '?q=' . urlencode($tuKhoa) : '')); ?>"
                            class="text-decoration-none text-danger small ms-2 fw-medium fs-8"
                            data-ajax-link="true">
                             Xóa hết
                         </a>
                     </div>
-                @endif
+                <?php endif; ?>
 
                 <!-- PRODUCT GRID -->
                 <div class="row row-cols-2 row-cols-md-3 g-3 g-md-4" id="shopProductsGrid">
-                    @forelse($sanPhams as $sp)
-                        <div class="col reveal stagger-{{ (($loop->iteration - 1) % 6) + 1 }}">
+                    <?php $__empty_1 = true; $__currentLoopData = $sanPhams; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $sp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                        <div class="col reveal stagger-<?php echo e((($loop->iteration - 1) % 6) + 1); ?>">
                             <div class="card clean-product-card h-100 border-0 rounded-3 overflow-hidden bg-transparent">
 
                                 <!-- Image Showcase Frame -->
@@ -373,16 +376,16 @@
                                         </span>
                                     </div>
 
-                                    <a href="{{ route('sanpham.chitiet', $sp->slug) }}" class="d-block w-100 h-100">
+                                    <a href="<?php echo e(route('sanpham.chitiet', $sp->slug)); ?>" class="d-block w-100 h-100">
                                         <img class="clean-product-thumb w-100 h-100"
-                                             src="{{ $sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
+                                             src="<?php echo e($sp->hinh_anh_chinh ? asset('storage/' . $sp->hinh_anh_chinh) : asset('img/shop_01.jpg')); ?>"
                                              loading="lazy"
                                              decoding="async"
-                                             alt="{{ $sp->ten_san_pham }}">
+                                             alt="<?php echo e($sp->ten_san_pham); ?>">
                                     </a>
 
                                     <!-- Quick Detail Hover Action Button -->
-                                    <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
+                                    <a href="<?php echo e(route('sanpham.chitiet', $sp->slug)); ?>"
                                        class="quick-view-overlay-btn btn btn-dark btn-sm rounded-pill position-absolute bottom-0 start-50 translate-middle-x mb-3 opacity-0 text-nowrap px-3 shadow-sm">
                                         Xem chi tiết
                                     </a>
@@ -392,25 +395,27 @@
                                 <div class="card-body p-2 pt-3 d-flex flex-column justify-content-between">
                                     <div>
                                         <span class="text-muted fs-8 text-uppercase d-block mb-1 tracking-wider">
-                                            {{ $sp->category->ten_danh_muc ?? 'Fashion' }}
+                                            <?php echo e($sp->category->ten_danh_muc ?? 'Fashion'); ?>
+
                                         </span>
-                                        <a href="{{ route('sanpham.chitiet', $sp->slug) }}"
+                                        <a href="<?php echo e(route('sanpham.chitiet', $sp->slug)); ?>"
                                            class="clean-product-title text-decoration-none text-dark fw-medium d-block fs-7 mb-2 text-truncate-2">
-                                            {{ $sp->ten_san_pham }}
+                                            <?php echo e($sp->ten_san_pham); ?>
+
                                         </a>
                                     </div>
                                     <div class="clean-product-price fw-bold text-dark fs-7">
-                                        @if($sp->variants_min_gia)
-                                            {{ number_format($sp->variants_min_gia, 0, ',', '.') }} ₫
-                                        @else
+                                        <?php if($sp->variants_min_gia): ?>
+                                            <?php echo e(number_format($sp->variants_min_gia, 0, ',', '.')); ?> ₫
+                                        <?php else: ?>
                                             Liên hệ
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </div>
 
                             </div>
                         </div>
-                    @empty
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <!-- Empty State -->
                         <div class="col-12 text-center py-5 my-4">
                             <div class="text-muted mb-3 fs-1">
@@ -420,17 +425,18 @@
                             <p class="text-muted fs-7 mb-4" style="max-width: 420px; margin: 0 auto;">
                                 Hãy thử thay đổi từ khóa tìm kiếm hoặc bỏ bớt các tiêu chí lọc để xem thêm các mẫu áo khác.
                             </p>
-                            <a href="{{ url('/Shop') }}" class="btn btn-dark rounded-3 px-4 py-2 fs-7 fw-semibold" data-ajax-link="true">
+                            <a href="<?php echo e(url('/Shop')); ?>" class="btn btn-dark rounded-3 px-4 py-2 fs-7 fw-semibold" data-ajax-link="true">
                                 Xem tất cả sản phẩm
                             </a>
                         </div>
-                    @endforelse
+                    <?php endif; ?>
                 </div>
 
                 <!-- PAGINATION -->
                 <div class="row mt-5 reveal reveal-fade" id="shopPaginationWrap">
                     <div class="col-12 d-flex justify-content-center">
-                        {{ $sanPhams->links('pagination::bootstrap-5') }}
+                        <?php echo e($sanPhams->links('pagination::bootstrap-5')); ?>
+
                     </div>
                 </div>
 
@@ -494,7 +500,7 @@
 </div>
 
 <!-- SHOP STYLES (Đồng bộ 100% với Product Detail) -->
-@include('client.layout.motion-system')
+<?php echo $__env->make('client.layout.motion-system', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 <style>
     /* Typography Utilities */
     .fs-7 { font-size: 0.875rem !important; }
@@ -948,5 +954,6 @@
     })();
 </script>
 
-@include('client.layout.footer')
-@include('client.layout.scripts')
+<?php echo $__env->make('client.layout.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php echo $__env->make('client.layout.scripts', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php /**PATH D:\e7\laragon\www\DATN\DATN-CustomTee\Customtee\resources\views/client/Shop.blade.php ENDPATH**/ ?>

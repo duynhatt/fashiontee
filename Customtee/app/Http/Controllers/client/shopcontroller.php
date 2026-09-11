@@ -17,9 +17,10 @@ class ShopController extends Controller
 
     public function Shop(Request $request)
     {
-        $danhMucs = Category::hienThi()->orderBy('ten_danh_muc')->get();
+        $danhMucs = collect(Category::getFlatTree(null, true));
+        $danhMucsTree = Category::getNestedTree(true);
         $tuKhoa = $request->get('q');
-        $selectedDanhMucs = array_filter((array) $request->input('danh_muc', []), fn($id) => is_numeric($id));
+        $selectedDanhMucs = array_map('intval', array_filter((array) $request->input('danh_muc', []), fn($id) => is_numeric($id)));
         $selectedSizes = array_filter((array) $request->input('size', []), fn($id) => is_numeric($id));
         $selectedColors = array_filter((array) $request->input('color', []), fn($id) => is_numeric($id));
 
@@ -37,7 +38,16 @@ class ShopController extends Controller
             }], 'gia');
 
         if (!empty($selectedDanhMucs)) {
-            $query->whereIn('danh_muc_id', $selectedDanhMucs);
+            $allTargetCategoryIds = [];
+            foreach ($selectedDanhMucs as $catId) {
+                $allTargetCategoryIds[] = (int) $catId;
+                $cat = Category::find($catId);
+                if ($cat) {
+                    $allTargetCategoryIds = array_merge($allTargetCategoryIds, $cat->getAllChildrenIds());
+                }
+            }
+            $allTargetCategoryIds = array_values(array_unique($allTargetCategoryIds));
+            $query->whereIn('danh_muc_id', $allTargetCategoryIds);
         }
 
         $tableVariant = (new BienThe())->getTable();
@@ -110,6 +120,8 @@ class ShopController extends Controller
 
         return view('client.Shop', compact(
             'danhMucs',
+            'danhMucsTree',
+            'selectedDanhMucs',
             'sanPhams',
             'tuKhoa',
             'sizes',

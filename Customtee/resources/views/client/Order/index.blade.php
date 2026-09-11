@@ -27,7 +27,7 @@
                         <span class="text-muted fw-normal fs-6">({{ $donHangs->total() }} đơn)</span>
                     @endif
                 </h1>
-                <p class="text-muted small mb-0">Theo dõi tiến trình vận chuyển và lịch sử mua sắm thời trang của bạn</p>
+               
             </div>
             <a href="{{ url('/Shop') }}" class="btn btn-sm btn-outline-dark rounded-pill px-3 py-1-5 fw-semibold d-inline-flex align-items-center gap-1">
                 <i class="bi bi-arrow-left"></i> Tiếp tục mua sắm

@@ -78,8 +78,6 @@
         .dropdown-menu {
             z-index: 3000 !important;
         }
-
-        */
     </style>
     <section id="container">
 

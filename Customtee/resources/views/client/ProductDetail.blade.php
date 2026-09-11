@@ -12,11 +12,26 @@
                         <i class="bi bi-house-door me-1"></i>Trang chủ
                     </a>
                 </li>
-                <li class="breadcrumb-item">
-                    <a href="{{ url('/Shop') }}" class="text-decoration-none text-muted small">
-                        {{ $sanPham->category->ten_danh_muc ?? 'Sản phẩm' }}
-                    </a>
-                </li>
+                @if($sanPham->category)
+                    @foreach($sanPham->category->getAncestors() as $ancestor)
+                        <li class="breadcrumb-item">
+                            <a href="{{ url('/Shop?danh_muc[]=' . $ancestor->id) }}" class="text-decoration-none text-muted small">
+                                {{ $ancestor->ten_danh_muc }}
+                            </a>
+                        </li>
+                    @endforeach
+                    <li class="breadcrumb-item">
+                        <a href="{{ url('/Shop?danh_muc[]=' . $sanPham->category->id) }}" class="text-decoration-none text-muted small">
+                            {{ $sanPham->category->ten_danh_muc }}
+                        </a>
+                    </li>
+                @else
+                    <li class="breadcrumb-item">
+                        <a href="{{ url('/Shop') }}" class="text-decoration-none text-muted small">
+                            Sản phẩm
+                        </a>
+                    </li>
+                @endif
                 <li class="breadcrumb-item active text-dark small fw-medium text-truncate" style="max-width: 280px;" aria-current="page">
                     {{ $sanPham->ten_san_pham }}
                 </li>
@@ -174,9 +189,12 @@
                             <label class="form-label fw-semibold text-dark mb-0 fs-7">
                                 Kích thước: <span class="text-muted fw-normal" id="selected-size-label">Chưa chọn</span>
                             </label>
-                            <button type="button" class="btn btn-link text-decoration-none p-0 text-muted fs-7 d-inline-flex align-items-center gap-1 size-guide-link"
+                            {{-- <button type="button" class="btn btn-link text-decoration-none p-0 text-muted fs-7 d-inline-flex align-items-center gap-1 size-guide-link"
+                            <button type="button" class="btn btn-link text-decoration-none p-0 text-primary fs-7 d-inline-flex align-items-center gap-1 size-guide-link hover-underline"
                                     id="btn-open-size-tab">
                                 <i class="bi bi-rulers"></i> Bảng hướng dẫn size
+                            </button> --}}
+                                <i class="bi bi-rulers"></i> <span>Bảng hướng dẫn size</span>
                             </button>
                         </div>
                         <div class="d-flex flex-wrap gap-2" id="size-options">
@@ -427,144 +445,381 @@
 
                 <!-- TAB: Bảng hướng dẫn chọn size -->
                 <div class="tab-pane fade" id="size-guide-pane" role="tabpanel" aria-labelledby="size-guide-tab" tabindex="0">
-                    <div class="row g-4">
-                        <!-- Cột trái: Bảng quy đổi Chiều cao & Cân nặng và Bảng thông số chi tiết -->
-                        <div class="col-12 col-xl-8">
-                            <!-- 1. Bảng quy đổi Chiều cao & Cân nặng -->
-                            <div class="mb-4">
-                                <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                                    <i class="bi bi-person-lines-fill text-primary"></i>
-                                    <span>1. Bảng quy đổi Chiều cao & Cân nặng</span>
-                                </h5>
-                                <div class="table-responsive rounded-3 border border-light-subtle shadow-xs">
-                                    <table class="table table-hover text-center align-middle mb-0 fs-7">
-                                        <thead class="table-light border-bottom">
-                                            <tr class="fw-semibold text-secondary">
-                                                <th class="py-3">Size</th>
-                                                <th class="py-3">Chiều cao gợi ý</th>
-                                                <th class="py-3">Cân nặng gợi ý</th>
-                                                <th class="py-3">Form áo gợi ý</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td class="py-2-5"><span class="badge bg-dark px-3 py-1 fw-bold">S</span></td>
-                                                <td>1m50 - 1m60</td>
-                                                <td>45 - 53 kg</td>
-                                                <td><span class="text-secondary fw-medium">Vừa vặn (Regular)</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="py-2-5"><span class="badge bg-dark px-3 py-1 fw-bold">M</span></td>
-                                                <td>1m60 - 1m68</td>
-                                                <td>54 - 62 kg</td>
-                                                <td><span class="text-secondary fw-medium">Vừa vặn (Regular)</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="py-2-5"><span class="badge bg-dark px-3 py-1 fw-bold">L</span></td>
-                                                <td>1m68 - 1m75</td>
-                                                <td>63 - 72 kg</td>
-                                                <td><span class="text-secondary fw-medium">Thoải mái (Comfort)</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="py-2-5"><span class="badge bg-dark px-3 py-1 fw-bold">XL</span></td>
-                                                <td>1m75 - 1m82</td>
-                                                <td>73 - 82 kg</td>
-                                                <td><span class="text-secondary fw-medium">Thoải mái (Comfort)</span></td>
-                                            </tr>
-                                            <tr>
-                                                <td class="py-2-5"><span class="badge bg-dark px-3 py-1 fw-bold">XXL</span></td>
-                                                <td>1m80 - 1m90</td>
-                                                <td>83 - 95 kg</td>
-                                                <td><span class="text-secondary fw-medium">Rộng rãi (Oversize)</span></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+
+                    <!-- 1. GỢI Ý SIZE THÔNG MINH (Interactive Size Finder Tool) -->
+                    <div class="size-finder-card p-3 p-md-4 rounded-4 mb-4 border border-primary-subtle shadow-xs">
+                        <div class="row align-items-center g-3">
+                            <div class="col-12 col-lg-7">
+                                <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                    <span class="badge bg-dark text-white rounded-pill px-3 py-1-5 fs-8 fw-semibold d-inline-flex align-items-center gap-1 shadow-xs">
+                                        <i class="bi bi-stars text-warning"></i> Gợi ý size chuẩn
+                                    </span>
+                                    <span class="text-secondary fs-8 fw-medium">Nhập số đo để tìm size vừa vặn nhất với bạn</span>
+                                </div>
+                                <div class="row g-2 mt-1">
+                                    <div class="col-6 col-sm-4">
+                                        <label class="form-label fs-8 fw-semibold text-dark mb-1 d-flex align-items-center gap-1">
+                                            <i class="bi bi-arrows-vertical text-muted"></i> Chiều cao
+                                        </label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" id="calc-height" class="form-control rounded-start-3 fw-semibold text-dark" placeholder="168" value="168" min="140" max="210">
+                                            <span class="input-group-text bg-light text-muted border-start-0 rounded-end-3 fs-8">cm</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-6 col-sm-4">
+                                        <label class="form-label fs-8 fw-semibold text-dark mb-1 d-flex align-items-center gap-1">
+                                            <i class="bi bi-speedometer2 text-muted"></i> Cân nặng
+                                        </label>
+                                        <div class="input-group input-group-sm">
+                                            <input type="number" id="calc-weight" class="form-control rounded-start-3 fw-semibold text-dark" placeholder="60" value="60" min="35" max="130">
+                                            <span class="input-group-text bg-light text-muted border-start-0 rounded-end-3 fs-8">kg</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-sm-4">
+                                        <label class="form-label fs-8 fw-semibold text-dark mb-1 d-flex align-items-center gap-1">
+                                            <i class="bi bi-person-gear text-muted"></i> Gu mặc
+                                        </label>
+                                        <select id="calc-fit" class="form-select form-select-sm rounded-3 fw-medium">
+                                            <option value="regular">Vừa vặn (Regular)</option>
+                                            <option value="comfort" selected>Thoải mái (Comfort)</option>
+                                            <option value="oversize">Rộng rãi (Oversize)</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
 
-                            <!-- 2. Bảng thông số chi tiết kích thước áo -->
-                            <div>
-                                <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                                    <i class="bi bi-aspect-ratio text-primary"></i>
-                                    <span>2. Thông số kích thước chi tiết áo (cm)</span>
-                                </h5>
-                                <div class="table-responsive rounded-3 border border-light-subtle shadow-xs">
-                                    <table class="table table-hover text-center align-middle mb-0 fs-7">
-                                        <thead class="table-light border-bottom">
-                                            <tr class="fw-semibold text-secondary">
-                                                <th class="py-3">Size</th>
-                                                <th class="py-3">Dài áo</th>
-                                                <th class="py-3">Rộng ngực</th>
-                                                <th class="py-3">Rộng vai</th>
-                                                <th class="py-3">Dài tay</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td class="py-2-5"><strong class="text-dark">S</strong></td>
-                                                <td>66 cm</td>
-                                                <td>48 cm</td>
-                                                <td>42 cm</td>
-                                                <td>20 cm</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="py-2-5"><strong class="text-dark">M</strong></td>
-                                                <td>69 cm</td>
-                                                <td>51 cm</td>
-                                                <td>44 cm</td>
-                                                <td>21 cm</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="py-2-5"><strong class="text-dark">L</strong></td>
-                                                <td>72 cm</td>
-                                                <td>54 cm</td>
-                                                <td>46 cm</td>
-                                                <td>22 cm</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="py-2-5"><strong class="text-dark">XL</strong></td>
-                                                <td>75 cm</td>
-                                                <td>57 cm</td>
-                                                <td>48 cm</td>
-                                                <td>23 cm</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="py-2-5"><strong class="text-dark">XXL</strong></td>
-                                                <td>77 cm</td>
-                                                <td>60 cm</td>
-                                                <td>50 cm</td>
-                                                <td>24 cm</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                            <div class="col-12 col-lg-5">
+                                <div class="size-recommendation-box p-3 rounded-4 bg-white border border-light-subtle d-flex align-items-center justify-content-between gap-3 shadow-xs">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="size-result-badge rounded-circle bg-dark text-white d-flex align-items-center justify-content-center fw-bold fs-3 shadow-sm" id="calc-result-size" style="width: 52px; height: 52px; flex-shrink: 0;">
+                                            M
+                                        </div>
+                                        <div>
+                                            <div class="d-flex align-items-center gap-1">
+                                                <span class="badge bg-success-subtle text-success fs-8 rounded-pill px-2 py-0-5 fw-semibold" id="calc-result-badge">Phù hợp 98%</span>
+                                                <span class="text-muted fs-8" id="calc-result-fit-label">Thoải mái</span>
+                                            </div>
+                                            <div class="text-secondary fs-8 mt-1" id="calc-result-desc">Cao 1m60 - 1m68, Nặng 54 - 62kg</div>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-primary-dark btn-sm rounded-pill px-3 py-2 fw-semibold d-inline-flex align-items-center gap-1 text-nowrap" id="btn-apply-calculated-size">
+                                        <span>Chọn size</span>
+                                        <i class="bi bi-arrow-right-short fs-6"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. BẢNG SIZE & HƯỚNG DẪN CHI TIẾT (2 Cột cân đối) -->
+                    <div class="row g-4">
+                        <!-- Cột trái: Bảng thông số với Subtabs chuyển đổi mượt mà -->
+                        <div class="col-12 col-xl-8">
+                            <div class="card border border-light-subtle rounded-4 overflow-hidden shadow-xs h-100">
+                                <!-- Card Header với Segmented Subtabs -->
+                                <div class="card-header bg-light border-bottom border-light-subtle p-3">
+                                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2">
+                                        <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                            <i class="bi bi-rulers text-primary"></i>
+                                            <span>Bảng thông số kích cỡ chuẩn</span>
+                                        </h6>
+                                        <!-- Sub-tab switchers -->
+                                        <ul class="nav nav-pills size-subtabs gap-1" id="sizeGuideSubTabs" role="tablist">
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link active rounded-pill px-3 py-1-5 fs-8 fw-semibold" id="subtab-body-weight" data-bs-toggle="pill" data-bs-target="#subpane-body-weight" type="button" role="tab" aria-selected="true">
+                                                    <i class="bi bi-person me-1"></i>Chiều cao & Cân nặng
+                                                </button>
+                                            </li>
+                                            <li class="nav-item" role="presentation">
+                                                <button class="nav-link rounded-pill px-3 py-1-5 fs-8 fw-semibold" id="subtab-measurements" data-bs-toggle="pill" data-bs-target="#subpane-measurements" type="button" role="tab" aria-selected="false">
+                                                    <i class="bi bi-aspect-ratio me-1"></i>Số đo áo (cm) & Sơ đồ
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="card-body p-0">
+                                    <div class="tab-content" id="sizeGuideSubContent">
+                                        <!-- Subpane 1: Chiều cao & Cân nặng -->
+                                        <div class="tab-pane fade show active p-3 p-md-4" id="subpane-body-weight" role="tabpanel" aria-labelledby="subtab-body-weight">
+                                            <div class="table-responsive rounded-3 border border-light-subtle">
+                                                <table class="table table-hover align-middle text-center mb-0 modern-size-table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="py-3 px-3 text-start">Size</th>
+                                                            <th class="py-3 px-2">Chiều cao gợi ý</th>
+                                                            <th class="py-3 px-2">Cân nặng gợi ý</th>
+                                                            <th class="py-3 px-2">Form áo gợi ý</th>
+                                                            <th class="py-3 px-3 text-end">Chọn nhanh</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr data-size-row="S" class="size-table-row">
+                                                            <td class="text-start py-3 px-3">
+                                                                <span class="size-pill-badge">S</span>
+                                                            </td>
+                                                            <td class="fw-medium text-dark">1m50 - 1m60</td>
+                                                            <td class="fw-medium text-dark">45 - 53 kg</td>
+                                                            <td>
+                                                                <span class="badge badge-fit-regular">Vừa vặn (Regular)</span>
+                                                            </td>
+                                                            <td class="text-end py-3 px-3">
+                                                                <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-1 fs-8 btn-quick-select-size" data-size="S">
+                                                                    Chọn
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        <tr data-size-row="M" class="size-table-row">
+                                                            <td class="text-start py-3 px-3">
+                                                                <span class="size-pill-badge">M</span>
+                                                            </td>
+                                                            <td class="fw-medium text-dark">1m60 - 1m68</td>
+                                                            <td class="fw-medium text-dark">54 - 62 kg</td>
+                                                            <td>
+                                                                <span class="badge badge-fit-regular">Vừa vặn (Regular)</span>
+                                                            </td>
+                                                            <td class="text-end py-3 px-3">
+                                                                <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-1 fs-8 btn-quick-select-size" data-size="M">
+                                                                    Chọn
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        <tr data-size-row="L" class="size-table-row">
+                                                            <td class="text-start py-3 px-3">
+                                                                <span class="size-pill-badge">L</span>
+                                                            </td>
+                                                            <td class="fw-medium text-dark">1m68 - 1m75</td>
+                                                            <td class="fw-medium text-dark">63 - 72 kg</td>
+                                                            <td>
+                                                                <span class="badge badge-fit-comfort">Thoải mái (Comfort)</span>
+                                                            </td>
+                                                            <td class="text-end py-3 px-3">
+                                                                <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-1 fs-8 btn-quick-select-size" data-size="L">
+                                                                    Chọn
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        <tr data-size-row="XL" class="size-table-row">
+                                                            <td class="text-start py-3 px-3">
+                                                                <span class="size-pill-badge">XL</span>
+                                                            </td>
+                                                            <td class="fw-medium text-dark">1m75 - 1m82</td>
+                                                            <td class="fw-medium text-dark">73 - 82 kg</td>
+                                                            <td>
+                                                                <span class="badge badge-fit-comfort">Thoải mái (Comfort)</span>
+                                                            </td>
+                                                            <td class="text-end py-3 px-3">
+                                                                <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-1 fs-8 btn-quick-select-size" data-size="XL">
+                                                                    Chọn
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        <tr data-size-row="XXL" class="size-table-row">
+                                                            <td class="text-start py-3 px-3">
+                                                                <span class="size-pill-badge">XXL</span>
+                                                            </td>
+                                                            <td class="fw-medium text-dark">1m80 - 1m90</td>
+                                                            <td class="fw-medium text-dark">83 - 95 kg</td>
+                                                            <td>
+                                                                <span class="badge badge-fit-oversize">Rộng rãi (Oversize)</span>
+                                                            </td>
+                                                            <td class="text-end py-3 px-3">
+                                                                <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-3 py-1 fs-8 btn-quick-select-size" data-size="XXL">
+                                                                    Chọn
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <div class="d-flex flex-wrap align-items-center justify-content-between mt-3 text-muted fs-8 px-1 gap-2">
+                                                <span><i class="bi bi-check2-circle text-success me-1"></i> Bấm <strong>"Chọn"</strong> ở hàng tương ứng để áp dụng ngay vào sản phẩm</span>
+                                                <span><i class="bi bi-gender-ambiguous me-1"></i> Form chuẩn Unisex cho cả nam và nữ</span>
+                                            </div>
+                                        </div>
+
+                                        <!-- Subpane 2: Chi tiết số đo áo & Sơ đồ SVG -->
+                                        <div class="tab-pane fade p-3 p-md-4" id="subpane-measurements" role="tabpanel" aria-labelledby="subtab-measurements">
+                                            <div class="row g-3 align-items-center">
+                                                <!-- Bảng số đo -->
+                                                <div class="col-12 col-md-7">
+                                                    <div class="table-responsive rounded-3 border border-light-subtle">
+                                                        <table class="table table-hover align-middle text-center mb-0 modern-size-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th class="py-3 px-2">Size</th>
+                                                                    <th class="py-3 px-2">Dài áo (A)</th>
+                                                                    <th class="py-3 px-2">Rộng ngực (B)</th>
+                                                                    <th class="py-3 px-2">Rộng vai (C)</th>
+                                                                    <th class="py-3 px-2">Dài tay (D)</th>
+                                                                    <th class="py-3 px-2 text-end">Chọn</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <tr data-size-row="S" class="size-table-row">
+                                                                    <td class="py-2-5"><span class="size-pill-badge">S</span></td>
+                                                                    <td class="fw-semibold text-dark">66 cm</td>
+                                                                    <td class="fw-semibold text-dark">48 cm</td>
+                                                                    <td class="fw-semibold text-dark">42 cm</td>
+                                                                    <td class="fw-semibold text-dark">20 cm</td>
+                                                                    <td class="text-end pe-2">
+                                                                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-2 py-0-5 fs-8 btn-quick-select-size" data-size="S">Chọn</button>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr data-size-row="M" class="size-table-row">
+                                                                    <td class="py-2-5"><span class="size-pill-badge">M</span></td>
+                                                                    <td class="fw-semibold text-dark">69 cm</td>
+                                                                    <td class="fw-semibold text-dark">51 cm</td>
+                                                                    <td class="fw-semibold text-dark">44 cm</td>
+                                                                    <td class="fw-semibold text-dark">21 cm</td>
+                                                                    <td class="text-end pe-2">
+                                                                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-2 py-0-5 fs-8 btn-quick-select-size" data-size="M">Chọn</button>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr data-size-row="L" class="size-table-row">
+                                                                    <td class="py-2-5"><span class="size-pill-badge">L</span></td>
+                                                                    <td class="fw-semibold text-dark">72 cm</td>
+                                                                    <td class="fw-semibold text-dark">54 cm</td>
+                                                                    <td class="fw-semibold text-dark">46 cm</td>
+                                                                    <td class="fw-semibold text-dark">22 cm</td>
+                                                                    <td class="text-end pe-2">
+                                                                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-2 py-0-5 fs-8 btn-quick-select-size" data-size="L">Chọn</button>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr data-size-row="XL" class="size-table-row">
+                                                                    <td class="py-2-5"><span class="size-pill-badge">XL</span></td>
+                                                                    <td class="fw-semibold text-dark">75 cm</td>
+                                                                    <td class="fw-semibold text-dark">57 cm</td>
+                                                                    <td class="fw-semibold text-dark">48 cm</td>
+                                                                    <td class="fw-semibold text-dark">23 cm</td>
+                                                                    <td class="text-end pe-2">
+                                                                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-2 py-0-5 fs-8 btn-quick-select-size" data-size="XL">Chọn</button>
+                                                                    </td>
+                                                                </tr>
+                                                                <tr data-size-row="XXL" class="size-table-row">
+                                                                    <td class="py-2-5"><span class="size-pill-badge">XXL</span></td>
+                                                                    <td class="fw-semibold text-dark">77 cm</td>
+                                                                    <td class="fw-semibold text-dark">60 cm</td>
+                                                                    <td class="fw-semibold text-dark">50 cm</td>
+                                                                    <td class="fw-semibold text-dark">24 cm</td>
+                                                                    <td class="text-end pe-2">
+                                                                        <button type="button" class="btn btn-outline-dark btn-sm rounded-pill px-2 py-0-5 fs-8 btn-quick-select-size" data-size="XXL">Chọn</button>
+                                                                    </td>
+                                                                </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                    <div class="mt-2 text-muted fs-8">
+                                                        * Độ co giãn và dung sai may mặc cho phép trong khoảng ±1 đến 1.5 cm.
+                                                    </div>
+                                                </div>
+
+                                                <!-- Sơ đồ minh họa áo phông vector SVG trực quan -->
+                                                <div class="col-12 col-md-5">
+                                                    <div class="tshirt-diagram-wrapper p-3 rounded-4 bg-light border border-light-subtle text-center">
+                                                        <div class="fw-semibold text-dark fs-8 mb-2 d-flex align-items-center justify-content-center gap-1">
+                                                            <i class="bi bi-diagram-3 text-primary"></i> Sơ đồ vị trí đo kích thước áo
+                                                        </div>
+                                                        <div class="tshirt-svg-container position-relative d-inline-block">
+                                                            <!-- Vector SVG T-Shirt with Dimensions -->
+                                                            <svg viewBox="0 0 300 270" class="tshirt-vector-svg" style="max-width: 230px; width: 100%; height: auto;">
+                                                                <defs>
+                                                                    <marker id="arrow-start" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                                                                        <path d="M6,0 L0,3 L6,6 L4,3 Z" fill="#0d6efd" />
+                                                                    </marker>
+                                                                    <marker id="arrow-end" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                                                                        <path d="M0,0 L6,3 L0,6 L2,3 Z" fill="#0d6efd" />
+                                                                    </marker>
+                                                                </defs>
+
+                                                                <!-- T-shirt silhouette -->
+                                                                <path d="M95,35 Q150,55 205,35 L260,70 L235,110 L205,95 L205,245 L95,245 L95,95 L65,110 L40,70 Z"
+                                                                      fill="#ffffff" stroke="#334155" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />
+
+                                                                <!-- Collar ribbing -->
+                                                                <path d="M110,36 Q150,58 190,36" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" />
+                                                                <path d="M110,36 Q150,22 190,36" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" />
+
+                                                                <!-- Line C: Rộng vai (Top Shoulder to Shoulder) -->
+                                                                <line x1="95" y1="36" x2="205" y2="36" stroke="#0d6efd" stroke-width="1.8" stroke-dasharray="3,3" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" />
+                                                                <circle cx="150" cy="36" r="10" fill="#0d6efd" />
+                                                                <text x="150" y="40" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">C</text>
+
+                                                                <!-- Line B: Rộng ngực (Armpit to Armpit) -->
+                                                                <line x1="95" y1="95" x2="205" y2="95" stroke="#0d6efd" stroke-width="1.8" stroke-dasharray="3,3" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" />
+                                                                <circle cx="150" cy="95" r="10" fill="#0d6efd" />
+                                                                <text x="150" y="99" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">B</text>
+
+                                                                <!-- Line A: Dài áo (Shoulder to Bottom hem) -->
+                                                                <line x1="225" y1="42" x2="225" y2="245" stroke="#0d6efd" stroke-width="1.8" stroke-dasharray="3,3" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" />
+                                                                <circle cx="225" cy="144" r="10" fill="#0d6efd" />
+                                                                <text x="225" y="148" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">A</text>
+
+                                                                <!-- Line D: Dài tay (Shoulder seam to sleeve cuff) -->
+                                                                <line x1="205" y1="45" x2="252" y2="76" stroke="#0d6efd" stroke-width="1.8" stroke-dasharray="3,3" marker-start="url(#arrow-start)" marker-end="url(#arrow-end)" />
+                                                                <circle cx="236" cy="55" r="10" fill="#0d6efd" />
+                                                                <text x="236" y="59" fill="#ffffff" font-size="11" font-weight="bold" text-anchor="middle">D</text>
+                                                            </svg>
+                                                        </div>
+                                                        <div class="row g-1 mt-2 text-start fs-8">
+                                                            <div class="col-6"><span class="badge bg-primary px-1-5 py-0-5 me-1">A</span> Dài áo</div>
+                                                            <div class="col-6"><span class="badge bg-primary px-1-5 py-0-5 me-1">B</span> Rộng ngực</div>
+                                                            <div class="col-6"><span class="badge bg-primary px-1-5 py-0-5 me-1">C</span> Rộng vai</div>
+                                                            <div class="col-6"><span class="badge bg-primary px-1-5 py-0-5 me-1">D</span> Dài tay</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Cột phải: Hướng dẫn đo & Mẹo chọn size -->
+                        <!-- Cột phải: Gợi ý phong cách mặc & Mẹo chọn size -->
                         <div class="col-12 col-xl-4">
                             <div class="d-flex flex-column gap-3 h-100">
-                                <div class="p-3-5 rounded-3 bg-light border border-light-subtle">
-                                    <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2 fs-7">
-                                        <i class="bi bi-info-circle text-primary fs-6"></i>
-                                        <span>Lưu ý form dáng</span>
+                                <!-- Card 1: Form dáng thực tế -->
+                                <div class="p-4 rounded-4 bg-light border border-light-subtle shadow-xs">
+                                    <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2 fs-7">
+                                        <i class="bi bi-person-bounding-box text-primary fs-6"></i>
+                                        <span>Gợi ý theo phong cách mặc</span>
                                     </h6>
-                                    <p class="text-secondary small mb-0 lh-lg">
-                                        Bảng thông số đo tiêu chuẩn theo form dáng người Việt Nam. Nếu bạn thích mặc phong cách rộng rãi thoải mái hoặc dáng Oversize/Streetwear, hãy cân nhắc chọn <strong>tăng thêm 1 size</strong>.
-                                    </p>
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="d-flex align-items-start gap-3 p-3 rounded-3 bg-white border border-light-subtle shadow-xs">
+                                            <span class="badge badge-fit-regular mt-0-5 flex-shrink-0">Regular</span>
+                                            <div>
+                                                <strong class="text-dark d-block fs-8 mb-1">Vừa vặn, thanh lịch</strong>
+                                                <span class="text-muted fs-8 lh-base d-block">Áo ôm nhẹ, gọn gàng, tôn dáng tự nhiên và lịch sự.</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-start gap-3 p-3 rounded-3 bg-white border border-light-subtle shadow-xs">
+                                            <span class="badge badge-fit-comfort mt-0-5 flex-shrink-0">Comfort</span>
+                                            <div>
+                                                <strong class="text-dark d-block fs-8 mb-1">Thoải mái hàng ngày</strong>
+                                                <span class="text-muted fs-8 lh-base d-block">Độ suông vừa phải, thoáng mát, dễ vận động cả ngày dài.</span>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-start gap-3 p-3 rounded-3 bg-white border border-light-subtle shadow-xs">
+                                            <span class="badge badge-fit-oversize mt-0-5 flex-shrink-0">Oversize</span>
+                                            <div>
+                                                <strong class="text-dark d-block fs-8 mb-1">Rộng rãi Streetwear</strong>
+                                                <span class="text-muted fs-8 lh-base d-block">Dáng thụng cá tính, vai trễ phóng khoáng chuẩn xu hướng.</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div class="p-3-5 rounded-3 bg-light border border-light-subtle flex-grow-1">
-                                    <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2 fs-7">
-                                        <i class="bi bi-lightbulb text-warning fs-6"></i>
-                                        <span>Mẹo đo kích thước chuẩn</span>
+                                <!-- Card 2: Mẹo chọn size khi ở khoảng giữa -->
+                                <div class="p-4 rounded-4 bg-warning-subtle border border-warning-subtle shadow-xs flex-grow-1">
+                                    <h6 class="fw-bold text-dark mb-2-5 d-flex align-items-center gap-2 fs-7">
+                                        <i class="bi bi-lightbulb-fill text-warning fs-6"></i>
+                                        <span>Mẹo khi phân vân giữa 2 size</span>
                                     </h6>
-                                    <ul class="text-secondary small mb-0 ps-3 d-flex flex-column gap-2 lh-lg">
-                                        <li><strong>Dài áo:</strong> Đo từ điểm cao nhất của đường may cầu vai xuôi thẳng xuống hết lai gấu áo.</li>
-                                        <li><strong>Rộng ngực:</strong> Đo ngang nách áo từ nách bên trái sang nách bên phải (lấy số đo x 2 để ra vòng ngực).</li>
-                                        <li><strong>Rộng vai:</strong> Đo khoảng cách giữa 2 điểm nối may cầu vai áo.</li>
-                                        <li><strong>Khi phân vân giữa 2 size:</strong> Nếu chiều cao ở size L nhưng cân nặng ở size M, bạn nên ưu tiên chọn theo <strong>chiều cao</strong> để áo không bị ngắn vạt khi mặc.</li>
-                                    </ul>
+                                    <p class="text-dark small mb-0 lh-lg">
+                                        Nếu chiều cao ở size <strong>L</strong> nhưng cân nặng ở size <strong>M</strong>, hãy <strong>ưu tiên chọn theo chiều cao</strong> để vạt áo không bị ngắn khi giơ tay hoặc di chuyển. Nếu bạn phân vân giữa dáng ôm vừa hay rộng, hãy cân nhắc chọn tăng thêm 1 size để mặc thoải mái hơn.
+                                    </p>
                                 </div>
                             </div>
                         </div>
@@ -1429,6 +1684,147 @@
             border-right: 1px solid #e2e8f0 !important;
         }
     }
+
+    /* SIZE GUIDE ENHANCED STYLES */
+    .p-3-5 { padding: 1.25rem !important; }
+    .shadow-2xs { box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important; }
+
+    .size-finder-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-color: #cbd5e1 !important;
+    }
+
+    .size-recommendation-box {
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .size-recommendation-box:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .size-subtabs .nav-link {
+        color: #475569;
+        background-color: #e2e8f0;
+        transition: all 0.2s ease;
+        border: 0;
+    }
+
+    .size-subtabs .nav-link:hover {
+        color: #0f172a;
+        background-color: #cbd5e1;
+    }
+
+    .size-subtabs .nav-link.active {
+        background-color: #0f172a !important;
+        color: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
+    }
+
+    .modern-size-table {
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .modern-size-table thead th {
+        background-color: #f8fafc !important;
+        color: #475569;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.85rem 1rem !important;
+    }
+
+    .modern-size-table tbody td {
+        padding: 0.85rem 1rem !important;
+    }
+
+    .modern-size-table tbody tr {
+        transition: background-color 0.2s ease, transform 0.15s ease;
+        cursor: pointer;
+    }
+
+    .modern-size-table tbody tr:hover {
+        background-color: #f1f5f9;
+    }
+
+    .modern-size-table tbody tr.is-active-size {
+        background-color: #eff6ff !important;
+        box-shadow: inset 3px 0 0 #2563eb;
+    }
+
+    .modern-size-table tbody tr.is-active-size .size-pill-badge {
+        background-color: #2563eb !important;
+        color: #ffffff !important;
+        transform: scale(1.08);
+    }
+
+    .modern-size-table tbody tr.is-active-size .btn-quick-select-size {
+        background-color: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+    }
+
+    .size-pill-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 0.85rem;
+        background-color: #0f172a;
+        color: #ffffff;
+        transition: all 0.2s ease;
+    }
+
+    .badge-fit-regular {
+        background-color: #ecfdf5;
+        color: #059669;
+        border: 1px solid #a7f3d0;
+        font-weight: 600;
+        font-size: 0.775rem;
+        border-radius: 20px;
+        padding: 4px 10px;
+    }
+
+    .badge-fit-comfort {
+        background-color: #eff6ff;
+        color: #2563eb;
+        border: 1px solid #bfdbfe;
+        font-weight: 600;
+        font-size: 0.775rem;
+        border-radius: 20px;
+        padding: 4px 10px;
+    }
+
+    .badge-fit-oversize {
+        background-color: #f5f3ff;
+        color: #7c3aed;
+        border: 1px solid #ddd6fe;
+        font-weight: 600;
+        font-size: 0.775rem;
+        border-radius: 20px;
+        padding: 4px 10px;
+    }
+
+    .btn-quick-select-size {
+        font-weight: 600;
+        transition: all 0.15s ease;
+    }
+
+    .btn-quick-select-size:hover {
+        background-color: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+    }
+
+    .tshirt-vector-svg {
+        filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.04));
+    }
 </style>
 
 @include('client.layout.footer')
@@ -1606,6 +2002,9 @@
                 updateMobileStickyNote();
                 updateStockStates();
                 updateVariantInfo();
+                if (typeof window.highlightSizeInGuide === 'function') {
+                    window.highlightSizeInGuide(selectedSizeName);
+                }
             });
         });
 
@@ -2031,5 +2430,147 @@
                 }
             });
         }
+
+        // SIZE GUIDE INTERACTIVE CALCULATOR & SYNC
+        (function initSizeGuideInteractive() {
+            const heightInput = document.getElementById('calc-height');
+            const weightInput = document.getElementById('calc-weight');
+            const fitSelect = document.getElementById('calc-fit');
+            const resultSizeEl = document.getElementById('calc-result-size');
+            const resultBadgeEl = document.getElementById('calc-result-badge');
+            const resultFitLabelEl = document.getElementById('calc-result-fit-label');
+            const resultDescEl = document.getElementById('calc-result-desc');
+            const btnApplyCalculated = document.getElementById('btn-apply-calculated-size');
+
+            if (!heightInput || !weightInput || !fitSelect || !resultSizeEl) return;
+
+            function highlightSizeRows(sizeName) {
+                if (!sizeName) return;
+                const rows = document.querySelectorAll('.size-table-row');
+                rows.forEach(r => {
+                    if (r.dataset.sizeRow && r.dataset.sizeRow.toUpperCase() === sizeName.toUpperCase()) {
+                        r.classList.add('is-active-size');
+                    } else {
+                        r.classList.remove('is-active-size');
+                    }
+                });
+            }
+
+            window.highlightSizeInGuide = highlightSizeRows;
+
+            function computeSize() {
+                const height = parseFloat(heightInput.value) || 168;
+                const weight = parseFloat(weightInput.value) || 60;
+                const fit = fitSelect.value || 'comfort';
+
+                let baseSize = 'M';
+                let desc = '';
+
+                if (height < 160 || weight < 53) {
+                    baseSize = 'S';
+                    desc = 'Cao 1m50 - 1m60, Nặng 45 - 53kg';
+                } else if (height <= 168 && weight <= 62) {
+                    baseSize = 'M';
+                    desc = 'Cao 1m60 - 1m68, Nặng 54 - 62kg';
+                } else if (height <= 175 && weight <= 72) {
+                    baseSize = 'L';
+                    desc = 'Cao 1m68 - 1m75, Nặng 63 - 72kg';
+                } else if (height <= 182 && weight <= 82) {
+                    baseSize = 'XL';
+                    desc = 'Cao 1m75 - 1m82, Nặng 73 - 82kg';
+                } else {
+                    baseSize = 'XXL';
+                    desc = 'Cao 1m80 - 1m90, Nặng 83 - 95kg';
+                }
+
+                const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+                let idx = sizes.indexOf(baseSize);
+
+                let fitText = 'Vừa vặn (Regular)';
+                let fitBadge = 'Khuyên dùng';
+
+                if (fit === 'oversize') {
+                    if (idx < sizes.length - 1) idx += 1;
+                    fitText = 'Rộng rãi (Oversize)';
+                    fitBadge = 'Form thụng';
+                } else if (fit === 'comfort') {
+                    if ((baseSize === 'S' && (weight >= 51 || height >= 158)) ||
+                        (baseSize === 'M' && (weight >= 60 || height >= 166)) ||
+                        (baseSize === 'L' && (weight >= 70 || height >= 173)) ||
+                        (baseSize === 'XL' && (weight >= 80 || height >= 180))) {
+                        if (idx < sizes.length - 1) idx += 1;
+                    }
+                    fitText = 'Thoải mái (Comfort)';
+                    fitBadge = 'Khuyên dùng';
+                }
+
+                const finalSize = sizes[idx];
+                resultSizeEl.textContent = finalSize;
+                if (resultBadgeEl) resultBadgeEl.textContent = fitBadge;
+                if (resultFitLabelEl) resultFitLabelEl.textContent = fitText;
+                if (resultDescEl) resultDescEl.textContent = desc;
+
+                highlightSizeRows(finalSize);
+                return finalSize;
+            }
+
+            function selectProductVariantSize(sizeName) {
+                if (!sizeName) return;
+                const sizeBtns = document.querySelectorAll('#size-options .size-btn');
+                let foundBtn = null;
+                sizeBtns.forEach(btn => {
+                    const name = (btn.dataset.sizeName || '').trim().toUpperCase();
+                    if (name === sizeName.toUpperCase()) {
+                        foundBtn = btn;
+                    }
+                });
+
+                if (foundBtn) {
+                    if (foundBtn.classList.contains('is-out-of-stock')) {
+                        showClientToast('Size ' + sizeName + ' tạm hết hàng đối với màu sắc đang chọn.', 'warning');
+                    } else {
+                        foundBtn.click();
+                        highlightSizeRows(sizeName);
+                        showClientToast('Đã chọn Size ' + sizeName + ' cho sản phẩm!', 'success');
+                    }
+                } else {
+                    showClientToast('Sản phẩm hiện không có sẵn biến thể size ' + sizeName + '.', 'info');
+                }
+            }
+
+            [heightInput, weightInput].forEach(inp => {
+                inp.addEventListener('input', computeSize);
+            });
+            fitSelect.addEventListener('change', computeSize);
+
+            if (btnApplyCalculated) {
+                btnApplyCalculated.addEventListener('click', function() {
+                    const currentSize = resultSizeEl.textContent.trim();
+                    selectProductVariantSize(currentSize);
+                    const optGroup = document.querySelector('.product-option-group:has(#size-options)') || document.getElementById('selected-size-label');
+                    if (optGroup) {
+                        optGroup.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+            }
+
+            document.querySelectorAll('.btn-quick-select-size').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const size = this.dataset.size;
+                    selectProductVariantSize(size);
+                });
+            });
+
+            document.querySelectorAll('.size-table-row').forEach(row => {
+                row.addEventListener('click', function(e) {
+                    if (e.target.closest('button')) return;
+                    const size = this.dataset.sizeRow;
+                    if (size) selectProductVariantSize(size);
+                });
+            });
+
+            computeSize();
+        })();
     });
 </script>
