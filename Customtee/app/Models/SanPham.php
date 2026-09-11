@@ -19,6 +19,10 @@ class SanPham extends Model
         'slug',
         'mo_ta_ngan',
         'mo_ta_chi_tiet',
+        'chat_lieu',
+        'kieu_dang',
+        'diem_noi_bat',
+        'huong_dan_bao_quan',
         'hinh_anh_chinh',
         'trang_thai',
     ];

@@ -550,6 +550,24 @@
     </style>
 
     <script>
+        // Global Client Toast Notification
+        window.showClientToast = function(message, type) {
+            if (!message) return;
+            type = type === 'error' ? 'error' : (type === 'warning' ? 'warning' : 'success');
+            const el = document.createElement('div');
+            el.className = 'custom-toast ' + type;
+            el.setAttribute('role', 'alert');
+            el.style.whiteSpace = 'pre-wrap';
+            el.textContent = message;
+            document.body.appendChild(el);
+            setTimeout(function() {
+                el.classList.add('fade-out');
+                setTimeout(() => {
+                    if (el.parentNode) el.remove();
+                }, 500);
+            }, type === 'error' ? 5000 : 3500);
+        };
+
         setTimeout(function() {
             const toasts = document.querySelectorAll('.custom-toast');
             toasts.forEach(function(toast) {

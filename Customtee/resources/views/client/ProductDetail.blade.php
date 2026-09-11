@@ -175,7 +175,7 @@
                                 Kích thước: <span class="text-muted fw-normal" id="selected-size-label">Chưa chọn</span>
                             </label>
                             <button type="button" class="btn btn-link text-decoration-none p-0 text-muted fs-7 d-inline-flex align-items-center gap-1 size-guide-link"
-                                    data-bs-toggle="modal" data-bs-target="#sizeGuideModal">
+                                    id="btn-open-size-tab">
                                 <i class="bi bi-rulers"></i> Bảng hướng dẫn size
                             </button>
                         </div>
@@ -277,23 +277,35 @@
         <div class="product-tabs-wrapper rounded-4 border border-light-subtle bg-white overflow-hidden shadow-xs reveal">
 
             <!-- Nav Tabs Header -->
-            <ul class="nav nav-tabs modern-tabs px-3 pt-2 bg-light border-bottom border-light-subtle" id="productDetailTab" role="tablist">
+            @php
+                $hasSpecsOrCare = !empty($sanPham->chat_lieu) || !empty($sanPham->kieu_dang) || !empty($sanPham->huong_dan_bao_quan);
+            @endphp
+            <ul class="nav nav-tabs modern-tabs nav-justified px-0 pt-0 bg-light border-bottom border-light-subtle" id="productDetailTab" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link modern-tab-link active fw-semibold text-dark py-3 px-4 border-0"
+                    <button class="nav-link modern-tab-link active fw-semibold py-3 px-3 border-0"
                             id="description-tab" data-bs-toggle="tab" data-bs-target="#description-pane"
                             type="button" role="tab" aria-controls="description-pane" aria-selected="true">
                         <i class="bi bi-text-paragraph me-2"></i>Mô tả sản phẩm
                     </button>
                 </li>
+                @if ($hasSpecsOrCare)
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link modern-tab-link fw-semibold py-3 px-3 border-0"
+                                id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs-pane"
+                                type="button" role="tab" aria-controls="specs-pane" aria-selected="false">
+                            <i class="bi bi-sliders me-2"></i>Thông số & Bảo quản
+                        </button>
+                    </li>
+                @endif
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link modern-tab-link fw-semibold text-muted py-3 px-4 border-0"
-                            id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs-pane"
-                            type="button" role="tab" aria-controls="specs-pane" aria-selected="false">
-                        <i class="bi bi-sliders me-2"></i>Thông số & Bảo quản
+                    <button class="nav-link modern-tab-link fw-semibold py-3 px-3 border-0"
+                            id="size-guide-tab" data-bs-toggle="tab" data-bs-target="#size-guide-pane"
+                            type="button" role="tab" aria-controls="size-guide-pane" aria-selected="false">
+                        <i class="bi bi-rulers me-2"></i>Bảng hướng dẫn size
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link modern-tab-link fw-semibold text-muted py-3 px-4 border-0"
+                    <button class="nav-link modern-tab-link fw-semibold py-3 px-3 border-0"
                             id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews-pane"
                             type="button" role="tab" aria-controls="reviews-pane" aria-selected="false">
                         <i class="bi bi-star me-2"></i>Đánh giá từ khách hàng
@@ -314,18 +326,26 @@
                                 <div class="product-editorial-content text-secondary lh-lg">
                                     {!! nl2br(e($sanPham->mo_ta_chi_tiet)) !!}
                                 </div>
+                            @elseif ($sanPham->mo_ta_ngan)
+                                <div class="product-editorial-content text-secondary lh-lg">
+                                    {{ $sanPham->mo_ta_ngan }}
+                                </div>
                             @else
-                                <p class="text-muted mb-0">Mẫu áo thun cao cấp thuộc bộ sưu tập mới nhất với chất liệu cotton thoáng mát, đường may tỉ mỉ và phong cách thiết kế hiện đại dễ dàng phối đồ hằng ngày.</p>
+                                <p class="text-muted mb-0">Đang cập nhật mô tả chi tiết cho sản phẩm này.</p>
                             @endif
 
-                            <div class="mt-4 p-4 rounded-3 bg-light border border-light-subtle">
-                                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-stars text-warning me-2"></i>Điểm nổi bật:</h6>
-                                <ul class="text-secondary small mb-0 ps-3 lh-lg">
-                                    <li>Chất liệu sợi dệt tự nhiên, xử lý bề mặt chống xù lông và thấm hút mồ hôi tối ưu.</li>
-                                    <li>Đường kim mũi chỉ được may chần 2 kim chắc chắn, giữ form áo chuẩn sau nhiều lần giặt.</li>
-                                    <li>Màu nhuộm an toàn cho da, giữ độ bền màu theo tiêu chuẩn xuất khẩu.</li>
-                                </ul>
-                            </div>
+                            @if (!empty($sanPham->diem_noi_bat))
+                                <div class="mt-4 p-4 rounded-3 bg-light border border-light-subtle">
+                                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-stars text-warning me-2"></i>Điểm nổi bật:</h6>
+                                    <ul class="text-secondary small mb-0 ps-3 lh-lg">
+                                        @foreach (preg_split('/\r\n|\r|\n/', trim($sanPham->diem_noi_bat)) as $line)
+                                            @if (trim($line))
+                                                <li>{{ ltrim(trim($line), '-*• ') }}</li>
+                                            @endif
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
                         </div>
 
                         <div class="col-12 col-lg-4 mt-4 mt-lg-0">
@@ -340,13 +360,9 @@
                                         <span class="text-muted">Tình trạng</span>
                                         <span class="fw-semibold text-success">{{ $totalStock > 0 ? 'Còn hàng' : 'Hết hàng' }}</span>
                                     </li>
-                                    <li class="d-flex justify-content-between pb-2 border-bottom border-light-subtle">
+                                    <li class="d-flex justify-content-between">
                                         <span class="text-muted">Bảo hành / Đổi trả</span>
                                         <span class="text-dark">3 ngày nếu có lỗi</span>
-                                    </li>
-                                    <li class="d-flex justify-content-between">
-                                        <span class="text-muted">Kiểu dáng</span>
-                                        <span class="text-dark">Regular / Oversize</span>
                                     </li>
                                 </ul>
                             </div>
@@ -354,69 +370,208 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: Thông số & Hướng dẫn bảo quản -->
-                <div class="tab-pane fade" id="specs-pane" role="tabpanel" aria-labelledby="specs-tab" tabindex="0">
+                @if ($hasSpecsOrCare)
+                    <!-- TAB 2: Thông số & Hướng dẫn bảo quản -->
+                    <div class="tab-pane fade" id="specs-pane" role="tabpanel" aria-labelledby="specs-tab" tabindex="0">
+                        <div class="row g-4">
+                            <div class="col-12 col-lg-{{ !empty($sanPham->huong_dan_bao_quan) ? '7' : '12' }}">
+                                <h5 class="fw-bold text-dark mb-3">Thông số sản phẩm</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-clean table-sm align-middle fs-7 mb-0">
+                                        <tbody>
+                                            @if (!empty($sanPham->chat_lieu))
+                                                <tr>
+                                                    <th class="text-muted fw-normal py-2" style="width: 35%;">Chất liệu</th>
+                                                    <td class="text-dark fw-medium py-2">{{ $sanPham->chat_lieu }}</td>
+                                                </tr>
+                                            @endif
+                                            @if (!empty($sanPham->kieu_dang))
+                                                <tr>
+                                                    <th class="text-muted fw-normal py-2">Kiểu dáng</th>
+                                                    <td class="text-dark fw-medium py-2">{{ $sanPham->kieu_dang }}</td>
+                                                </tr>
+                                            @endif
+                                            @if (!empty($sanPham->huong_dan_bao_quan))
+                                                <tr>
+                                                    <th class="text-muted fw-normal py-2 align-top">Hướng dẫn bảo quản</th>
+                                                    <td class="text-dark fw-medium py-2 lh-base">
+                                                        {!! nl2br(e($sanPham->huong_dan_bao_quan)) !!}
+                                                    </td>
+                                                </tr>
+                                            @endif
+                                            <tr>
+                                                <th class="text-muted fw-normal py-2">Xuất xứ</th>
+                                                <td class="text-dark fw-medium py-2">Sản xuất tại Việt Nam</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            @if (!empty($sanPham->huong_dan_bao_quan))
+                                <div class="col-12 col-lg-5">
+                                    <div class="p-3-5 rounded-3 bg-light border border-light-subtle h-100">
+                                        <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2 fs-7">
+                                            <i class="bi bi-shield-check text-primary fs-6"></i>
+                                            <span>Lưu ý bảo quản</span>
+                                        </h6>
+                                        <div class="text-secondary small lh-lg">
+                                            {!! nl2br(e($sanPham->huong_dan_bao_quan)) !!}
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+
+                <!-- TAB: Bảng hướng dẫn chọn size -->
+                <div class="tab-pane fade" id="size-guide-pane" role="tabpanel" aria-labelledby="size-guide-tab" tabindex="0">
                     <div class="row g-4">
-                        <div class="col-12 col-lg-6">
-                            <h5 class="fw-bold text-dark mb-3">Quy cách & Kỹ thuật may</h5>
-                            <div class="table-responsive">
-                                <table class="table table-clean table-sm align-middle fs-7 mb-0">
-                                    <tbody>
-                                        <tr>
-                                            <th class="text-muted fw-normal py-2" style="width: 35%;">Chất liệu</th>
-                                            <td class="text-dark fw-medium py-2">100% Cotton Compact 2 chiều</td>
-                                        </tr>
-                                        <tr>
-                                            <th class="text-muted fw-normal py-2">Định lượng vải</th>
-                                            <td class="text-dark fw-medium py-2">250 GSM - Dày dặn vừa phải, đứng form</td>
-                                        </tr>
-                                        <tr>
-                                            <th class="text-muted fw-normal py-2">Cổ áo</th>
-                                            <td class="text-dark fw-medium py-2">Bo cổ dệt rib cao cấp dày 2.5cm, không giãn nhão</td>
-                                        </tr>
-                                        <tr>
-                                            <th class="text-muted fw-normal py-2">Công nghệ in</th>
-                                            <td class="text-dark fw-medium py-2">In lụa / Kỹ thuật số sắc nét, chống nứt gãy</td>
-                                        </tr>
-                                        <tr>
-                                            <th class="text-muted fw-normal py-2">Xuất xứ</th>
-                                            <td class="text-dark fw-medium py-2">Sản xuất tại Việt Nam</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                        <!-- Cột trái: Bảng quy đổi Chiều cao & Cân nặng và Bảng thông số chi tiết -->
+                        <div class="col-12 col-xl-8">
+                            <!-- 1. Bảng quy đổi Chiều cao & Cân nặng -->
+                            <div class="mb-4">
+                                <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                                    <i class="bi bi-person-lines-fill text-primary"></i>
+                                    <span>1. Bảng quy đổi Chiều cao & Cân nặng</span>
+                                </h5>
+                                <div class="table-responsive rounded-3 border border-light-subtle shadow-xs">
+                                    <table class="table table-hover text-center align-middle mb-0 fs-7">
+                                        <thead class="table-light border-bottom">
+                                            <tr class="fw-semibold text-secondary">
+                                                <th class="py-3">Size</th>
+                                                <th class="py-3">Chiều cao gợi ý</th>
+                                                <th class="py-3">Cân nặng gợi ý</th>
+                                                <th class="py-3">Form áo gợi ý</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="py-2-5"><span class="badge bg-dark px-3 py-1 fw-bold">S</span></td>
+                                                <td>1m50 - 1m60</td>
+                                                <td>45 - 53 kg</td>
+                                                <td><span class="text-secondary fw-medium">Vừa vặn (Regular)</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-2-5"><span class="badge bg-dark px-3 py-1 fw-bold">M</span></td>
+                                                <td>1m60 - 1m68</td>
+                                                <td>54 - 62 kg</td>
+                                                <td><span class="text-secondary fw-medium">Vừa vặn (Regular)</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-2-5"><span class="badge bg-dark px-3 py-1 fw-bold">L</span></td>
+                                                <td>1m68 - 1m75</td>
+                                                <td>63 - 72 kg</td>
+                                                <td><span class="text-secondary fw-medium">Thoải mái (Comfort)</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-2-5"><span class="badge bg-dark px-3 py-1 fw-bold">XL</span></td>
+                                                <td>1m75 - 1m82</td>
+                                                <td>73 - 82 kg</td>
+                                                <td><span class="text-secondary fw-medium">Thoải mái (Comfort)</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-2-5"><span class="badge bg-dark px-3 py-1 fw-bold">XXL</span></td>
+                                                <td>1m80 - 1m90</td>
+                                                <td>83 - 95 kg</td>
+                                                <td><span class="text-secondary fw-medium">Rộng rãi (Oversize)</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- 2. Bảng thông số chi tiết kích thước áo -->
+                            <div>
+                                <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                                    <i class="bi bi-aspect-ratio text-primary"></i>
+                                    <span>2. Thông số kích thước chi tiết áo (cm)</span>
+                                </h5>
+                                <div class="table-responsive rounded-3 border border-light-subtle shadow-xs">
+                                    <table class="table table-hover text-center align-middle mb-0 fs-7">
+                                        <thead class="table-light border-bottom">
+                                            <tr class="fw-semibold text-secondary">
+                                                <th class="py-3">Size</th>
+                                                <th class="py-3">Dài áo</th>
+                                                <th class="py-3">Rộng ngực</th>
+                                                <th class="py-3">Rộng vai</th>
+                                                <th class="py-3">Dài tay</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td class="py-2-5"><strong class="text-dark">S</strong></td>
+                                                <td>66 cm</td>
+                                                <td>48 cm</td>
+                                                <td>42 cm</td>
+                                                <td>20 cm</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-2-5"><strong class="text-dark">M</strong></td>
+                                                <td>69 cm</td>
+                                                <td>51 cm</td>
+                                                <td>44 cm</td>
+                                                <td>21 cm</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-2-5"><strong class="text-dark">L</strong></td>
+                                                <td>72 cm</td>
+                                                <td>54 cm</td>
+                                                <td>46 cm</td>
+                                                <td>22 cm</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-2-5"><strong class="text-dark">XL</strong></td>
+                                                <td>75 cm</td>
+                                                <td>57 cm</td>
+                                                <td>48 cm</td>
+                                                <td>23 cm</td>
+                                            </tr>
+                                            <tr>
+                                                <td class="py-2-5"><strong class="text-dark">XXL</strong></td>
+                                                <td>77 cm</td>
+                                                <td>60 cm</td>
+                                                <td>50 cm</td>
+                                                <td>24 cm</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="col-12 col-lg-6">
-                            <h5 class="fw-bold text-dark mb-3">Hướng dẫn bảo quản chuẩn</h5>
-                            <div class="p-3 rounded-3 bg-light border border-light-subtle">
-                                <div class="d-flex align-items-start gap-3 mb-2">
-                                    <i class="bi bi-droplet text-primary fs-5 mt-1"></i>
-                                    <div>
-                                        <strong class="text-dark fs-7">Giặt ở nhiệt độ thường</strong>
-                                        <p class="text-muted small mb-0">Khuyến khích lộn trái áo khi giặt máy và dùng túi giặt để giữ độ bền form.</p>
-                                    </div>
+                        <!-- Cột phải: Hướng dẫn đo & Mẹo chọn size -->
+                        <div class="col-12 col-xl-4">
+                            <div class="d-flex flex-column gap-3 h-100">
+                                <div class="p-3-5 rounded-3 bg-light border border-light-subtle">
+                                    <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2 fs-7">
+                                        <i class="bi bi-info-circle text-primary fs-6"></i>
+                                        <span>Lưu ý form dáng</span>
+                                    </h6>
+                                    <p class="text-secondary small mb-0 lh-lg">
+                                        Bảng thông số đo tiêu chuẩn theo form dáng người Việt Nam. Nếu bạn thích mặc phong cách rộng rãi thoải mái hoặc dáng Oversize/Streetwear, hãy cân nhắc chọn <strong>tăng thêm 1 size</strong>.
+                                    </p>
                                 </div>
-                                <div class="d-flex align-items-start gap-3 mb-2">
-                                    <i class="bi bi-sun text-warning fs-5 mt-1"></i>
-                                    <div>
-                                        <strong class="text-dark fs-7">Phơi nơi thoáng mát</strong>
-                                        <p class="text-muted small mb-0">Tránh phơi trực tiếp dưới ánh nắng gay gắt để ngăn ngừa phai màu.</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-start gap-3">
-                                    <i class="bi bi-slash-circle text-danger fs-5 mt-1"></i>
-                                    <div>
-                                        <strong class="text-dark fs-7">Không ủi trực tiếp lên hình in</strong>
-                                        <p class="text-muted small mb-0">Ủi ở nhiệt độ trung bình từ mặt trong hoặc phủ một lớp vải mỏng lên trên.</p>
-                                    </div>
+
+                                <div class="p-3-5 rounded-3 bg-light border border-light-subtle flex-grow-1">
+                                    <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2 fs-7">
+                                        <i class="bi bi-lightbulb text-warning fs-6"></i>
+                                        <span>Mẹo đo kích thước chuẩn</span>
+                                    </h6>
+                                    <ul class="text-secondary small mb-0 ps-3 d-flex flex-column gap-2 lh-lg">
+                                        <li><strong>Dài áo:</strong> Đo từ điểm cao nhất của đường may cầu vai xuôi thẳng xuống hết lai gấu áo.</li>
+                                        <li><strong>Rộng ngực:</strong> Đo ngang nách áo từ nách bên trái sang nách bên phải (lấy số đo x 2 để ra vòng ngực).</li>
+                                        <li><strong>Rộng vai:</strong> Đo khoảng cách giữa 2 điểm nối may cầu vai áo.</li>
+                                        <li><strong>Khi phân vân giữa 2 size:</strong> Nếu chiều cao ở size L nhưng cân nặng ở size M, bạn nên ưu tiên chọn theo <strong>chiều cao</strong> để áo không bị ngắn vạt khi mặc.</li>
+                                    </ul>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- TAB 3: Đánh giá từ khách hàng -->
+                <!-- TAB: Đánh giá từ khách hàng -->
                 <div class="tab-pane fade" id="reviews-pane" role="tabpanel" aria-labelledby="reviews-tab" tabindex="0">
 
                     <!-- Rating Summary Overview Card -->
@@ -1090,32 +1245,70 @@
     /* Segmented Modern Tabs */
     .modern-tabs {
         border-bottom: 1px solid #e2e8f0;
+        background-color: #f8fafc;
+    }
+
+    .modern-tabs.nav-justified .nav-item {
+        flex: 1 1 0;
+        min-width: 0;
     }
 
     .modern-tab-link {
         color: #64748b !important;
         position: relative;
         background: transparent !important;
-        transition: color 0.2s ease;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        text-align: center;
+        border-radius: 0 !important;
+        font-size: 0.95rem;
     }
 
     .modern-tab-link:hover {
         color: #0f172a !important;
+        background-color: rgba(15, 23, 42, 0.03) !important;
     }
 
     .modern-tab-link.active {
         color: #0f172a !important;
         font-weight: 700 !important;
+        background-color: #ffffff !important;
     }
 
     .modern-tab-link.active::after {
         content: '';
         position: absolute;
         bottom: -1px;
-        left: 1rem;
-        right: 1rem;
-        height: 2px;
+        left: 0;
+        right: 0;
+        height: 3px;
         background-color: #0f172a;
+    }
+
+    @media (max-width: 767.98px) {
+        .modern-tabs.nav-justified {
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .modern-tabs.nav-justified::-webkit-scrollbar {
+            display: none;
+        }
+        .modern-tabs.nav-justified .nav-item {
+            flex: 0 0 auto;
+            min-width: max-content;
+        }
+        .modern-tab-link {
+            padding-left: 1.25rem !important;
+            padding-right: 1.25rem !important;
+            white-space: nowrap;
+            font-size: 0.875rem;
+        }
     }
 
     .review-avatar {
@@ -1821,5 +2014,22 @@
 
             updateRelatedNav();
         })();
+
+        // Click trigger xem bảng size từ bộ chọn size
+        const btnOpenSizeTab = document.getElementById('btn-open-size-tab');
+        if (btnOpenSizeTab) {
+            btnOpenSizeTab.addEventListener('click', function(e) {
+                e.preventDefault();
+                const sizeTabBtn = document.getElementById('size-guide-tab');
+                if (sizeTabBtn) {
+                    const tabInstance = bootstrap.Tab.getOrCreateInstance(sizeTabBtn);
+                    tabInstance.show();
+                    const tabsSection = document.getElementById('product-tabs-section');
+                    if (tabsSection) {
+                        tabsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                }
+            });
+        }
     });
 </script>

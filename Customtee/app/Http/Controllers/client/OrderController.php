@@ -81,6 +81,16 @@ class OrderController extends Controller
             }
         }
 
+        $tuKhoa = trim((string) $request->query('q', ''));
+        if ($tuKhoa !== '') {
+            $query->where(function ($q) use ($tuKhoa) {
+                $q->where('ma_don_hang', 'like', "%{$tuKhoa}%")
+                    ->orWhereHas('chiTietDonHangs.sanPham', function ($q2) use ($tuKhoa) {
+                        $q2->where('ten_san_pham', 'like', "%{$tuKhoa}%");
+                    });
+            });
+        }
+
         $donHangs = $query->paginate(8)->withQueryString();
 
         foreach ($donHangs as $order) {
@@ -90,6 +100,7 @@ class OrderController extends Controller
         return view('client.order.index', [
             'donHangs' => $donHangs,
             'currentStatus' => $trangThai,
+            'tuKhoa' => $tuKhoa,
         ]);
     }
 
@@ -728,5 +739,97 @@ class OrderController extends Controller
         }
 
         return $itemRefundAmounts;
+    }
+
+    /**
+     * Thêm toàn bộ sản phẩm hợp lệ trong đơn hàng cũ vào giỏ hàng của khách.
+     */
+    public function reorder(Request $request, $id)
+    {
+        $userId = Auth::id();
+        if (!$userId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Vui lòng đăng nhập để mua lại đơn hàng.'
+            ], 401);
+        }
+
+        $donHang = DonHang::where('id', $id)
+            ->where('nguoi_dung_id', $userId)
+            ->with(['chiTietDonHangs.bienThe', 'chiTietDonHangs.sanPham'])
+            ->first();
+
+        if (!$donHang) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Không tìm thấy đơn hàng.'
+            ], 404);
+        }
+
+        $addedCount = 0;
+        $warnings = [];
+
+        foreach ($donHang->chiTietDonHangs as $chiTiet) {
+            $sanPham = $chiTiet->sanPham;
+            $bienThe = $chiTiet->bienThe;
+
+            if (!$sanPham || !$sanPham->trang_thai || !$bienThe || !$bienThe->trang_thai) {
+                $warnings[] = ($sanPham->ten_san_pham ?? 'Sản phẩm') . ' hiện ngừng kinh doanh.';
+                continue;
+            }
+
+            $soLuongTon = (int) $bienThe->so_luong;
+            if ($soLuongTon <= 0) {
+                $warnings[] = $sanPham->ten_san_pham . ' hiện đã hết hàng.';
+                continue;
+            }
+
+            $donGia = $bienThe->gia_khuyen_mai ?? $bienThe->gia;
+            $soLuongCanThem = (int) ($chiTiet->so_luong ?? 1);
+
+            $cartItem = GioHang::where('nguoi_dung_id', $userId)
+                ->where('san_pham_id', $chiTiet->san_pham_id)
+                ->where('bien_the_id', $chiTiet->bien_the_id)
+                ->dangTrongGio()
+                ->first();
+
+            if ($cartItem) {
+                $soLuongMoi = min($soLuongTon, $cartItem->so_luong + $soLuongCanThem);
+                $cartItem->so_luong = $soLuongMoi;
+                $cartItem->don_gia = $donGia;
+                $cartItem->thanh_tien = $soLuongMoi * $donGia;
+                $cartItem->save();
+            } else {
+                $soLuongMoi = min($soLuongTon, $soLuongCanThem);
+                GioHang::create([
+                    'nguoi_dung_id' => $userId,
+                    'san_pham_id'   => $chiTiet->san_pham_id,
+                    'bien_the_id'   => $chiTiet->bien_the_id,
+                    'thiet_ke_ao_id' => null,
+                    'so_luong'      => $soLuongMoi,
+                    'don_gia'       => $donGia,
+                    'thanh_tien'    => $soLuongMoi * $donGia,
+                    'trang_thai'    => GioHang::TRANG_THAI_DANG_TRONG_GIO,
+                ]);
+            }
+            $addedCount++;
+        }
+
+        if ($addedCount === 0) {
+            return response()->json([
+                'success' => false,
+                'message' => !empty($warnings) ? implode(' ', $warnings) : 'Sản phẩm trong đơn hàng hiện không còn trong kho.'
+            ], 422);
+        }
+
+        $totalCartItems = GioHang::where('nguoi_dung_id', $userId)->dangTrongGio()->sum('so_luong');
+
+        return response()->json([
+            'success' => true,
+            'message' => "Đã thêm {$addedCount} món vào giỏ hàng thành công!",
+            'added_count' => $addedCount,
+            'total_cart_items' => $totalCartItems,
+            'warnings' => $warnings
+        ]);
     }
 }

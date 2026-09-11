@@ -284,6 +284,9 @@
         <div class="product-tabs-wrapper rounded-4 border border-light-subtle bg-white overflow-hidden shadow-xs reveal">
 
             <!-- Nav Tabs Header -->
+            <?php
+                $hasSpecsOrCare = !empty($sanPham->chat_lieu) || !empty($sanPham->kieu_dang) || !empty($sanPham->huong_dan_bao_quan);
+            ?>
             <ul class="nav nav-tabs modern-tabs px-3 pt-2 bg-light border-bottom border-light-subtle" id="productDetailTab" role="tablist">
                 <li class="nav-item" role="presentation">
                     <button class="nav-link modern-tab-link active fw-semibold text-dark py-3 px-4 border-0"
@@ -292,13 +295,15 @@
                         <i class="bi bi-text-paragraph me-2"></i>Mô tả sản phẩm
                     </button>
                 </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link modern-tab-link fw-semibold text-muted py-3 px-4 border-0"
-                            id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs-pane"
-                            type="button" role="tab" aria-controls="specs-pane" aria-selected="false">
-                        <i class="bi bi-sliders me-2"></i>Thông số & Bảo quản
-                    </button>
-                </li>
+                <?php if($hasSpecsOrCare): ?>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link modern-tab-link fw-semibold text-muted py-3 px-4 border-0"
+                                id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs-pane"
+                                type="button" role="tab" aria-controls="specs-pane" aria-selected="false">
+                            <i class="bi bi-sliders me-2"></i>Thông số & Bảo quản
+                        </button>
+                    </li>
+                <?php endif; ?>
                 <li class="nav-item" role="presentation">
                     <button class="nav-link modern-tab-link fw-semibold text-muted py-3 px-4 border-0"
                             id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews-pane"
@@ -322,18 +327,27 @@
                                     <?php echo nl2br(e($sanPham->mo_ta_chi_tiet)); ?>
 
                                 </div>
+                            <?php elseif($sanPham->mo_ta_ngan): ?>
+                                <div class="product-editorial-content text-secondary lh-lg">
+                                    <?php echo e($sanPham->mo_ta_ngan); ?>
+
+                                </div>
                             <?php else: ?>
-                                <p class="text-muted mb-0">Mẫu áo thun cao cấp thuộc bộ sưu tập mới nhất với chất liệu cotton thoáng mát, đường may tỉ mỉ và phong cách thiết kế hiện đại dễ dàng phối đồ hằng ngày.</p>
+                                <p class="text-muted mb-0">Đang cập nhật mô tả chi tiết cho sản phẩm này.</p>
                             <?php endif; ?>
 
-                            <div class="mt-4 p-4 rounded-3 bg-light border border-light-subtle">
-                                <h6 class="fw-bold text-dark mb-2"><i class="bi bi-stars text-warning me-2"></i>Điểm nổi bật:</h6>
-                                <ul class="text-secondary small mb-0 ps-3 lh-lg">
-                                    <li>Chất liệu sợi dệt tự nhiên, xử lý bề mặt chống xù lông và thấm hút mồ hôi tối ưu.</li>
-                                    <li>Đường kim mũi chỉ được may chần 2 kim chắc chắn, giữ form áo chuẩn sau nhiều lần giặt.</li>
-                                    <li>Màu nhuộm an toàn cho da, giữ độ bền màu theo tiêu chuẩn xuất khẩu.</li>
-                                </ul>
-                            </div>
+                            <?php if(!empty($sanPham->diem_noi_bat)): ?>
+                                <div class="mt-4 p-4 rounded-3 bg-light border border-light-subtle">
+                                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-stars text-warning me-2"></i>Điểm nổi bật:</h6>
+                                    <ul class="text-secondary small mb-0 ps-3 lh-lg">
+                                        <?php $__currentLoopData = preg_split('/\r\n|\r|\n/', trim($sanPham->diem_noi_bat)); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $line): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <?php if(trim($line)): ?>
+                                                <li><?php echo e(ltrim(trim($line), '-*• ')); ?></li>
+                                            <?php endif; ?>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                    </ul>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
                         <div class="col-12 col-lg-4 mt-4 mt-lg-0">
@@ -348,13 +362,9 @@
                                         <span class="text-muted">Tình trạng</span>
                                         <span class="fw-semibold text-success"><?php echo e($totalStock > 0 ? 'Còn hàng' : 'Hết hàng'); ?></span>
                                     </li>
-                                    <li class="d-flex justify-content-between pb-2 border-bottom border-light-subtle">
+                                    <li class="d-flex justify-content-between">
                                         <span class="text-muted">Bảo hành / Đổi trả</span>
                                         <span class="text-dark">3 ngày nếu có lỗi</span>
-                                    </li>
-                                    <li class="d-flex justify-content-between">
-                                        <span class="text-muted">Kiểu dáng</span>
-                                        <span class="text-dark">Regular / Oversize</span>
                                     </li>
                                 </ul>
                             </div>
@@ -362,67 +372,62 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: Thông số & Hướng dẫn bảo quản -->
-                <div class="tab-pane fade" id="specs-pane" role="tabpanel" aria-labelledby="specs-tab" tabindex="0">
-                    <div class="row g-4">
-                        <div class="col-12 col-lg-6">
-                            <h5 class="fw-bold text-dark mb-3">Quy cách & Kỹ thuật may</h5>
-                            <div class="table-responsive">
-                                <table class="table table-clean table-sm align-middle fs-7 mb-0">
-                                    <tbody>
-                                        <tr>
-                                            <th class="text-muted fw-normal py-2" style="width: 35%;">Chất liệu</th>
-                                            <td class="text-dark fw-medium py-2">100% Cotton Compact 2 chiều</td>
-                                        </tr>
-                                        <tr>
-                                            <th class="text-muted fw-normal py-2">Định lượng vải</th>
-                                            <td class="text-dark fw-medium py-2">250 GSM - Dày dặn vừa phải, đứng form</td>
-                                        </tr>
-                                        <tr>
-                                            <th class="text-muted fw-normal py-2">Cổ áo</th>
-                                            <td class="text-dark fw-medium py-2">Bo cổ dệt rib cao cấp dày 2.5cm, không giãn nhão</td>
-                                        </tr>
-                                        <tr>
-                                            <th class="text-muted fw-normal py-2">Công nghệ in</th>
-                                            <td class="text-dark fw-medium py-2">In lụa / Kỹ thuật số sắc nét, chống nứt gãy</td>
-                                        </tr>
-                                        <tr>
-                                            <th class="text-muted fw-normal py-2">Xuất xứ</th>
-                                            <td class="text-dark fw-medium py-2">Sản xuất tại Việt Nam</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
+                <?php if($hasSpecsOrCare): ?>
+                    <!-- TAB 2: Thông số & Hướng dẫn bảo quản -->
+                    <div class="tab-pane fade" id="specs-pane" role="tabpanel" aria-labelledby="specs-tab" tabindex="0">
+                        <div class="row g-4">
+                            <div class="col-12 col-lg-<?php echo e(!empty($sanPham->huong_dan_bao_quan) ? '7' : '12'); ?>">
+                                <h5 class="fw-bold text-dark mb-3">Thông số sản phẩm</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-clean table-sm align-middle fs-7 mb-0">
+                                        <tbody>
+                                            <?php if(!empty($sanPham->chat_lieu)): ?>
+                                                <tr>
+                                                    <th class="text-muted fw-normal py-2" style="width: 35%;">Chất liệu</th>
+                                                    <td class="text-dark fw-medium py-2"><?php echo e($sanPham->chat_lieu); ?></td>
+                                                </tr>
+                                            <?php endif; ?>
+                                            <?php if(!empty($sanPham->kieu_dang)): ?>
+                                                <tr>
+                                                    <th class="text-muted fw-normal py-2">Kiểu dáng</th>
+                                                    <td class="text-dark fw-medium py-2"><?php echo e($sanPham->kieu_dang); ?></td>
+                                                </tr>
+                                            <?php endif; ?>
+                                            <?php if(!empty($sanPham->huong_dan_bao_quan)): ?>
+                                                <tr>
+                                                    <th class="text-muted fw-normal py-2 align-top">Hướng dẫn bảo quản</th>
+                                                    <td class="text-dark fw-medium py-2 lh-base">
+                                                        <?php echo nl2br(e($sanPham->huong_dan_bao_quan)); ?>
 
-                        <div class="col-12 col-lg-6">
-                            <h5 class="fw-bold text-dark mb-3">Hướng dẫn bảo quản chuẩn</h5>
-                            <div class="p-3 rounded-3 bg-light border border-light-subtle">
-                                <div class="d-flex align-items-start gap-3 mb-2">
-                                    <i class="bi bi-droplet text-primary fs-5 mt-1"></i>
-                                    <div>
-                                        <strong class="text-dark fs-7">Giặt ở nhiệt độ thường</strong>
-                                        <p class="text-muted small mb-0">Khuyến khích lộn trái áo khi giặt máy và dùng túi giặt để giữ độ bền form.</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-start gap-3 mb-2">
-                                    <i class="bi bi-sun text-warning fs-5 mt-1"></i>
-                                    <div>
-                                        <strong class="text-dark fs-7">Phơi nơi thoáng mát</strong>
-                                        <p class="text-muted small mb-0">Tránh phơi trực tiếp dưới ánh nắng gay gắt để ngăn ngừa phai màu.</p>
-                                    </div>
-                                </div>
-                                <div class="d-flex align-items-start gap-3">
-                                    <i class="bi bi-slash-circle text-danger fs-5 mt-1"></i>
-                                    <div>
-                                        <strong class="text-dark fs-7">Không ủi trực tiếp lên hình in</strong>
-                                        <p class="text-muted small mb-0">Ủi ở nhiệt độ trung bình từ mặt trong hoặc phủ một lớp vải mỏng lên trên.</p>
-                                    </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endif; ?>
+                                            <tr>
+                                                <th class="text-muted fw-normal py-2">Xuất xứ</th>
+                                                <td class="text-dark fw-medium py-2">Sản xuất tại Việt Nam</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
+
+                            <?php if(!empty($sanPham->huong_dan_bao_quan)): ?>
+                                <div class="col-12 col-lg-5">
+                                    <div class="p-3-5 rounded-3 bg-light border border-light-subtle h-100">
+                                        <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2 fs-7">
+                                            <i class="bi bi-shield-check text-primary fs-6"></i>
+                                            <span>Lưu ý bảo quản</span>
+                                        </h6>
+                                        <div class="text-secondary small lh-lg">
+                                            <?php echo nl2br(e($sanPham->huong_dan_bao_quan)); ?>
+
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         </div>
                     </div>
-                </div>
+                <?php endif; ?>
 
                 <!-- TAB 3: Đánh giá từ khách hàng -->
                 <div class="tab-pane fade" id="reviews-pane" role="tabpanel" aria-labelledby="reviews-tab" tabindex="0">

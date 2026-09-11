@@ -103,6 +103,8 @@ Route::middleware('auth')->group(function () {
     Route::post('/order/{id}/confirm', [OrderController::class, 'confirm'])->name('order.confirm');
     Route::post('/order/{donHang}/return-request', [OrderController::class, 'requestReturn'])
         ->name('order.return.request');
+    Route::post('/order/{id}/reorder', [OrderController::class, 'reorder'])
+        ->name('order.reorder');
 
     Route::get('/gio-hang', [GioHangController::class, 'index'])->name('gio-hang.index');
     Route::post('/gio-hang', [GioHangController::class, 'store'])->name('gio-hang.store');

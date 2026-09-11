@@ -1,9 +1,7 @@
-@extends('admin.layout.AdminLayout')
-
-@section('AdminContent')
+<?php $__env->startSection('AdminContent'); ?>
     <div class="container-fluid" style="margin-top: 30px;">
 
-        {{-- Header --}}
+        
         <div class="d-flex justify-content-between align-items-center mb-3">
             <button class="btn btn-primary" data-toggle="modal" style="margin-bottom:20px;" data-target="#modalAdd">
                 <i class="fas fa-plus"></i> Thêm sản phẩm
@@ -38,11 +36,11 @@
             border-radius: 6px 0 0 6px;
         }
     </style>
-        {{-- Table --}}
+        
         <div class="card shadow">
             <div class="card-body">
                 
-                <form method="GET" action="{{ route('admin.san-pham.index') }}" class="mb-4">
+                <form method="GET" action="<?php echo e(route('admin.san-pham.index')); ?>" class="mb-4">
                     <div class="card shadow-sm border-0">
                         <div class="card-body">
                             <div class="row">
@@ -50,19 +48,20 @@
                                     <label class="font-weight-bold">Tên sản phẩm</label>
                                     <input type="text" name="keyword" class="form-control"
                                         placeholder="Nhập tên sản phẩm..."
-                                        value="{{ request('keyword') }}">
+                                        value="<?php echo e(request('keyword')); ?>">
                                 </div>
 
                                 <div class="col-md-3">
                                     <label class="font-weight-bold">Danh mục</label>
                                     <select name="danh_muc_id" class="form-control">
                                         <option value="">Tất cả danh mục</option>
-                                        @foreach ($danhMucs as $dm)
-                                            <option value="{{ $dm->id }}"
-                                                {{ request('danh_muc_id') == $dm->id ? 'selected' : '' }}>
-                                                {{ $dm->ten_danh_muc }}
+                                        <?php $__currentLoopData = $danhMucs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dm): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($dm->id); ?>"
+                                                <?php echo e(request('danh_muc_id') == $dm->id ? 'selected' : ''); ?>>
+                                                <?php echo e($dm->ten_danh_muc); ?>
+
                                             </option>
-                                        @endforeach
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                 </div>
 
@@ -70,8 +69,8 @@
                                     <label class="font-weight-bold">Trạng thái</label>
                                     <select name="trang_thai" class="form-control">
                                         <option value="">Tất cả</option>
-                                        <option value="1" {{ request('trang_thai') === '1' ? 'selected' : '' }}>Hiển thị</option>
-                                        <option value="0" {{ request('trang_thai') === '0' ? 'selected' : '' }}>Ẩn</option>
+                                        <option value="1" <?php echo e(request('trang_thai') === '1' ? 'selected' : ''); ?>>Hiển thị</option>
+                                        <option value="0" <?php echo e(request('trang_thai') === '0' ? 'selected' : ''); ?>>Ẩn</option>
                                     </select>
                                 </div>
 
@@ -81,7 +80,7 @@
                                         <button class="btn btn-primary w-50 mr-2">
                                             <i class="fas fa-search"></i> Tìm
                                         </button>
-                                        <a href="{{ route('admin.san-pham.index') }}" class="btn btn-outline-secondary w-50">
+                                        <a href="<?php echo e(route('admin.san-pham.index')); ?>" class="btn btn-outline-secondary w-50">
                                             <i class="fas fa-undo"></i> Reset
                                         </a>
                                     </div>
@@ -99,58 +98,55 @@
                             <th>Hình ảnh</th>
                             <th>Tên sản phẩm</th>
                             <th>Danh mục</th>
-                            {{-- <th>màu</th>
-                        <th>kích cỡ</th>
-                        <th>số lượng</th>
-                        <th>giá</th> --}}
+                            
                             <th>Trạng thái</th>
                             <th width="15%">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($sanPhams as $key => $sp)
+                        <?php $__empty_1 = true; $__currentLoopData = $sanPhams; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $key => $sp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
-                                <td>{{ $key + 1 }}</td>
+                                <td><?php echo e($key + 1); ?></td>
                                 <td>
-                                    @if ($sp->hinh_anh_chinh)
-                                        <img src="{{ asset('storage/' . $sp->hinh_anh_chinh) }}"
-                                            alt="{{ $sp->ten_san_pham }}"
+                                    <?php if($sp->hinh_anh_chinh): ?>
+                                        <img src="<?php echo e(asset('storage/' . $sp->hinh_anh_chinh)); ?>"
+                                            alt="<?php echo e($sp->ten_san_pham); ?>"
                                             style="max-width:60px; height:auto; border-radius:4px;">
-                                    @else
+                                    <?php else: ?>
                                         <span class="text-muted">Chưa có ảnh</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
-                                <td class="text-center">{{ $sp->ten_san_pham }}</td>
-                                <td>{{ $sp->danhMuc->ten_danh_muc ?? '—' }}</td>
+                                <td class="text-center"><?php echo e($sp->ten_san_pham); ?></td>
+                                <td><?php echo e($sp->danhMuc->ten_danh_muc ?? '—'); ?></td>
                                 <td>
-                                    @if ($sp->trang_thai)
+                                    <?php if($sp->trang_thai): ?>
                                         <span class="badge badge-success">Hiển thị</span>
-                                    @else
+                                    <?php else: ?>
                                         <span class="badge badge-secondary">Ẩn</span>
-                                    @endif
+                                    <?php endif; ?>
                                 </td>
                                 <td>
-                                    <a href="{{ route('variants.create', ['san_pham_id' => $sp->id]) }}"
+                                    <a href="<?php echo e(route('variants.create', ['san_pham_id' => $sp->id])); ?>"
                                         class="btn btn-sm btn-info" title="Thêm biến thể">
                                         <i class="fas fa-palette"></i>
                                     </a>
-                                    <a href="{{ route('variants.index', ['san_pham_id' => $sp->id]) }}"
+                                    <a href="<?php echo e(route('variants.index', ['san_pham_id' => $sp->id])); ?>"
                                         class="btn btn-sm btn-secondary" title="Xem biến thể">
                                         <i class="fas fa-list"></i>
                                     </a>
-                                    <button class="btn btn-sm btn-warning btn-edit" data-id="{{ $sp->id }}">
+                                    <button class="btn btn-sm btn-warning btn-edit" data-id="<?php echo e($sp->id); ?>">
                                         <i class="fas fa-edit"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-danger btn-delete" data-id="{{ $sp->id }}">
+                                    <button class="btn btn-sm btn-danger btn-delete" data-id="<?php echo e($sp->id); ?>">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr>
                                 <td colspan="8">Chưa có sản phẩm nào</td>
                             </tr>
-                        @endforelse
+                        <?php endif; ?>
                     </tbody>
                 </table>
             </div>
@@ -158,11 +154,11 @@
 
     </div>
 
-    {{-- ================= MODAL THÊM SẢN PHẨM ================= --}}
+    
     <div class="modal fade" id="modalAdd">
         <div class="modal-dialog modal-lg">
             <form id="formAdd" enctype="multipart/form-data">
-                @csrf
+                <?php echo csrf_field(); ?>
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Thêm sản phẩm mới</h5>
@@ -181,9 +177,9 @@
                                     <label>Danh mục <span class="text-danger">*</span></label>
                                     <select name="danh_muc_id" class="form-control" required>
                                         <option value="">--- Chọn danh mục ---</option>
-                                        @foreach ($danhMucs as $dm)
-                                            <option value="{{ $dm->id }}">{{ $dm->ten_danh_muc }}</option>
-                                        @endforeach
+                                        <?php $__currentLoopData = $danhMucs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $dm): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                            <option value="<?php echo e($dm->id); ?>"><?php echo e($dm->ten_danh_muc); ?></option>
+                                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                     </select>
                                 </div>
 
@@ -270,23 +266,23 @@
                                     <div class="col-md-6">
                                         <div class="font-weight-bold mb-1">Màu sắc</div>
                                         <div class="border p-2" style="max-height:140px; overflow:auto;">
-                                            @foreach ($colors as $c)
+                                            <?php $__currentLoopData = $colors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <div class="form-check">
-                                                    <input class="form-check-input auto-variant-color" type="checkbox" value="{{ $c->id }}" id="autoColor_{{ $c->id }}">
-                                                    <label class="form-check-label" for="autoColor_{{ $c->id }}">{{ $c->ten_mau }}</label>
+                                                    <input class="form-check-input auto-variant-color" type="checkbox" value="<?php echo e($c->id); ?>" id="autoColor_<?php echo e($c->id); ?>">
+                                                    <label class="form-check-label" for="autoColor_<?php echo e($c->id); ?>"><?php echo e($c->ten_mau); ?></label>
                                                 </div>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
                                         <div class="font-weight-bold mb-1">Kích thước</div>
                                         <div class="border p-2" style="max-height:140px; overflow:auto;">
-                                            @foreach ($sizes as $s)
+                                            <?php $__currentLoopData = $sizes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                                 <div class="form-check">
-                                                    <input class="form-check-input auto-variant-size" type="checkbox" value="{{ $s->id }}" id="autoSize_{{ $s->id }}">
-                                                    <label class="form-check-label" for="autoSize_{{ $s->id }}">{{ $s->ten_kich_thuoc }}</label>
+                                                    <input class="form-check-input auto-variant-size" type="checkbox" value="<?php echo e($s->id); ?>" id="autoSize_<?php echo e($s->id); ?>">
+                                                    <label class="form-check-label" for="autoSize_<?php echo e($s->id); ?>"><?php echo e($s->ten_kich_thuoc); ?></label>
                                                 </div>
-                                            @endforeach
+                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -320,18 +316,18 @@
                                             <select name="variants[0][mau_sac_id]" class="form-control form-control-sm"
                                                 disabled>
                                                 <option value="">-- Chọn màu --</option>
-                                                @foreach ($colors as $c)
-                                                    <option value="{{ $c->id }}">{{ $c->ten_mau }}</option>
-                                                @endforeach
+                                                <?php $__currentLoopData = $colors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <option value="<?php echo e($c->id); ?>"><?php echo e($c->ten_mau); ?></option>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </select>
                                         </div>
                                         <div class="col-md-2">
                                             <select name="variants[0][kich_thuoc_id]" class="form-control form-control-sm"
                                                 disabled>
                                                 <option value="">-- Chọn size --</option>
-                                                @foreach ($sizes as $s)
-                                                    <option value="{{ $s->id }}">{{ $s->ten_kich_thuoc }}</option>
-                                                @endforeach
+                                                <?php $__currentLoopData = $sizes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                                    <option value="<?php echo e($s->id); ?>"><?php echo e($s->ten_kich_thuoc); ?></option>
+                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                             </select>
                                         </div>
                                         <div class="col-md-2">
@@ -376,11 +372,11 @@
         </div>
     </div>
 
-    {{-- ================= MODAL SỬA SẢN PHẨM ================= --}}
+    
     <div class="modal fade" id="modalEdit">
         <div class="modal-dialog modal-lg">
             <form id="formEdit" enctype="multipart/form-data">
-                @csrf
+                <?php echo csrf_field(); ?>
                 <input type="hidden" name="id" id="edit_id">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -487,17 +483,17 @@
                         <div class="col-md-3">
                             <select name="variants[${index}][mau_sac_id]" class="form-control form-control-sm" required>
                                 <option value="">-- Chọn màu --</option>
-                                @foreach ($colors as $c)
-                                    <option value="{{ $c->id }}">{{ $c->ten_mau }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $colors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($c->id); ?>"><?php echo e($c->ten_mau); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="col-md-2">
                             <select name="variants[${index}][kich_thuoc_id]" class="form-control form-control-sm" required>
                                 <option value="">-- Chọn size --</option>
-                                @foreach ($sizes as $s)
-                                    <option value="{{ $s->id }}">{{ $s->ten_kich_thuoc }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $sizes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($s->id); ?>"><?php echo e($s->ten_kich_thuoc); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -672,7 +668,7 @@
                 let formData = new FormData(this);
 
                 $.ajax({
-                    url: "{{ route('admin.san-pham.store') }}",
+                    url: "<?php echo e(route('admin.san-pham.store')); ?>",
                     type: "POST",
                     data: formData,
                     processData: false,
@@ -695,7 +691,7 @@
             $('.btn-edit').click(function() {
                 let id = $(this).data('id');
 
-                $.get("{{ url('admin/san-pham') }}/" + id + "/edit", function(res) {
+                $.get("<?php echo e(url('admin/san-pham')); ?>/" + id + "/edit", function(res) {
                     if (res.status) {
                         let sp = res.data;
 
@@ -720,7 +716,7 @@
                         });
 
                         let imgHtml = sp.hinh_anh_chinh ?
-                            `<img src="{{ asset('storage') }}/${sp.hinh_anh_chinh}" style="max-width:140px; border-radius:6px;">` :
+                            `<img src="<?php echo e(asset('storage')); ?>/${sp.hinh_anh_chinh}" style="max-width:140px; border-radius:6px;">` :
                             '<span class="text-muted">Chưa có ảnh</span>';
                         $('#current_image').html(imgHtml);
 
@@ -738,7 +734,7 @@
                 formData.append('_method', 'PUT');
 
                 $.ajax({
-                    url: "{{ url('admin/san-pham') }}/" + id,
+                    url: "<?php echo e(url('admin/san-pham')); ?>/" + id,
                     type: "POST",
                     data: formData,
                     processData: false,
@@ -764,10 +760,10 @@
                 let id = $(this).data('id');
 
                 $.ajax({
-                    url: "{{ url('admin/san-pham') }}/" + id,
+                    url: "<?php echo e(url('admin/san-pham')); ?>/" + id,
                     type: 'DELETE',
                     data: {
-                        _token: "{{ csrf_token() }}"
+                        _token: "<?php echo e(csrf_token()); ?>"
                     },
                     success: function(res) {
                         if (res.status) {
@@ -785,4 +781,6 @@
 
         });
     </script>
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('admin.layout.AdminLayout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\e7\laragon\www\DATN\DATN-CustomTee\Customtee\resources\views/admin/product/list.blade.php ENDPATH**/ ?>
