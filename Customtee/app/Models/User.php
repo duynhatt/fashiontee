@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use App\Models\BinhLuan;
 use App\Notifications\ResetPasswordNotification;
+use App\Notifications\VerifyEmailNotification;
 use App\Traits\HasRolesAndPermissions;
 
 class User extends Authenticatable
@@ -57,11 +58,18 @@ class User extends Authenticatable
         'avatar',
         'password',
         'role',
+        'status',
+        'email_verified_at',
     ];
 
     public function sendPasswordResetNotification($code): void
     {
         $this->notify(new ResetPasswordNotification($code));
+    }
+
+    public function sendEmailVerificationOtpNotification(string $code): void
+    {
+        $this->notify(new VerifyEmailNotification($code));
     }
 
     public function gioHangs()

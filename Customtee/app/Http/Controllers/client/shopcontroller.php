@@ -20,6 +20,7 @@ class ShopController extends Controller
         $danhMucs = collect(Category::getFlatTree(null, true));
         $danhMucsTree = Category::getNestedTree(true);
         $tuKhoa = $request->get('q');
+        $selectedDanhMucs = array_filter((array) $request->input('danh_muc', []), fn($id) => is_numeric($id));
         $selectedDanhMucs = array_map('intval', array_filter((array) $request->input('danh_muc', []), fn($id) => is_numeric($id)));
         $selectedSizes = array_filter((array) $request->input('size', []), fn($id) => is_numeric($id));
         $selectedColors = array_filter((array) $request->input('color', []), fn($id) => is_numeric($id));

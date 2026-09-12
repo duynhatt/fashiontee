@@ -1,6 +1,7 @@
 @include('client.layout.header')
 
 @php
+    $selectedDanhMucs = collect((array) request()->input('danh_muc', []))->map(fn($id) => (int) $id)->all();
     $selectedDanhMucs = $selectedDanhMucs ?? collect((array) request()->input('danh_muc', []))->map(fn($id) => (int) $id)->all();
     $selectedSizes = collect((array) request()->input('size', []))->map(fn($id) => (int) $id)->all();
     $selectedColors = collect((array) request()->input('color', []))->map(fn($id) => (int) $id)->all();
@@ -112,6 +113,30 @@
                                             <i class="bi bi-chevron-right fs-8"></i>
                                         </a>
                                     </li>
+                                    @foreach($danhMucs as $danhMuc)
+                                        @php
+                                            $isActiveCategory = in_array((int) $danhMuc->id, $selectedDanhMucs, true);
+                                            $categoryQuery = request()->query();
+                                            unset($categoryQuery['page']);
+                                            $categoryQuery['danh_muc'] = [$danhMuc->id];
+                                            $categoryUrl = url('/Shop') . '?' . http_build_query($categoryQuery);
+                                            $depth = $danhMuc->depth ?? 0;
+                                            $indentPadding = $depth * 14;
+                                        @endphp
+                                        <li>
+                                            <a href="{{ $categoryUrl }}"
+                                               data-ajax-link="true"
+                                               style="{{ $indentPadding > 0 ? 'padding-left: ' . ($indentPadding + 10) . 'px !important;' : '' }}"
+                                               class="category-filter-item d-flex justify-content-between align-items-center py-2 px-2-5 rounded-3 text-decoration-none {{ $isActiveCategory ? 'active' : '' }}">
+                                                <span class="fs-7 {{ $depth === 0 ? 'fw-semibold text-dark' : 'text-secondary' }}">
+                                                    @if($depth > 0)
+                                                        <span class="text-muted me-1">↳</span>
+                                                    @endif
+                                                    {{ $danhMuc->ten_danh_muc }}
+                                                </span>
+                                                <i class="bi bi-chevron-right fs-8"></i>
+                                            </a>
+                                        </li>
                                     @foreach($danhMucsTree ?? [] as $rootCategory)
                                         @include('client.partials.shop-category-item', [
                                             'category' => $rootCategory,
@@ -515,6 +540,7 @@
         padding: 0 0.5rem;
     }
 
+    /* Category Filter List */
     /* Category Filter List & Accordion */
     .category-filter-item {
         color: #475569;
@@ -524,6 +550,7 @@
     .category-filter-item:hover {
         background-color: #f1f5f9;
         color: #0f172a;
+        transform: translateX(2px);
     }
     .category-filter-item.active {
         background-color: #0f172a;

@@ -10,6 +10,20 @@
                 <div class="card-body p-4">
                     <h3 class="text-center mb-4 fw-bold">Đăng ký tài khoản</h3>
 
+                    @if (session('status'))
+                        <div class="alert alert-info alert-dismissible fade show" role="alert">
+                            {{ session('status') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
+                    @if (session('warning'))
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            {{ session('warning') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
+
                     <form method="POST" action="{{ url('/register') }}">
                         @csrf
 
@@ -32,6 +46,16 @@
                                    placeholder="example@gmail.com">
                             @error('email')
                                 <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="invalid-feedback d-block">
+                                    {{ $message }}
+                                    @if(session('unverified_email'))
+                                        <div class="mt-1">
+                                            <a href="{{ route('verification.notice', ['email' => session('unverified_email')]) }}" class="fw-semibold text-primary">
+                                                <i class="fa fa-arrow-right me-1"></i> Đến trang xác thực email ngay
+                                            </a>
+                                        </div>
+                                    @endif
+                                </div>
                             @enderror
                         </div>
 

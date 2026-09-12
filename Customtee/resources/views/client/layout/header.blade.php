@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>FashionTee</title>
+    <title>FASHION</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -90,7 +90,7 @@
 
                     <!-- Brand Logo -->
                     <a class="navbar-brand d-flex align-items-center gap-1 text-decoration-none py-1" href="{{ url('/') }}">
-                        <span class="fashion-brand-logo fw-extrabold fs-4 tracking-tight">Fashion<span class="text-success">Tee</span></span>
+                        <span class="fashion-brand-logo fw-extrabold fs-4 tracking-tight">FASHION<span class="text-success">NIGGA</span></span>
                     </a>
 
                     <!-- Mobile Toggler Button -->

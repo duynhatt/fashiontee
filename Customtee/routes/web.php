@@ -34,6 +34,11 @@ Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Email Verification
+Route::get('/verify-email', [AuthController::class, 'showVerifyForm'])->name('verification.notice');
+Route::post('/verify-email', [AuthController::class, 'verifyEmail'])->name('verification.verify');
+Route::post('/verify-email/resend', [AuthController::class, 'resendVerificationOtp'])->middleware('throttle:6,1')->name('verification.resend');
+
 Route::get('/forgot-password', [AuthController::class, 'showForgotForm'])->name('password.request');
 Route::post('/forgot-password', [AuthController::class, 'sendResetLinkEmail'])->middleware('throttle:6,1')->name('password.email');
 Route::get('/reset-password', [AuthController::class, 'showResetForm'])->name('password.reset');
