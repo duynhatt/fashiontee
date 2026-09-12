@@ -27,7 +27,7 @@ class VerifyEmailNotification extends Notification
             ->from(config('mail.from.address'), config('mail.from.name', $appName))
             ->subject('Mã xác thực tài khoản - ' . $appName)
             ->greeting('Xin chào ' . ($notifiable->name ?? 'bạn') . '!')
-            ->line('Cảm ơn bạn đã đăng ký tài khoản tại FASHIONTEENIGGA.')
+            ->line('Cảm ơn bạn đã đăng ký tài khoản tại FASHIONNIGGA.')
             ->line('Mã xác thực OTP gồm 6 chữ số để kích hoạt tài khoản của bạn là:')
             ->line("**{$this->code}**")
             ->line('Mã xác thực này có hiệu lực trong vòng **5 phút**.')
