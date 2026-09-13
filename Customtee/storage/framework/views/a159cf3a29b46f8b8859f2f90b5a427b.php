@@ -96,6 +96,11 @@
                             <?php if(!empty($tuKhoa)): ?>
                                 <input type="hidden" name="q" value="<?php echo e($tuKhoa); ?>">
                             <?php endif; ?>
+                            <?php if(!empty($selectedDanhMucs)): ?>
+                                <?php $__currentLoopData = $selectedDanhMucs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $catId): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <input type="hidden" name="danh_muc[]" value="<?php echo e($catId); ?>">
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            <?php endif; ?>
 
                             <!-- 1. CATEGORIES -->
                             <div class="filter-section mb-4">
@@ -114,6 +119,7 @@
                                             <span class="fs-7">Tất cả sản phẩm</span>
                                             <i class="bi bi-chevron-right fs-8"></i>
                                         </a>
+                                    </li>
                                     <?php $__currentLoopData = $danhMucsTree ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $rootCategory): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                         <?php echo $__env->make('client.partials.shop-category-item', [
                                             'category' => $rootCategory,
@@ -556,6 +562,7 @@
         background: transparent;
         border: none;
         padding: 2px 6px;
+        padding: 3px 6px;
         margin-left: 4px;
         border-radius: 4px;
         color: #64748b;
@@ -567,11 +574,13 @@
     }
     .btn-cat-toggle:hover {
         background-color: rgba(15, 23, 42, 0.08);
+        background-color: rgba(15, 23, 42, 0.1);
         color: #0f172a;
     }
     .btn-cat-toggle i {
         display: inline-block;
         transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
     }
     .btn-cat-toggle.is-open i {
         transform: rotate(180deg);
@@ -584,10 +593,32 @@
         margin-left: 12px;
         padding-left: 10px;
         border-left: 2px solid #e2e8f0;
+        animation: sublistFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     .category-sublist .category-filter-item {
         padding-top: 0.35rem !important;
         padding-bottom: 0.35rem !important;
+    }
+
+    @keyframes sublistFadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-4px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Tự động hiện danh mục con khi rê chuột vào nút dropdown hoặc khối danh mục */
+    @media (hover: hover) and (pointer: fine) {
+        .category-accordion-item:not([data-manual-closed="true"]):hover > .category-sublist {
+            display: block !important;
+        }
+        .category-accordion-item:not([data-manual-closed="true"]):hover > .category-filter-item .btn-cat-toggle i {
+            transform: rotate(180deg);
+        }
     }
 
     /* Size Filter Tiles */
@@ -900,32 +931,57 @@
                 });
             });
 
-            // Category accordion dropdown toggles
-            const catToggles = document.querySelectorAll('.btn-cat-toggle');
-            catToggles.forEach((btn) => {
-                btn.addEventListener('click', function (event) {
+            // Category accordion dropdown toggles (Hover auto-expand & Click toggle)
+            const catItems = document.querySelectorAll('.category-accordion-item');
+            catItems.forEach((item) => {
+                const toggleBtn = item.querySelector('.btn-cat-toggle');
+                const sublist = item.querySelector('.category-sublist');
+                if (!toggleBtn || !sublist) return;
+
+                let hoverTimer = null;
+
+                // Tự động mở danh mục con khi di chuyển chuột qua nút dropdown hoặc khối danh mục
+                item.addEventListener('mouseenter', function () {
+                    if (item.getAttribute('data-manual-closed') === 'true') return;
+                    clearTimeout(hoverTimer);
+                    sublist.style.display = 'block';
+                    toggleBtn.classList.add('is-open');
+                    sublist.classList.add('is-open');
+                });
+
+                // Tự động đóng lại khi di chuyển chuột ra ngoài (nếu không phải danh mục đang active/được khóa mở)
+                item.addEventListener('mouseleave', function () {
+                    item.removeAttribute('data-manual-closed');
+                    if (!item.classList.contains('is-locked-open')) {
+                        hoverTimer = setTimeout(function () {
+                            if (!item.classList.contains('is-locked-open')) {
+                                sublist.style.display = 'none';
+                                toggleBtn.classList.remove('is-open');
+                                sublist.classList.remove('is-open');
+                            }
+                        }, 200);
+                    }
+                });
+
+                // Nhấn nút dropdown để chuyển đổi đóng/mở chủ động
+                toggleBtn.addEventListener('click', function (event) {
                     event.preventDefault();
                     event.stopPropagation();
-                    const targetId = this.getAttribute('data-target');
-                    if (!targetId) return;
-                    const sublist = document.querySelector(targetId);
-                    if (sublist) {
-                        const isOpen = this.classList.contains('is-open');
-                        if (isOpen) {
-                            if (window.jQuery) {
-                                $(sublist).slideUp(200);
-                            } else {
-                                sublist.style.display = 'none';
-                            }
-                            this.classList.remove('is-open');
-                        } else {
-                            if (window.jQuery) {
-                                $(sublist).slideDown(200);
-                            } else {
-                                sublist.style.display = 'block';
-                            }
-                            this.classList.add('is-open');
-                        }
+                    clearTimeout(hoverTimer);
+
+                    const isCurrentlyOpen = toggleBtn.classList.contains('is-open') && sublist.style.display !== 'none';
+                    if (isCurrentlyOpen) {
+                        sublist.style.display = 'none';
+                        toggleBtn.classList.remove('is-open');
+                        sublist.classList.remove('is-open');
+                        item.classList.remove('is-locked-open');
+                        item.setAttribute('data-manual-closed', 'true');
+                    } else {
+                        sublist.style.display = 'block';
+                        toggleBtn.classList.add('is-open');
+                        sublist.classList.add('is-open');
+                        item.classList.add('is-locked-open');
+                        item.removeAttribute('data-manual-closed');
                     }
                 });
             });
@@ -951,8 +1007,11 @@
             ajaxNavigate(window.location.href, false);
         });
 
-        document.addEventListener('DOMContentLoaded', bindAjaxEvents);
-        bindAjaxEvents();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bindAjaxEvents, { once: true });
+        } else {
+            bindAjaxEvents();
+        }
     })();
 </script>
 

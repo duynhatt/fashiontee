@@ -28,6 +28,7 @@
 @endphp
 
 <li class="category-accordion-item">
+<li class="category-accordion-item {{ $isExpanded ? 'is-locked-open' : '' }}" data-cat-id="{{ $category->id }}">
     <div class="category-filter-item d-flex justify-content-between align-items-center py-2 px-2-5 rounded-3 {{ $isActive ? 'active' : '' }}">
         <a href="{{ $categoryUrl }}"
            data-ajax-link="true"

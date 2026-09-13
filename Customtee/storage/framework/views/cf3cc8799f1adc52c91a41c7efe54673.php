@@ -28,6 +28,7 @@
 ?>
 
 <li class="category-accordion-item">
+<li class="category-accordion-item <?php echo e($isExpanded ? 'is-locked-open' : ''); ?>" data-cat-id="<?php echo e($category->id); ?>">
     <div class="category-filter-item d-flex justify-content-between align-items-center py-2 px-2-5 rounded-3 <?php echo e($isActive ? 'active' : ''); ?>">
         <a href="<?php echo e($categoryUrl); ?>"
            data-ajax-link="true"

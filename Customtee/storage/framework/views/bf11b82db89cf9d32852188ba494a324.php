@@ -477,6 +477,13 @@
             }
         }
 
+        /* Tự động hiện menu khi rê chuột qua trên desktop */
+        @media (min-width: 992px) {
+            .fashion-floating-navbar .dropdown:hover > .dropdown-menu {
+                display: block;
+            }
+        }
+
         .live-search-dropdown {
             position: absolute;
             top: 100%;
