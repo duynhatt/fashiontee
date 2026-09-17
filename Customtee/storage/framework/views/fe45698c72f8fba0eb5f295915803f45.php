@@ -1,0 +1,561 @@
+<?php echo $__env->make('client.layout.header', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+
+<style>
+    .checkout-container {
+        background: #f8f9fa;
+        min-height: 100vh;
+        padding: 40px 0;
+    }
+    .card {
+        border: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .step-number {
+        width: 32px;
+        height: 32px;
+        background: #0d6efd;
+        color: white;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        font-weight: bold;
+        margin-right: 12px;
+    }
+    .payment-option {
+        border: 2px solid #dee2e6;
+        border-radius: 10px;
+        padding: 16px;
+        margin-bottom: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .payment-option.active,
+    .payment-option:hover {
+        border-color: #0d6efd;
+        background: #e7f1ff;
+    }
+    .order-item img {
+        width: 70px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    .btn-place-order {
+        font-size: 1.1rem;
+        padding: 14px;
+        border-radius: 10px;
+    }
+    .voucher-list {
+        max-height: 240px;
+        overflow-y: auto;
+        padding-right: 4px;
+    }
+    .voucher-list .voucher-item:last-child {
+        margin-bottom: 0 !important;
+    }
+    @media (max-width: 991px) {
+        .order-summary {
+            position: static !important;
+        }
+    }
+</style>
+
+<div class="checkout-container">
+    <?php if($errors->any()): ?>
+    <div class="container">
+        <div class="alert alert-danger">
+            <ul>
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $error): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <li><?php echo e($error); ?></li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </ul>
+        </div>
+    </div>
+    <?php endif; ?>
+
+    <div class="container">
+        <h2 class="text-center mb-5 fw-bold text-dark">THANH TOÁN</h2>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-body p-4">
+                        <h4 class="mb-4 d-flex align-items-center">
+                            <span class="step-number">1</span> Thông tin nhận hàng
+                        </h4>
+
+                        <form method="POST" action="<?php echo e(!empty($buyNowMode) ? route('checkout.buy-now.process') : route('checkout.process')); ?>" id="checkoutForm">
+                            <?php echo csrf_field(); ?>
+                            <?php if(!empty($buyNowMode)): ?>
+                                <input type="hidden" name="mode" value="buy_now">
+                            <?php endif; ?>
+                            <input type="hidden" name="voucher_code_applied" id="hidden-voucher-code">
+                            
+                            <?php if(empty($buyNowMode)): ?>
+                                <input type="hidden" name="selected_items" value="<?php echo e(request()->query('items', '')); ?>">
+                            <?php endif; ?>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+<label class="form-label">Họ và tên <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control <?php $__errorArgs = ['full_name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                        name="full_name" value="<?php echo e(old('full_name')); ?>" required>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control <?php $__errorArgs = ['phone'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                        name="phone" value="<?php echo e(old('phone')); ?>" required>
+                                </div>
+
+                               <div class="col-md-4">
+                                    <label class="form-label">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                    <select class="form-select <?php $__errorArgs = ['province'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="province" id="province" required>
+                                        <option value="">Chọn tỉnh/thành</option>
+                                    </select>
+                                    <?php $__errorArgs = ['province'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Quận/Huyện <span class="text-danger">*</span></label>
+                                    <select class="form-select <?php $__errorArgs = ['district'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="district" id="district" required disabled>
+                                        <option value="">Chọn quận/huyện</option>
+                                    </select>
+                                    <?php $__errorArgs = ['district'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label">Phường/Xã <span class="text-danger">*</span></label>
+                                    <select class="form-select <?php $__errorArgs = ['ward'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>" name="ward" id="ward" required disabled>
+                                        <option value="">Chọn phường/xã</option>
+                                    </select>
+                                    <?php $__errorArgs = ['ward'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                    <div class="invalid-feedback"><?php echo e($message); ?></div>
+                                    <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+<textarea name="address" class="form-control" rows="3" required placeholder="Số nhà, tên đường..."><?php echo e(old('address')); ?></textarea>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label">Ghi chú (tùy chọn)</label>
+                                    <textarea class="form-control" name="note" rows="3"><?php echo e(old('note')); ?></textarea>
+                                </div>
+                            </div>
+
+                            <div class="card mt-4">
+                                <div class="card-body p-4">
+                                    <h4 class="mb-4 d-flex align-items-center">
+                                        <span class="step-number">2</span> Phương thức thanh toán
+                                    </h4>
+
+                                    <div class="payment-option active" data-method="cod">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="cod" value="cod" checked required>
+                                            <label class="form-check-label fw-bold" for="cod">Thanh toán khi nhận hàng (COD)</label>
+                                        </div>
+                                    </div>
+
+                                    <div class="payment-option" data-method="online">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="online" value="vnpay" required>
+                                            <label class="form-check-label fw-bold" for="online">Thanh toán trực tuyến</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card order-summary position-sticky" style="top: 20px;">
+                    <div class="card-body p-4">
+                        <h4 class="mb-4">Đơn hàng của bạn</h4>
+
+                        <div class="mb-4">
+                            <?php $__empty_1 = true; $__currentLoopData = $cartItems; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                            <div class="d-flex align-items-center mb-3 order-item">
+                                <img src="<?php echo e(asset('storage/' . $item->sanPham->hinh_anh_chinh)); ?>" class="me-3">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1"><?php echo e($item->sanPham->ten_san_pham); ?></h6>
+                                    <small class="text-muted">
+                                        Size: <?php echo e($item->bienThe->size->ten_kich_thuoc ?? 'N/A'); ?> |
+Color: <?php echo e($item->bienThe->color->ten_mau ?? 'N/A'); ?> | 
+                                        SL: <?php echo e($item->checkout_qty ?? $item->so_luong); ?>
+
+                                    </small>
+                                    <div class="fw-bold text-primary"><?php echo e(number_format($item->checkout_thanh_tien ?? $item->thanh_tien)); ?> ₫</div>
+                                </div>
+                            </div>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                            <p class="text-center text-muted">Giỏ hàng trống</p>
+                            <?php endif; ?>
+                        </div>
+
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tạm tính</span>
+                            <span><?php echo e(number_format($subtotal)); ?> ₫</span>
+                        </div>
+
+                    <div class="d-flex justify-content-between mb-3">
+                 <span>Phí vận chuyển</span>
+                  <span id="shipping-display" class="<?php echo e($shippingFee > 0 ? '' : 'text-success'); ?>">
+                   <?php echo e($shippingFee > 0 ? number_format($shippingFee) . ' ₫' : 'Miễn phí'); ?>
+
+                   </span>
+                    </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold small">Mã giảm giá</label>
+                            <?php if(isset($availableVouchers) && $availableVouchers->isNotEmpty()): ?>
+                                <p class="small text-muted mb-2">Voucher được phép dùng:</p>
+                                <div class="voucher-list mb-3">
+                                    <?php $__currentLoopData = $availableVouchers; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $v): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                        <div class="border rounded p-2 mb-2 voucher-item" data-code="<?php echo e($v->ma); ?>" role="button" style="cursor: pointer;">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="fw-bold text-primary"><?php echo e($v->ma); ?></span>
+                                                <span class="badge bg-success">
+                                                    <?php if($v->loai == 'phan_tram'): ?>
+                                                        Giảm <?php echo e((int)$v->gia_tri); ?>% <?php if($v->giam_toi_da): ?> (tối đa <?php echo e(number_format($v->giam_toi_da)); ?>đ) <?php endif; ?>
+                                                    <?php else: ?>
+                                                        Giảm <?php echo e(number_format($v->gia_tri)); ?>đ
+                                                    <?php endif; ?>
+                                                </span>
+                                            </div>
+                                            <?php if($v->don_hang_toi_thieu): ?>
+                                                <small class="text-muted">Đơn từ <?php echo e(number_format($v->don_hang_toi_thieu)); ?>đ</small>
+                                            <?php endif; ?>
+</div>
+                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                                </div>
+                            <?php endif; ?>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="voucher-code" placeholder="Nhập mã...">
+                                <button class="btn btn-outline-primary" type="button" id="apply-voucher">Áp dụng</button>
+                            </div>
+                            <div id="voucher-message" class="mt-2 small fw-medium"></div>
+                        </div>
+
+                        <div id="discount-row" class="justify-content-between mb-2 text-success" style="display: none;">
+                            <span>Giảm giá (Voucher)</span>
+                            <span id="discount-display">-0 ₫</span>
+                        </div>
+
+                        <hr>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h5 class="mb-0">Tổng cộng</h5>
+                            <h4 class="mb-0 text-primary fw-bold" id="total-display"><?php echo e(number_format($total)); ?> ₫</h4>
+                        </div>
+
+                        <button type="submit" form="checkoutForm" class="btn btn-primary btn-place-order w-100" id="btn-place-order">ĐẶT HÀNG</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var btnPlaceOrder = document.getElementById('btn-place-order');
+    var voucherBlockPlaceOrder = false;
+
+    function setPlaceOrderBlock(block) {
+        voucherBlockPlaceOrder = block;
+        btnPlaceOrder.disabled = block;
+        btnPlaceOrder.title = block ? 'Voucher chưa đủ điều kiện. Vui lòng xóa mã hoặc tăng giá trị đơn hàng.' : '';
+    }
+
+    // Khi xóa mã voucher -> cho phép đặt hàng lại
+    document.getElementById('voucher-code').addEventListener('input', function() {
+        if (!this.value.trim()) {
+            setPlaceOrderBlock(false);
+            document.getElementById('hidden-voucher-code').value = '';
+        }
+    });
+
+    // Click voucher trong danh sách -> điền mã và áp dụng
+    document.querySelectorAll('.voucher-item').forEach(function(el) {
+        el.addEventListener('click', function() {
+            const code = this.dataset.code;
+            document.getElementById('voucher-code').value = code;
+        });
+    });
+
+    // Logic cho Voucher
+    document.getElementById('apply-voucher').addEventListener('click', function() {
+        const code = document.getElementById('voucher-code').value.trim();
+        const subtotal = <?php echo e($subtotal); ?>;
+        const msg = document.getElementById('voucher-message');
+        const btn = this;
+
+        if (!code) {
+            msg.innerHTML = '<span class="text-danger">Vui lòng nhập mã!</span>';
+            setPlaceOrderBlock(false);
+            return;
+        }
+
+        btn.disabled = true;
+btn.innerText = '...';
+
+        fetch("<?php echo e(route('voucher.apply')); ?>", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "<?php echo e(csrf_token()); ?>"
+            },
+            body: JSON.stringify({ voucher_code: code, total_amount: subtotal })
+        })
+        .then(res => res.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerText = 'Áp dụng';
+            document.getElementById('hidden-voucher-code').value = '';
+            if (data.success) {
+                setPlaceOrderBlock(false);
+                msg.innerHTML = '<span class="text-success">' + data.message + '</span>';
+                document.getElementById('discount-row').style.display = 'flex';
+                document.getElementById('discount-display').innerText = '-' + data.discount.toLocaleString() + ' ₫';
+                var shippingFee = <?php echo e($shippingFee); ?>;
+                var finalTotal = data.new_total + shippingFee;
+                document.getElementById('total-display').innerText = finalTotal.toLocaleString() + ' ₫';
+                document.getElementById('hidden-voucher-code').value = data.voucher_ma;
+            } else {
+                var isMinOrderError = (data.message || '').indexOf('tối thiểu') !== -1 || (data.message || '').indexOf('điều kiện') !== -1;
+                if (isMinOrderError) {
+                    setPlaceOrderBlock(true);
+                } else {
+                    setPlaceOrderBlock(false);
+                }
+                msg.innerHTML = '<span class="text-danger">' + data.message + '</span>';
+                document.getElementById('discount-row').style.display = 'none';
+            }
+        });
+    });
+
+    // Logic cho Payment Method
+    document.querySelectorAll('.payment-option').forEach(option => {
+        option.addEventListener('click', function() {
+            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('active'));
+            this.classList.add('active');
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) radio.checked = true;
+        });
+    });
+
+    // Logic cho Địa chỉ (Province API)
+    const provinceSelect = document.getElementById('province');
+    const districtSelect = document.getElementById('district');
+    const wardSelect = document.getElementById('ward');
+    const apiBase = 'https://provinces.open-api.vn/api/';
+    const ADDRESS_REQUEST_TIMEOUT_MS = 8000;
+    const ADDRESS_REQUEST_RETRIES = 2;
+
+    function ensureAddressErrorUI() {
+        let box = document.getElementById('address-load-error');
+        if (box) return box;
+
+        box = document.createElement('div');
+        box.id = 'address-load-error';
+        box.className = 'alert alert-warning small mt-2 mb-0 d-none';
+        box.innerHTML = `
+            Không tải được dữ liệu Tỉnh/Thành phố. 
+            <button type="button" class="btn btn-link btn-sm p-0 ms-1" id="retry-address-load">Thử lại</button>
+        `;
+
+        // Chèn ngay dưới cụm select địa chỉ để user thấy rõ lỗi.
+        const provinceCol = provinceSelect?.closest('.col-md-4');
+        if (provinceCol && provinceCol.parentElement) {
+            const row = provinceCol.parentElement;
+            row.parentElement.insertBefore(box, row.nextSibling);
+        }
+
+        box.addEventListener('click', function(e) {
+            if (e.target && e.target.id === 'retry-address-load') {
+                e.preventDefault();
+                loadProvinces(true);
+            }
+        });
+
+        return box;
+    }
+
+    function setAddressLoadError(show, message) {
+        const box = ensureAddressErrorUI();
+        if (!box) return;
+        if (message) {
+            box.childNodes[0].nodeValue = message + ' ';
+        }
+        box.classList.toggle('d-none', !show);
+    }
+
+    async function fetchData(url) {
+        let lastError = null;
+
+        for (let attempt = 0; attempt <= ADDRESS_REQUEST_RETRIES; attempt++) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), ADDRESS_REQUEST_TIMEOUT_MS);
+            try {
+                const res = await fetch(url, { signal: controller.signal });
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}`);
+                }
+                return await res.json();
+            } catch (err) {
+                lastError = err;
+                // Retry với backoff nhẹ cho các lỗi mạng tạm thời.
+                if (attempt < ADDRESS_REQUEST_RETRIES) {
+                    await new Promise(r => setTimeout(r, 400 * (attempt + 1)));
+                }
+            } finally {
+                clearTimeout(timer);
+            }
+        }
+
+        throw lastError || new Error('Failed to fetch');
+    }
+
+    async function loadProvinces(isManualRetry = false) {
+        try {
+            setAddressLoadError(false);
+            provinceSelect.disabled = true;
+            provinceSelect.innerHTML = '<option value="">Đang tải tỉnh/thành...</option>';
+            districtSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
+            wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+            districtSelect.disabled = true;
+            wardSelect.disabled = true;
+
+            const provinces = await fetchData(`${apiBase}?depth=1`);
+            provinceSelect.innerHTML = '<option value="">Chọn tỉnh/thành</option>';
+            provinces.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.name;
+                opt.textContent = p.name;
+                opt.dataset.code = p.code;
+                provinceSelect.appendChild(opt);
+            });
+            provinceSelect.disabled = false;
+        } catch (err) {
+            provinceSelect.innerHTML = '<option value="">Không tải được dữ liệu tỉnh/thành</option>';
+            provinceSelect.disabled = false;
+            setAddressLoadError(
+                true,
+                isManualRetry
+                    ? 'Vẫn chưa thể tải dữ liệu địa chỉ.'
+                    : 'Không tải được dữ liệu Tỉnh/Thành phố.'
+            );
+        }
+    }
+
+    provinceSelect.addEventListener('change', async function() {
+        const code = this.options[this.selectedIndex].dataset.code;
+        districtSelect.innerHTML = '<option value="">Chọn quận/huyện</option>';
+        wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+        districtSelect.disabled = true;
+        wardSelect.disabled = true;
+        if(!code) return;
+
+        try {
+            const data = await fetchData(`${apiBase}p/${code}?depth=2`);
+            data.districts.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.name; opt.textContent = d.name; opt.dataset.code = d.code;
+                districtSelect.appendChild(opt);
+            });
+            districtSelect.disabled = false;
+        } catch (err) {
+            setAddressLoadError(true, 'Không tải được danh sách Quận/Huyện.');
+        }
+    });
+
+    districtSelect.addEventListener('change', async function() {
+        const code = this.options[this.selectedIndex].dataset.code;
+        wardSelect.innerHTML = '<option value="">Chọn phường/xã</option>';
+        wardSelect.disabled = true;
+        if(!code) return;
+
+        try {
+            const data = await fetchData(`${apiBase}d/${code}?depth=2`);
+            data.wards.forEach(w => {
+                const opt = document.createElement('option');
+                opt.value = w.name; opt.textContent = w.name;
+                wardSelect.appendChild(opt);
+            });
+            wardSelect.disabled = false;
+        } catch (err) {
+            setAddressLoadError(true, 'Không tải được danh sách Phường/Xã.');
+        }
+    });
+
+    loadProvinces();
+</script>
+
+<?php echo $__env->make('client.layout.footer', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
+<?php echo $__env->make('client.layout.scripts', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\e7\laragon\www\DATN\DATN-CustomTee\Customtee\resources\views\client\Checkout\index.blade.php ENDPATH**/ ?>

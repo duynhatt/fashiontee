@@ -9,7 +9,7 @@
     </a>
 </div>
 
-<form action="{{ route('variants.store') }}" method="POST" style="max-width:1500px;">
+<form action="{{ route('variants.store') }}" method="POST" enctype="multipart/form-data" style="max-width:1500px;">
     @csrf
 
     @if ($errors->any())
@@ -133,6 +133,12 @@
             </div>
         </div>
 
+        <div id="colorImagesContainer" class="border rounded p-3 mb-3">
+            <div class="font-weight-bold">Ảnh theo màu</div>
+            <small class="text-muted">Mỗi màu chỉ cần upload một lần, ảnh sẽ dùng cho tất cả size của màu đó.</small>
+            <div id="colorImageRows" class="row mt-2"></div>
+        </div>
+
         <div class="row variant-header">
             <div class="col-md-3">Màu</div>
             <div class="col-md-2">Size</div>
@@ -229,6 +235,20 @@
 .variant-actions{
     margin-top:8px;
 }
+.variant-image-preview img{
+    width:64px;
+    height:64px;
+    max-width:64px;
+    object-fit:cover;
+    border-radius:4px;
+    margin-right:6px;
+    border:1px solid #ddd;
+}
+.variant-image-preview{
+    max-height:78px;
+    overflow-y:auto;
+    overflow-x:hidden;
+}
 </style>
 
 
@@ -313,6 +333,90 @@ document.getElementById('productSelect').addEventListener('change', function () 
 
 const variantsContainer = document.getElementById('variantsContainer');
 const addVariantRowBtn = document.getElementById('addVariantRow');
+
+function refreshColorImageRows() {
+    const colorRows = new Map();
+    document.querySelectorAll('#colorImageRows input[type="file"]').forEach(input => {
+        colorRows.set(input.dataset.colorId, input);
+    });
+    const selected = new Map();
+    variantsContainer.querySelectorAll('select[name$="[mau_sac_id]"]').forEach(select => {
+        const option = select.options[select.selectedIndex];
+        if (select.value && option) selected.set(select.value, option.textContent.trim());
+    });
+    const container = document.getElementById('colorImageRows');
+    container.innerHTML = '';
+    selected.forEach((name, colorId) => {
+        const col = document.createElement('div');
+        col.className = 'col-md-6 mb-2';
+        const label = document.createElement('label');
+        label.className = 'small font-weight-bold';
+        label.textContent = name;
+        const input = colorRows.get(colorId) || document.createElement('input');
+        input.type = 'file';
+        input.name = `color_images[${colorId}][]`;
+        input.dataset.colorId = colorId;
+        input.className = 'form-control-file color-image-input';
+        input.accept = 'image/jpeg,image/png,image/gif,image/webp';
+        input.multiple = true;
+        col.append(label, input);
+        const preview = document.createElement('div');
+        preview.className = 'color-image-preview d-flex flex-wrap mt-2';
+        col.appendChild(preview);
+        container.appendChild(col);
+    });
+}
+
+variantsContainer.addEventListener('change', event => {
+    if (event.target.matches('select[name$="[mau_sac_id]"]')) refreshColorImageRows();
+});
+document.getElementById('colorImageRows').addEventListener('change', event => {
+    if (!event.target.matches('.color-image-input')) return;
+    const input = event.target;
+    const preview = input.parentElement.querySelector('.color-image-preview');
+    preview.innerHTML = '';
+    Array.from(input.files).forEach((file, index) => {
+        const image = document.createElement('img');
+        image.src = URL.createObjectURL(file);
+        image.style.cssText = 'width:64px;height:64px;object-fit:cover;margin-right:6px;border-radius:4px;';
+        image.title = 'Ảnh ' + (index + 1);
+        preview.appendChild(image);
+    });
+});
+refreshColorImageRows();
+
+function renderVariantImagePreview(input) {
+    const preview = input.closest('.variant-row').querySelector('.variant-image-preview');
+    preview.innerHTML = '';
+    Array.from(input.files || []).forEach((file, fileIndex) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'position-relative mr-1 mb-1';
+        const image = document.createElement('img');
+        const remove = document.createElement('button');
+        image.src = URL.createObjectURL(file);
+        image.onload = () => URL.revokeObjectURL(image.src);
+        remove.type = 'button';
+        remove.className = 'btn btn-sm btn-danger position-absolute';
+        remove.style.cssText = 'top:0;right:0;padding:0 4px;';
+        remove.textContent = '×';
+        remove.addEventListener('click', () => {
+            const transfer = new DataTransfer();
+            Array.from(input.files).forEach((item, index) => {
+                if (index !== fileIndex) transfer.items.add(item);
+            });
+            input.files = transfer.files;
+            renderVariantImagePreview(input);
+        });
+        wrapper.append(image, remove);
+        preview.appendChild(wrapper);
+    });
+}
+
+variantsContainer.addEventListener('change', function (event) {
+    if (event.target.classList.contains('variant-image-input')) {
+        renderVariantImagePreview(event.target);
+    }
+});
 
 function notifyError(msg) {
     if (window.toastr && typeof toastr.error === 'function') {

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\BienThe;
 use App\Models\Category;
+use App\Models\HinhAnhSanPham;
 use App\Models\KichThuoc;
 use App\Models\MauSac;
 use App\Models\SanPham;
@@ -73,6 +74,11 @@ class SanPhamController extends Controller
             'variants.*.gia_khuyen_mai' => 'nullable|numeric|min:0|max:999999999999',
             'variants.*.so_luong'       => 'required_with:variants|integer|min:0',
             'variants.*.trang_thai'     => 'nullable|in:0,1',
+            'variants.*.images'         => 'nullable|array',
+            'variants.*.images.*'       => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+            'color_images'              => 'nullable|array',
+            'color_images.*'            => 'array',
+            'color_images.*.*'          => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
         ], [
             'variants.*.gia.min'            => 'Giá không được âm.',
             'variants.*.gia.max'            => 'Giá vượt quá giới hạn cho phép.',
@@ -118,9 +124,8 @@ class SanPhamController extends Controller
         $sanPham = SanPham::create($validated);
 
         if (!empty($variants)) {
-            $rows = [];
-            foreach ($variants as $variant) {
-                $rows[] = [
+            foreach ($variants as $index => $variant) {
+                $bienThe = BienThe::create([
                     'san_pham_id'    => $sanPham->id,
                     'mau_sac_id'     => $variant['mau_sac_id'],
                     'kich_thuoc_id'  => $variant['kich_thuoc_id'],
@@ -128,10 +133,40 @@ class SanPhamController extends Controller
                     'gia_khuyen_mai' => $variant['gia_khuyen_mai'] ?? null,
                     'so_luong'       => $variant['so_luong'],
                     'trang_thai'     => $variant['trang_thai'] ?? 1,
-                ];
+                ]);
+
+                foreach ($request->file("variants.$index.images", []) as $image) {
+                    HinhAnhSanPham::create([
+                        'san_pham_id' => $sanPham->id,
+                        'mau_sac_id' => $bienThe->mau_sac_id,
+                        // Product images are shared by every size of the same color.
+                        'bien_the_id' => null,
+                        'duong_dan' => $image->store('san-pham/variants', 'public'),
+                        'thu_tu' => HinhAnhSanPham::where('san_pham_id', $sanPham->id)
+                            ->where('mau_sac_id', $bienThe->mau_sac_id)
+                            ->count(),
+                    ]);
+                }
             }
 
-            BienThe::insert($rows);
+            foreach ($request->file('color_images', []) as $colorId => $images) {
+                $variant = BienThe::where('san_pham_id', $sanPham->id)
+                    ->where('mau_sac_id', $colorId)
+                    ->first();
+                if (!$variant) {
+                    continue;
+                }
+                foreach ($images as $image) {
+                    HinhAnhSanPham::create([
+                        'san_pham_id' => $sanPham->id,
+                        'mau_sac_id' => $colorId,
+                        'bien_the_id' => null,
+                        'duong_dan' => $image->store('san-pham/variants', 'public'),
+                        'thu_tu' => HinhAnhSanPham::where('san_pham_id', $sanPham->id)
+                            ->where('mau_sac_id', $colorId)->count(),
+                    ]);
+                }
+            }
         }
 
         return response()->json([
@@ -142,7 +177,7 @@ class SanPhamController extends Controller
 
     public function edit($id)
     {
-        $sanPham = SanPham::findOrFail($id);
+        $sanPham = SanPham::with(['variants.images'])->findOrFail($id);
         $danhMucs = Category::getFlatTree(null, true);
 
         return response()->json([
@@ -194,6 +229,10 @@ class SanPhamController extends Controller
             Storage::disk('public')->delete($sanPham->hinh_anh_chinh);
         }
 
+        $sanPham->images()->get()->each->delete();
+        $sanPham->variants()->with('images')->get()->each(function (BienThe $variant) {
+            $variant->images->each->delete();
+        });
         $sanPham->delete();
 
         return response()->json([

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\BienThe;
+use App\Models\HinhAnhSanPham;
 use App\Models\KichThuoc;
 use App\Models\MauSac;
 use App\Models\SanPham;
@@ -161,6 +162,11 @@ public function store(Request $request)
         'variants.*.gia_khuyen_mai' => 'nullable|numeric|min:0|max:999999999999',
         'variants.*.so_luong'       => 'required|integer|min:0',
         'variants.*.trang_thai'     => 'nullable|in:0,1',
+        'variants.*.images'         => 'nullable|array',
+        'variants.*.images.*'       => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        'color_images'              => 'nullable|array',
+        'color_images.*'            => 'array',
+        'color_images.*.*'          => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
     ], [
         'variants.*.gia.min'            => 'Giá không được âm.',
         'variants.*.gia.max'            => 'Giá vượt quá giới hạn cho phép.',
@@ -216,9 +222,8 @@ public function store(Request $request)
 
     $validated = $validator->validate();
 
-    $rows = [];
-    foreach ($validated['variants'] as $variant) {
-        $rows[] = [
+    foreach ($validated['variants'] as $index => $variant) {
+        $bienThe = BienThe::create([
             'san_pham_id'    => $validated['san_pham_id'],
             'mau_sac_id'     => $variant['mau_sac_id'],
             'kich_thuoc_id'  => $variant['kich_thuoc_id'],
@@ -226,10 +231,23 @@ public function store(Request $request)
             'gia_khuyen_mai' => $variant['gia_khuyen_mai'] ?? null,
             'so_luong'       => $variant['so_luong'],
             'trang_thai'     => $variant['trang_thai'] ?? 1,
-        ];
+        ]);
+
+        foreach ($request->file("variants.$index.images", []) as $image) {
+            HinhAnhSanPham::create([
+                'san_pham_id' => $bienThe->san_pham_id,
+                'mau_sac_id' => $bienThe->mau_sac_id,
+                // Product images are shared by every size of the same color.
+                'bien_the_id' => null,
+                'duong_dan' => $image->store('san-pham/variants', 'public'),
+                'thu_tu' => HinhAnhSanPham::where('san_pham_id', $bienThe->san_pham_id)
+                    ->where('mau_sac_id', $bienThe->mau_sac_id)
+                    ->count(),
+            ]);
+        }
     }
 
-    BienThe::insert($rows);
+    $this->storeColorImages($request, $validated['san_pham_id']);
 
     return redirect()
         ->route('variants.create', ['san_pham_id' => $validated['san_pham_id']])
@@ -242,8 +260,9 @@ public function edit($id)
     $variant = BienThe::findOrFail($id);
     $product = SanPham::with([
         'variants' => function ($q) {
-            $q->with(['color', 'size'])->orderBy('id');
+            $q->with(['color', 'size', 'images'])->orderBy('id');
         },
+        'images',
         'category'
     ])->findOrFail($variant->san_pham_id);
     $products = SanPham::all();
@@ -268,6 +287,13 @@ public function update(Request $request, $id)
         'variants.*.gia_khuyen_mai' => 'nullable|numeric|min:0|max:999999999999',
         'variants.*.so_luong'       => 'required|integer|min:0',
         'variants.*.trang_thai'     => 'nullable|in:0,1',
+        'variants.*.images'         => 'nullable|array',
+        'variants.*.images.*'       => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        'color_images'              => 'nullable|array',
+        'color_images.*'            => 'array',
+        'color_images.*.*'          => 'image|mimes:jpeg,png,jpg,gif,webp|max:5120',
+        'variants_to_delete'        => 'nullable|array',
+        'variants_to_delete.*'      => 'integer|exists:bien_thes,id',
     ], [
         'variants.*.gia.min'            => 'Giá không được âm.',
         'variants.*.gia.max'            => 'Giá vượt quá giới hạn cho phép.',
@@ -342,8 +368,12 @@ public function update(Request $request, $id)
     $validated = $validator->validate();
     $sanPhamId = $validated['san_pham_id'];
 
-    foreach ($validated['variants'] as $variantData) {
-        BienThe::where('id', $variantData['id'])->update([
+    foreach ($validated['variants'] as $index => $variantData) {
+        $bienThe = BienThe::where('id', $variantData['id'])
+            ->where('san_pham_id', $sanPhamId)
+            ->firstOrFail();
+        $oldColorId = $bienThe->mau_sac_id;
+        $bienThe->update([
             'san_pham_id'    => $sanPhamId,
             'mau_sac_id'     => $variantData['mau_sac_id'],
             'kich_thuoc_id'  => $variantData['kich_thuoc_id'],
@@ -352,6 +382,42 @@ public function update(Request $request, $id)
             'so_luong'       => $variantData['so_luong'],
             'trang_thai'     => $variantData['trang_thai'] ?? 1,
         ]);
+
+        foreach ($request->file("variants.$index.images", []) as $image) {
+            HinhAnhSanPham::create([
+                'san_pham_id' => $sanPhamId,
+                'mau_sac_id' => $bienThe->mau_sac_id,
+                // Product images are shared by every size of the same color.
+                'bien_the_id' => null,
+                'duong_dan' => $image->store('san-pham/variants', 'public'),
+                'thu_tu' => HinhAnhSanPham::where('san_pham_id', $sanPhamId)
+                    ->where('mau_sac_id', $bienThe->mau_sac_id)
+                    ->count(),
+            ]);
+        }
+
+        if ((string) $oldColorId !== (string) $bienThe->mau_sac_id) {
+            $this->cleanupColorImages($sanPhamId, $oldColorId);
+        }
+    }
+
+    $this->storeColorImages($request, $sanPhamId);
+
+    $deleteIds = collect($validated['variants_to_delete'] ?? [])->unique()->values();
+    if ($deleteIds->isNotEmpty()) {
+        $variantsToDelete = BienThe::where('san_pham_id', $sanPhamId)
+            ->whereIn('id', $deleteIds)
+            ->with('images')
+            ->get();
+
+        $variantsToDelete->each(function (BienThe $variant) {
+            $variant->images->each->delete();
+            $variant->delete();
+        });
+
+        $variantsToDelete->pluck('mau_sac_id')->unique()->each(function ($colorId) use ($sanPhamId) {
+            $this->cleanupColorImages($sanPhamId, $colorId);
+        });
     }
 
     return redirect()
@@ -363,10 +429,56 @@ public function update(Request $request, $id)
 public function destroy($id)
 {
     $variant = BienThe::findOrFail($id);
+    $sanPhamId = $variant->san_pham_id;
+    $colorId = $variant->mau_sac_id;
+    $variant->load('images');
+    $variant->images->each->delete();
     $variant->delete();
+    $this->cleanupColorImages($sanPhamId, $colorId);
 
     return redirect()->back()
         ->with('success', 'Đã xoá biến thể');
+}
+
+private function cleanupColorImages(int $sanPhamId, ?int $colorId): void
+{
+    if (!$colorId || BienThe::where('san_pham_id', $sanPhamId)->where('mau_sac_id', $colorId)->exists()) {
+        return;
+    }
+
+    HinhAnhSanPham::where('san_pham_id', $sanPhamId)
+        ->where('mau_sac_id', $colorId)
+        ->whereNull('bien_the_id')
+        ->get()
+        ->each
+        ->delete();
+}
+
+private function storeColorImages(Request $request, int $sanPhamId): void
+{
+    foreach ($request->file('color_images', []) as $colorId => $images) {
+        if (!BienThe::where('san_pham_id', $sanPhamId)->where('mau_sac_id', $colorId)->exists()) {
+            continue;
+        }
+        foreach ($images as $image) {
+            HinhAnhSanPham::create([
+                'san_pham_id' => $sanPhamId,
+                'mau_sac_id' => $colorId,
+                'bien_the_id' => null,
+                'duong_dan' => $image->store('san-pham/variants', 'public'),
+                'thu_tu' => HinhAnhSanPham::where('san_pham_id', $sanPhamId)
+                    ->where('mau_sac_id', $colorId)->count(),
+            ]);
+        }
+    }
+}
+
+public function destroyImage($id)
+{
+    $image = HinhAnhSanPham::findOrFail($id);
+    $image->delete();
+
+    return response()->json(['status' => true, 'message' => 'Đã xóa ảnh biến thể']);
 }
 
 

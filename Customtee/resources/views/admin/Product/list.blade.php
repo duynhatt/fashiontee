@@ -14,12 +14,33 @@
     
     width: 1269px;
 }
+
    .form-group{
     margin-bottom:1px;
     
 }
         #variantsSection .variant-row select[name$="[trang_thai]"] {
             min-width: 60px;
+        }
+
+        .variant-image-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            max-height: 78px;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .variant-image-preview img,
+        .variant-preview-image {
+            display: block;
+            width: 64px;
+            height: 64px;
+            max-width: 64px;
+            object-fit: cover;
+            border: 1px solid #ddd;
+            border-radius: 4px;
         }
 
         .card {
@@ -327,6 +348,11 @@
                                 </div>
                             </div>
 
+                            <div id="colorImagesContainer" class="border rounded p-3 mb-3">
+                                <div class="font-weight-bold">Ảnh theo màu</div>
+                                <small class="text-muted">Mỗi màu chỉ cần upload một lần, ảnh sẽ dùng cho tất cả size của màu đó.</small>
+                                <div id="colorImageRows" class="row mt-2"></div>
+                            </div>
                             <div class="row small text-muted mb-2">
                                 <div class="col-md-3">Màu</div>
                                 <div class="col-md-2">Size</div>
@@ -547,6 +573,31 @@
             `;
             }
 
+            function renderVariantImagePreview(input) {
+                const preview = input.closest('.variant-row').querySelector('.variant-image-preview');
+                preview.innerHTML = '';
+                Array.from(input.files || []).forEach((file, fileIndex) => {
+                    const wrapper = $('<div class="position-relative mr-1 mb-1"></div>');
+                    const image = $('<img class="variant-preview-image">').attr('src', URL.createObjectURL(file));
+                    const remove = $('<button type="button" class="btn btn-sm btn-danger position-absolute">×</button>')
+                        .css({top: 0, right: 0, padding: '0 4px'})
+                        .on('click', function() {
+                            const transfer = new DataTransfer();
+                            Array.from(input.files).forEach((item, index) => {
+                                if (index !== fileIndex) transfer.items.add(item);
+                            });
+                            input.files = transfer.files;
+                            renderVariantImagePreview(input);
+                        });
+                    wrapper.append(image, remove);
+                    $(preview).append(wrapper);
+                });
+            }
+
+            $('#productVariantsContainer').on('change', '.variant-image-input', function() {
+                renderVariantImagePreview(this);
+            });
+
             $('#enableInitialVariants').on('change', function() {
                 const enabled = $(this).is(':checked');
                 setVariantsEnabled(enabled);
@@ -653,6 +704,7 @@
                 });
 
                 container.attr('data-next-index', index);
+                refreshColorImageRows();
                 setVariantsEnabled(true);
                 $('#autoVariantPanel').hide();
             });
@@ -662,6 +714,7 @@
                 const currentIndex = parseInt(container.attr('data-next-index'), 10) || 0;
                 container.append(buildVariantRow(currentIndex));
                 container.attr('data-next-index', currentIndex + 1);
+                refreshColorImageRows();
             });
 
             $('#productVariantsContainer').on('click', '.remove-variant', function() {
@@ -676,6 +729,7 @@
                 const container = $('#productVariantsContainer');
                 container.html(buildVariantRow(0));
                 container.attr('data-next-index', 1);
+                refreshColorImageRows();
                 $('#enableInitialVariants').prop('checked', false);
                 $('#enableAutoVariants').prop('checked', false);
                 setVariantsEnabled(false);
@@ -806,5 +860,40 @@
             });
 
         });
+            function refreshColorImageRows() {
+                const existing = {};
+                $('#colorImageRows input[type="file"]').each(function() {
+                    existing[this.dataset.colorId] = this;
+                });
+                const selected = {};
+                $('#productVariantsContainer select[name$="[mau_sac_id]"]').each(function() {
+                    if (this.value) selected[this.value] = $(this).find('option:selected').text().trim();
+                });
+                const container = $('#colorImageRows').empty();
+                Object.keys(selected).forEach(colorId => {
+                    const col = $('<div class="col-md-6 mb-2"></div>');
+                    col.append($('<label class="small font-weight-bold"></label>').text(selected[colorId]));
+                    const input = existing[colorId] || $('<input>')[0];
+                    input.type = 'file';
+                    input.name = `color_images[${colorId}][]`;
+                    input.dataset.colorId = colorId;
+                    input.className = 'form-control-file color-image-input';
+                    input.accept = 'image/jpeg,image/png,image/gif,image/webp';
+                    input.multiple = true;
+                    col.append(input).append('<div class="color-image-preview d-flex flex-wrap mt-2"></div>');
+                    container.append(col);
+                });
+            }
+
+            $('#productVariantsContainer').on('change', 'select[name$="[mau_sac_id]"]', refreshColorImageRows);
+            $('#colorImageRows').on('change', '.color-image-input', function() {
+                const preview = $(this).siblings('.color-image-preview').empty();
+                Array.from(this.files).forEach((file, index) => $('<img>', {
+                    src: URL.createObjectURL(file),
+                    title: 'Ảnh ' + (index + 1),
+                    css: { width: '64px', height: '64px', objectFit: 'cover', marginRight: '6px', borderRadius: '4px' }
+                }).appendTo(preview));
+            });
+            refreshColorImageRows();
     </script>
 @endsection

@@ -214,6 +214,7 @@ Route::prefix('admin/variants')->name('variants.')->middleware(['auth', 'admin']
     Route::get('/edit/{id}', [VariantController::class, 'edit'])->name('edit')->middleware('permission:inventory.update');
     Route::post('/update/{id}', [VariantController::class, 'update'])->name('update')->middleware('permission:inventory.update');
     Route::delete('/delete/{id}', [VariantController::class, 'destroy'])->name('delete')->middleware('permission:inventory.update');
+    Route::delete('/images/{id}', [VariantController::class, 'destroyImage'])->name('images.delete')->middleware('permission:inventory.update');
 });
 
 // Các Route API bổ trợ cho Admin
@@ -228,7 +229,7 @@ Route::get('/admin/products/info/{id}', function ($id) {
 })->middleware(['auth', 'admin']);
 
 Route::get('/admin/variants/by-product/{id}', function ($id) {
-    $product = \App\Models\SanPham::with(['variants.color', 'variants.size'])->findOrFail($id);
+    $product = \App\Models\SanPham::with(['variants.color', 'variants.size', 'variants.images'])->findOrFail($id);
     return response()->json([
         'variants' => $product->variants->map(function ($variant) {
             return [
@@ -241,6 +242,7 @@ Route::get('/admin/variants/by-product/{id}', function ($id) {
                 'gia_khuyen_mai' => $variant->gia_khuyen_mai,
                 'so_luong'       => $variant->so_luong,
                 'trang_thai'     => (bool) $variant->trang_thai,
+                'images'         => $variant->images->map(fn ($image) => asset('storage/' . $image->duong_dan))->values(),
             ];
         })->values(),
     ]);

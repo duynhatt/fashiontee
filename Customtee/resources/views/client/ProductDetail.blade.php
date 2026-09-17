@@ -71,7 +71,7 @@
 
                         <!-- Main Image Frame -->
                         <div class="product-image-container ratio ratio-1x1 d-flex align-items-center justify-content-center">
-                            <img src="{{ asset('storage/' . $sanPham->hinh_anh_chinh) }}"
+                            <img src="{{ $sanPham->hinh_anh_chinh ? asset('storage/' . $sanPham->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
                                  id="main-product-img"
                                  class="product-main-img w-100 h-100"
                                  alt="{{ $sanPham->ten_san_pham }}"
@@ -79,6 +79,7 @@
                                  decoding="async">
                         </div>
                     </div>
+                    <div id="product-gallery-thumbnails" class="d-flex flex-wrap gap-2 mt-3" aria-label="Thư viện ảnh sản phẩm"></div>
 
                     <!-- Micro Feature Tags below Image -->
                     <div class="row g-2 mt-3 text-center text-muted small">
@@ -1284,6 +1285,19 @@
     .product-main-img {
         object-fit: contain;
         transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+     }
+
+     .gallery-thumbnail {
+        opacity: 0.72;
+        transition: opacity 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+     }
+
+     .gallery-thumbnail:hover,
+     .gallery-thumbnail.active {
+        opacity: 1;
+        border-color: #0f172a !important;
+        box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0f172a, 0 5px 14px rgba(15, 23, 42, 0.28);
+        transform: translateY(-2px);
         padding: 1.5rem;
     }
 
@@ -1831,7 +1845,46 @@
 @include('client.layout.scripts')
 
 @php
-    $variantsForJs = $sanPham->variants->map(function($v) {
+    $defaultProductImage = $sanPham->hinh_anh_chinh
+        ? asset('storage/' . $sanPham->hinh_anh_chinh)
+        : asset('img/shop_01.jpg');
+    $defaultGalleryImages = $sanPham->images->whereNull('bien_the_id')
+        ->map(fn ($image) => asset('storage/' . $image->duong_dan))
+        ->values();
+    if ($defaultGalleryImages->isEmpty()) {
+        $defaultGalleryImages = collect([$defaultProductImage]);
+    }
+    $colorImages = $sanPham->images->groupBy('mau_sac_id');
+    $variantImagesByColor = $sanPham->allVariants
+        ->flatMap(fn ($variant) => $variant->images)
+        ->groupBy('mau_sac_id');
+    $galleryImages = $sanPham->images
+        ->map(fn ($image) => [
+            'id' => 'product-' . $image->id,
+            'url' => asset('storage/' . $image->duong_dan),
+            'color_id' => $image->mau_sac_id ? (string) $image->mau_sac_id : null,
+        ]);
+    $galleryImages = $galleryImages
+        ->concat($variantImagesByColor->flatten()->map(fn ($image) => [
+            'id' => 'variant-' . $image->id,
+            'url' => asset('storage/' . $image->duong_dan),
+            'color_id' => $image->mau_sac_id ? (string) $image->mau_sac_id : null,
+        ]))
+        ->unique('url')
+        ->values();
+    if ($galleryImages->isEmpty()) {
+        $galleryImages = collect([[
+            'id' => 'default',
+            'url' => $defaultProductImage,
+            'color_id' => null,
+        ]]);
+    }
+    $variantsForJs = $sanPham->variants->map(function($v) use ($colorImages, $variantImagesByColor, $defaultProductImage) {
+        $images = $variantImagesByColor->get($v->mau_sac_id, collect())
+            ->merge($colorImages->get($v->mau_sac_id, collect()))
+            ->unique('id')
+            ->map(fn ($image) => asset('storage/' . $image->duong_dan))
+            ->values();
         return [
             'id'             => (int) $v->id,
             'mau_sac_id'     => (string) $v->mau_sac_id,
@@ -1840,6 +1893,7 @@
             'trang_thai'     => (bool) $v->trang_thai,
             'gia'            => (float) $v->gia,
             'gia_khuyen_mai' => $v->gia_khuyen_mai ? (float) $v->gia_khuyen_mai : null,
+            'images'         => $images->isEmpty() ? [$defaultProductImage] : $images->all(),
         ];
     })->values();
 @endphp
@@ -1895,8 +1949,11 @@
         const mobileStickyVariantNote = document.getElementById('mobile-sticky-variant-note');
         const mobileBtnAddCart = document.getElementById('mobile-btn-add-cart');
         const mobileBtnBuyNow = document.getElementById('mobile-btn-buy-now');
+        const mainProductImage = document.getElementById('main-product-img');
+        const galleryThumbnails = document.getElementById('product-gallery-thumbnails');
 
         const allVariants = {!! json_encode($variantsForJs) !!};
+        const galleryImages = {!! json_encode($galleryImages->all()) !!};
 
         let selectedColor = null;
         let selectedSize = null;
@@ -1904,6 +1961,38 @@
         let selectedSizeName = '';
         let currentVariantId = null;
         let currentStock = null;
+
+        function updateGallery(selectedColorId = null) {
+            const images = galleryImages;
+            const selectedImage = selectedColorId
+                ? images.find(image => String(image.color_id) === String(selectedColorId))
+                : images[0];
+            const mainImage = selectedImage || images[0];
+
+            mainProductImage.src = mainImage.url;
+            galleryThumbnails.innerHTML = '';
+            images.forEach((galleryImage, index) => {
+                const thumbnail = document.createElement('button');
+                thumbnail.type = 'button';
+                thumbnail.className = 'p-0 border rounded overflow-hidden bg-white gallery-thumbnail';
+                thumbnail.style.cssText = 'width:64px;height:64px;';
+                thumbnail.setAttribute('aria-label', `Xem ảnh ${index + 1}`);
+                const thumbnailImage = document.createElement('img');
+                thumbnailImage.src = galleryImage.url;
+                thumbnailImage.alt = '{{ addslashes($sanPham->ten_san_pham) }}';
+                thumbnailImage.style.cssText = 'width:100%;height:100%;object-fit:cover;';
+                if (galleryImage.id === mainImage.id) {
+                    thumbnail.classList.add('active');
+                }
+                thumbnail.appendChild(thumbnailImage);
+                thumbnail.addEventListener('click', () => {
+                    mainProductImage.src = galleryImage.url;
+                    galleryThumbnails.querySelectorAll('.gallery-thumbnail').forEach(item => item.classList.remove('active'));
+                    thumbnail.classList.add('active');
+                });
+                galleryThumbnails.appendChild(thumbnail);
+            });
+        }
 
         function updateStockStates() {
             // Cập nhật trạng thái các nút Size theo Màu đã chọn
@@ -2022,6 +2111,7 @@
         }
 
         updateStockStates();
+        updateGallery(null);
 
         document.getElementById('btn-increase').addEventListener('click', () => {
             let qty = parseInt(quantityInput.value, 10) || 1;
@@ -2053,6 +2143,7 @@
             if (!selectedColor || !selectedSize) {
                 currentVariantId = null;
                 currentStock = null;
+                updateGallery(selectedColor);
                 giaHienTai.textContent = '{{ $priceRange }}';
                 if (mobileStickyPrice) mobileStickyPrice.textContent = '{{ $priceRange }}';
                 giaGoc.classList.add('d-none');
@@ -2064,6 +2155,13 @@
                 buyNowBtn.disabled = false;
                 return;
             }
+
+            const selectedVariant = allVariants.find(v =>
+                String(v.mau_sac_id) === String(selectedColor) &&
+                String(v.kich_thuoc_id) === String(selectedSize) &&
+                v.trang_thai
+            );
+            updateGallery(selectedColor);
 
             fetch(`/api/product-variant?product_id={{ $sanPham->id }}&color=${selectedColor}&size=${selectedSize}`)
                 .then(response => response.json())

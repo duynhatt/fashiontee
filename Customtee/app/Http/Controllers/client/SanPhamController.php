@@ -13,8 +13,10 @@ class SanPhamController extends Controller
         $sanPham = SanPham::with([
             'variants' => function ($query) {
                 $query->where('trang_thai', true)
-                    ->with(['color', 'size']);
+                    ->with(['color', 'size', 'images']);
             },
+            'allVariants.images',
+            'images',
             'category'
         ])
         ->where('slug', $slug)

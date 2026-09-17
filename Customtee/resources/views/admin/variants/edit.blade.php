@@ -27,6 +27,19 @@
 .variant-actions{
     margin-top:8px;
 }
+.variant-image-preview img{
+    width:64px;
+    height:64px;
+    max-width:64px;
+    object-fit:cover;
+    border-radius:4px;
+    border:1px solid #ddd;
+}
+.variant-image-preview{
+    max-height:78px;
+    overflow-y:auto;
+    overflow-x:hidden;
+}
 
 </style>
 <div class="d-flex justify-content-between align-items-center" style="margin-bottom:20px;">
@@ -36,7 +49,7 @@
     </a>
 </div>
 
-<form action="{{ route('variants.update', $variant->id) }}" method="POST" style="max-width:900px;">
+<form action="{{ route('variants.update', $variant->id) }}" method="POST" enctype="multipart/form-data" style="max-width:1100px;">
     @csrf
 
     @if ($errors->any())
@@ -75,9 +88,11 @@
     </div>
 
     @php
+        $colorImages = $product->images->groupBy('mau_sac_id');
         $oldVariants = old('variants');
         if (!$oldVariants) {
-            $oldVariants = $product->variants->map(function ($v) {
+            $oldVariants = $product->variants->map(function ($v) use ($colorImages) {
+                $images = $v->images->merge($colorImages->get($v->mau_sac_id, collect()))->unique('id');
                 return [
                     'id' => $v->id,
                     'mau_sac_id' => $v->mau_sac_id,
@@ -86,6 +101,10 @@
                     'gia_khuyen_mai' => $v->gia_khuyen_mai,
                     'so_luong' => $v->so_luong,
                     'trang_thai' => $v->trang_thai ? '1' : '0',
+                    'images' => $images->map(fn ($image) => [
+                        'id' => $image->id,
+                        'url' => asset('storage/' . $image->duong_dan),
+                    ])->all(),
                 ];
             })->values()->all();
         }
@@ -93,6 +112,30 @@
 
     <div class="form-group">
         <label>Danh sách biến thể</label>
+        <div class="border rounded p-3 mb-3">
+            <div class="font-weight-bold">Ảnh theo màu</div>
+            <small class="text-muted">Mỗi màu chỉ cần upload một lần, ảnh sẽ dùng cho tất cả size của màu đó.</small>
+            <div class="row mt-2">
+                @foreach($colorImages as $colorId => $images)
+                    @php
+                        $color = $colors->firstWhere('id', $colorId);
+                    @endphp
+                    <div class="col-md-6 mb-3">
+                        <label class="small font-weight-bold d-block">{{ $color->ten_mau ?? 'Màu' }}</label>
+                        <div class="d-flex flex-wrap mb-2">
+                            @foreach($images as $image)
+                                <div class="position-relative mr-2 mb-2 existing-image" data-image-id="{{ $image->id }}">
+                                    <img src="{{ asset('storage/' . $image->duong_dan) }}" alt="Ảnh màu" style="width:64px;height:64px;object-fit:cover;border:1px solid #ddd;border-radius:4px;">
+                                    <button type="button" class="btn btn-sm btn-danger position-absolute delete-variant-image" style="top:0;right:0;padding:0 4px;" data-image-id="{{ $image->id }}">×</button>
+                                </div>
+                            @endforeach
+                        </div>
+                        <input type="file" name="color_images[{{ $colorId }}][]" class="form-control-file color-image-input" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
+                        <div class="color-image-preview d-flex flex-wrap mt-2"></div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
         <div class="row variant-header">
             <div class="col-md-3">Màu</div>
             <div class="col-md-2">Size</div>
@@ -136,6 +179,9 @@
                                 <option value="1" {{ ($row['trang_thai'] ?? '1') == '1' ? 'selected' : '' }}>Hiện</option>
                                 <option value="0" {{ ($row['trang_thai'] ?? '1') == '0' ? 'selected' : '' }}>Ẩn</option>
                             </select>
+                        </div>
+                        <div class="col-md-12 mt-2 text-right">
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-variant">Xóa biến thể</button>
                         </div>
                     </div>
                 </div>
@@ -196,6 +242,85 @@ function updateInfo() {
 
 select.addEventListener('change', updateInfo);
 updateInfo();
+
+function renderVariantImagePreview(input) {
+    const preview = input.closest('.variant-row').querySelector('.variant-image-preview');
+    preview.innerHTML = '';
+    Array.from(input.files || []).forEach((file, fileIndex) => {
+        const wrapper = document.createElement('div');
+        wrapper.className = 'position-relative mr-1 mb-1';
+        const image = document.createElement('img');
+        const remove = document.createElement('button');
+        image.src = URL.createObjectURL(file);
+        image.onload = () => URL.revokeObjectURL(image.src);
+        remove.type = 'button';
+        remove.className = 'btn btn-sm btn-danger position-absolute';
+        remove.style.cssText = 'top:0;right:0;padding:0 4px;';
+        remove.textContent = '×';
+        remove.addEventListener('click', () => {
+            const transfer = new DataTransfer();
+            Array.from(input.files).forEach((item, index) => {
+                if (index !== fileIndex) transfer.items.add(item);
+            });
+            input.files = transfer.files;
+            renderVariantImagePreview(input);
+        });
+        wrapper.append(image, remove);
+        preview.appendChild(wrapper);
+    });
+}
+
+document.querySelectorAll('.variant-image-input').forEach(input => {
+    input.addEventListener('change', () => renderVariantImagePreview(input));
+});
+
+document.querySelectorAll('.color-image-input').forEach(input => {
+    input.addEventListener('change', () => {
+        const preview = input.parentElement.querySelector('.color-image-preview');
+        preview.innerHTML = '';
+        Array.from(input.files).forEach((file, index) => {
+            const image = document.createElement('img');
+            image.src = URL.createObjectURL(file);
+            image.title = 'Ảnh ' + (index + 1);
+            image.style.cssText = 'width:64px;height:64px;object-fit:cover;margin-right:6px;border-radius:4px;';
+            preview.appendChild(image);
+        });
+    });
+});
+
+document.querySelectorAll('.delete-variant-image').forEach(button => {
+    button.addEventListener('click', async () => {
+        if (!confirm('Bạn có chắc muốn xóa ảnh này?')) return;
+        const response = await fetch('{{ url('admin/variants/images') }}/' + button.dataset.imageId, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }
+        });
+        const data = await response.json();
+        if (response.ok && data.status) {
+            button.closest('.existing-image').remove();
+        } else {
+            alert(data.message || 'Không thể xóa ảnh.');
+        }
+    });
+});
+
+document.getElementById('variantsContainer').addEventListener('click', function (event) {
+    const button = event.target.closest('.remove-variant');
+    if (!button) return;
+    const row = button.closest('.variant-row');
+    const id = row.querySelector('input[name$="[id]"]').value;
+    if (id) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'variants_to_delete[]';
+        input.value = id;
+        document.querySelector('form').appendChild(input);
+    }
+    row.remove();
+});
 </script>
 
 @endsection

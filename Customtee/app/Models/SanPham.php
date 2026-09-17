@@ -55,6 +55,16 @@ class SanPham extends Model
     return $this->hasMany(BienThe::class, 'san_pham_id');
 }
 
+    public function allVariants()
+    {
+        return $this->hasMany(BienThe::class, 'san_pham_id');
+    }
+
+    public function images()
+    {
+        return $this->hasMany(HinhAnhSanPham::class, 'san_pham_id')->orderBy('thu_tu');
+    }
+
 public function category()
 {
     return $this->belongsTo(Category::class, 'danh_muc_id');
