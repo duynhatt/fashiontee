@@ -1,6 +1,4 @@
-@extends('admin.layout.AdminLayout')
-
-@section('AdminContent')
+<?php $__env->startSection('AdminContent'); ?>
 <style>
     .form-group{
     margin-bottom:15px;
@@ -79,50 +77,51 @@
 </style>
 <div class="d-flex justify-content-between align-items-center" style="margin-bottom:20px;">
     <h3 class="mb-0">Cập nhật biến thể</h3>
-    <a href="{{ route('admin.san-pham.index') }}" class="btn btn-outline-secondary btn-sm">
+    <a href="<?php echo e(route('admin.san-pham.index')); ?>" class="btn btn-outline-secondary btn-sm">
         <i class="fa fa-arrow-left"></i> Danh sách sản phẩm
     </a>
 </div>
 
-<form action="{{ route('variants.update', $variant->id) }}" method="POST" enctype="multipart/form-data" style="max-width:1100px;">
-    @csrf
+<form action="<?php echo e(route('variants.update', $variant->id)); ?>" method="POST" enctype="multipart/form-data" style="max-width:1100px;">
+    <?php echo csrf_field(); ?>
 
-    @if ($errors->any())
+    <?php if($errors->any()): ?>
         <div class="alert alert-danger">
             <ul class="mb-0">
-                @foreach ($errors->all() as $err)
-                    <li>{{ $err }}</li>
-                @endforeach
+                <?php $__currentLoopData = $errors->all(); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $err): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <li><?php echo e($err); ?></li>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </ul>
         </div>
-    @endif
+    <?php endif; ?>
 
-    <input type="hidden" name="san_pham_id" value="{{ $product->id }}">
+    <input type="hidden" name="san_pham_id" value="<?php echo e($product->id); ?>">
 
-    {{-- SẢN PHẨM --}}
+    
     <div class="form-group">
         <label>Sản phẩm</label>
         <select id="productSelect" class="form-control" disabled>
-            @foreach($products as $p)
-                <option value="{{ $p->id }}"
-                        data-img="{{ $p->hinh_anh_chinh ? asset('storage/' . $p->hinh_anh_chinh) : asset('img/shop_01.jpg') }}"
-                        data-cat="{{ $p->category->ten_danh_muc ?? '' }}"
-                        {{ $product->id == $p->id ? 'selected' : '' }}>
-                    {{ $p->ten_san_pham }}
+            <?php $__currentLoopData = $products; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <option value="<?php echo e($p->id); ?>"
+                        data-img="<?php echo e($p->hinh_anh_chinh ? asset('storage/' . $p->hinh_anh_chinh) : asset('img/shop_01.jpg')); ?>"
+                        data-cat="<?php echo e($p->category->ten_danh_muc ?? ''); ?>"
+                        <?php echo e($product->id == $p->id ? 'selected' : ''); ?>>
+                    <?php echo e($p->ten_san_pham); ?>
+
                 </option>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </select>
         <small class="text-muted">Sửa biến thể sản phẩm.</small>
     </div>
 
-    {{-- PREVIEW SẢN PHẨM --}}
+    
     <div class="product-info-box">
         <img id="previewImg"
-             src="{{ $product->hinh_anh_chinh ? asset('storage/' . $product->hinh_anh_chinh) : asset('img/shop_01.jpg') }}">
-        <div><b>Danh mục:</b> <span id="productCat">{{ $product->category->ten_danh_muc ?? '-' }}</span></div>
+             src="<?php echo e($product->hinh_anh_chinh ? asset('storage/' . $product->hinh_anh_chinh) : asset('img/shop_01.jpg')); ?>">
+        <div><b>Danh mục:</b> <span id="productCat"><?php echo e($product->category->ten_danh_muc ?? '-'); ?></span></div>
     </div>
 
-    @php
+    <?php
         $colorImages = $product->images->groupBy('mau_sac_id');
         $oldVariants = old('variants');
         if (!$oldVariants) {
@@ -143,7 +142,7 @@
                 ];
             })->values()->all();
         }
-    @endphp
+    ?>
 
     <div class="form-group">
         <label>Danh sách biến thể</label>
@@ -154,26 +153,26 @@
             </div>
             <small class="text-muted d-block mb-3">Mỗi màu chỉ cần upload một lần, ảnh sẽ dùng cho tất cả size của màu đó.</small>
             <div class="row mt-2">
-                @foreach($colorImages as $colorId => $images)
-                    @php
+                <?php $__currentLoopData = $colorImages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $colorId => $images): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
                         $color = $colors->firstWhere('id', $colorId);
-                    @endphp
+                    ?>
                     <div class="col-md-6 mb-3">
                         <div class="color-upload-card">
-                        <label class="small font-weight-bold d-block mb-2">{{ $color->ten_mau ?? 'Màu' }}</label>
+                        <label class="small font-weight-bold d-block mb-2"><?php echo e($color->ten_mau ?? 'Màu'); ?></label>
                         <div class="color-upload-existing d-flex flex-wrap mb-2">
-                            @foreach($images as $image)
-                                <div class="position-relative mr-2 mb-2 existing-image" data-image-id="{{ $image->id }}">
-                                    <img src="{{ asset('storage/' . $image->duong_dan) }}" alt="Ảnh màu" style="width:64px;height:64px;object-fit:cover;border:1px solid #ddd;border-radius:4px;">
-                                    <button type="button" class="btn btn-sm btn-danger position-absolute delete-variant-image" style="top:0;right:0;padding:0 4px;" data-image-id="{{ $image->id }}">×</button>
+                            <?php $__currentLoopData = $images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <div class="position-relative mr-2 mb-2 existing-image" data-image-id="<?php echo e($image->id); ?>">
+                                    <img src="<?php echo e(asset('storage/' . $image->duong_dan)); ?>" alt="Ảnh màu" style="width:64px;height:64px;object-fit:cover;border:1px solid #ddd;border-radius:4px;">
+                                    <button type="button" class="btn btn-sm btn-danger position-absolute delete-variant-image" style="top:0;right:0;padding:0 4px;" data-image-id="<?php echo e($image->id); ?>">×</button>
                                 </div>
-                            @endforeach
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
-                        <input type="file" name="color_images[{{ $colorId }}][]" class="form-control-file color-upload-input color-image-input" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
+                        <input type="file" name="color_images[<?php echo e($colorId); ?>][]" class="form-control-file color-upload-input color-image-input" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
                         <div class="color-upload-preview d-flex flex-wrap mt-2"></div>
                         </div>
                     </div>
-                @endforeach
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
         </div>
         <div class="row variant-header">
@@ -185,39 +184,39 @@
             <div class="col-md-1">Trạng thái</div>
         </div>
         <div id="variantsContainer">
-            @foreach($oldVariants as $index => $row)
-                <div class="variant-row" data-index="{{ $index }}">
-                    <input type="hidden" name="variants[{{ $index }}][id]" value="{{ $row['id'] ?? '' }}">
+            <?php $__currentLoopData = $oldVariants; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $row): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                <div class="variant-row" data-index="<?php echo e($index); ?>">
+                    <input type="hidden" name="variants[<?php echo e($index); ?>][id]" value="<?php echo e($row['id'] ?? ''); ?>">
                     <div class="row">
                         <div class="col-md-3">
-                            <select name="variants[{{ $index }}][mau_sac_id]" class="form-control form-control-sm" required>
+                            <select name="variants[<?php echo e($index); ?>][mau_sac_id]" class="form-control form-control-sm" required>
                                 <option value="">-- Chọn màu --</option>
-                                @foreach($colors as $c)
-                                    <option value="{{ $c->id }}" {{ ($row['mau_sac_id'] ?? '') == $c->id ? 'selected' : '' }}>{{ $c->ten_mau }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $colors; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $c): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($c->id); ?>" <?php echo e(($row['mau_sac_id'] ?? '') == $c->id ? 'selected' : ''); ?>><?php echo e($c->ten_mau); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <select name="variants[{{ $index }}][kich_thuoc_id]" class="form-control form-control-sm" required>
+                            <select name="variants[<?php echo e($index); ?>][kich_thuoc_id]" class="form-control form-control-sm" required>
                                 <option value="">-- Chọn size --</option>
-                                @foreach($sizes as $s)
-                                    <option value="{{ $s->id }}" {{ ($row['kich_thuoc_id'] ?? '') == $s->id ? 'selected' : '' }}>{{ $s->ten_kich_thuoc }}</option>
-                                @endforeach
+                                <?php $__currentLoopData = $sizes; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $s): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($s->id); ?>" <?php echo e(($row['kich_thuoc_id'] ?? '') == $s->id ? 'selected' : ''); ?>><?php echo e($s->ten_kich_thuoc); ?></option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <input type="number" name="variants[{{ $index }}][gia]" class="form-control form-control-sm" value="{{ $row['gia'] ?? '' }}" min="0" required>
+                            <input type="number" name="variants[<?php echo e($index); ?>][gia]" class="form-control form-control-sm" value="<?php echo e($row['gia'] ?? ''); ?>" min="0" required>
                         </div>
                         <div class="col-md-2">
-                            <input type="number" name="variants[{{ $index }}][gia_khuyen_mai]" class="form-control form-control-sm" value="{{ $row['gia_khuyen_mai'] ?? '' }}" min="0">
+                            <input type="number" name="variants[<?php echo e($index); ?>][gia_khuyen_mai]" class="form-control form-control-sm" value="<?php echo e($row['gia_khuyen_mai'] ?? ''); ?>" min="0">
                         </div>
                         <div class="col-md-2">
-                            <input type="number" name="variants[{{ $index }}][so_luong]" class="form-control form-control-sm" value="{{ $row['so_luong'] ?? '' }}" min="0" required>
+                            <input type="number" name="variants[<?php echo e($index); ?>][so_luong]" class="form-control form-control-sm" value="<?php echo e($row['so_luong'] ?? ''); ?>" min="0" required>
                         </div>
                         <div class="col-md-1">
-                            <select name="variants[{{ $index }}][trang_thai]" class="form-control form-control-sm">
-                                <option value="1" {{ ($row['trang_thai'] ?? '1') == '1' ? 'selected' : '' }}>Hiện</option>
-                                <option value="0" {{ ($row['trang_thai'] ?? '1') == '0' ? 'selected' : '' }}>Ẩn</option>
+                            <select name="variants[<?php echo e($index); ?>][trang_thai]" class="form-control form-control-sm">
+                                <option value="1" <?php echo e(($row['trang_thai'] ?? '1') == '1' ? 'selected' : ''); ?>>Hiện</option>
+                                <option value="0" <?php echo e(($row['trang_thai'] ?? '1') == '0' ? 'selected' : ''); ?>>Ẩn</option>
                             </select>
                         </div>
                         <div class="col-md-12 mt-2 text-right">
@@ -225,7 +224,7 @@
                         </div>
                     </div>
                 </div>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
     </div>
 
@@ -331,10 +330,10 @@ document.querySelectorAll('.color-image-input').forEach(input => {
 document.querySelectorAll('.delete-variant-image').forEach(button => {
     button.addEventListener('click', async () => {
         if (!confirm('Bạn có chắc muốn xóa ảnh này?')) return;
-        const response = await fetch('{{ url('admin/variants/images') }}/' + button.dataset.imageId, {
+        const response = await fetch('<?php echo e(url('admin/variants/images')); ?>/' + button.dataset.imageId, {
             method: 'DELETE',
             headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': '<?php echo e(csrf_token()); ?>',
                 'Accept': 'application/json'
             }
         });
@@ -363,4 +362,6 @@ document.getElementById('variantsContainer').addEventListener('click', function 
 });
 </script>
 
-@endsection
+<?php $__env->stopSection(); ?>
+
+<?php echo $__env->make('admin.layout.AdminLayout', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH D:\e7\laragon\www\DATN\DATN-CustomTee\Customtee\resources\views/admin/variants/edit.blade.php ENDPATH**/ ?>

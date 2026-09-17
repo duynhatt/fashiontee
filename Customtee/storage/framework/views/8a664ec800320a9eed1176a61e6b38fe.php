@@ -53,6 +53,41 @@
             border-radius: 6px;
         }
 
+        .color-upload-panel {
+            border: 1px solid #e3e8ef;
+            border-radius: 10px;
+            padding: 16px;
+            background: #f8fafc;
+        }
+        .color-upload-card {
+            height: 100%;
+            padding: 14px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+        }
+        .color-upload-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px dashed #b8c2cc;
+            border-radius: 6px;
+            background: #f8fafc;
+            font-size: 12px;
+        }
+        .color-upload-preview {
+            gap: 6px;
+            max-height: 72px;
+            overflow-y: auto;
+        }
+        .color-upload-preview img {
+            width: 64px;
+            height: 64px;
+            object-fit: cover;
+            border: 1px solid #d8dee6;
+            border-radius: 6px;
+        }
+
         .input-group-text {
             border-radius: 6px 0 0 6px;
         }
@@ -346,9 +381,12 @@
                                 </div>
                             </div>
 
-                            <div id="colorImagesContainer" class="border rounded p-3 mb-3">
-                                <div class="font-weight-bold">Ảnh theo màu</div>
-                                <small class="text-muted">Mỗi màu chỉ cần upload một lần, ảnh sẽ dùng cho tất cả size của màu đó.</small>
+                            <div id="colorImagesContainer" class="color-upload-panel mb-3">
+                                <div class="d-flex align-items-center mb-1">
+                                    <i class="fas fa-images text-primary mr-2"></i>
+                                    <div class="font-weight-bold">Ảnh theo màu</div>
+                                </div>
+                                <small class="text-muted d-block mb-3">Mỗi màu chỉ cần upload một lần, ảnh sẽ dùng cho tất cả size của màu đó.</small>
                                 <div id="colorImageRows" class="row mt-2"></div>
                             </div>
                             <div class="row small text-muted mb-2">
@@ -869,23 +907,24 @@
                 });
                 const container = $('#colorImageRows').empty();
                 Object.keys(selected).forEach(colorId => {
-                    const col = $('<div class="col-md-6 mb-2"></div>');
-                    col.append($('<label class="small font-weight-bold"></label>').text(selected[colorId]));
+                    const col = $('<div class="col-md-6 mb-3"><div class="color-upload-card"></div></div>');
+                    const card = col.children('.color-upload-card');
+                    card.append($('<label class="small font-weight-bold d-block mb-2"></label>').text(selected[colorId]));
                     const input = existing[colorId] || $('<input>')[0];
                     input.type = 'file';
                     input.name = `color_images[${colorId}][]`;
                     input.dataset.colorId = colorId;
-                    input.className = 'form-control-file color-image-input';
+                    input.className = 'form-control-file color-upload-input color-image-input';
                     input.accept = 'image/jpeg,image/png,image/gif,image/webp';
                     input.multiple = true;
-                    col.append(input).append('<div class="color-image-preview d-flex flex-wrap mt-2"></div>');
+                    card.append(input).append('<div class="color-upload-preview d-flex flex-wrap mt-2"></div>');
                     container.append(col);
                 });
             }
 
             $('#productVariantsContainer').on('change', 'select[name$="[mau_sac_id]"]', refreshColorImageRows);
             $('#colorImageRows').on('change', '.color-image-input', function() {
-                const preview = $(this).siblings('.color-image-preview').empty();
+                const preview = $(this).siblings('.color-upload-preview').empty();
                 Array.from(this.files).forEach((file, index) => $('<img>', {
                     src: URL.createObjectURL(file),
                     title: 'Ảnh ' + (index + 1),

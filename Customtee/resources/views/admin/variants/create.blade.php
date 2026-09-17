@@ -1,6 +1,45 @@
 @extends('admin.layout.AdminLayout')
 
 @section('AdminContent')
+<style>
+    .color-upload-panel {
+        border: 1px solid #e3e8ef;
+        border-radius: 10px;
+        padding: 16px;
+        background: #f8fafc;
+    }
+    .color-upload-card {
+        height: 100%;
+        padding: 14px;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #fff;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, .04);
+    }
+    .color-upload-input {
+        width: 100%;
+        padding: 8px;
+        border: 1px dashed #b8c2cc;
+        border-radius: 6px;
+        background: #f8fafc;
+        font-size: 12px;
+    }
+    .color-upload-preview,
+    .color-upload-preview img {
+        width: 64px;
+        height: 64px;
+    }
+    .color-upload-preview {
+        gap: 6px;
+        max-height: 72px;
+        overflow-y: auto;
+    }
+    .color-upload-preview img {
+        object-fit: cover;
+        border: 1px solid #d8dee6;
+        border-radius: 6px;
+    }
+</style>
 
 <div class="d-flex justify-content-between align-items-center" style="margin-bottom:20px;">
     <h3 class="mb-0">Thêm biến thể sản phẩm</h3>
@@ -133,9 +172,12 @@
             </div>
         </div>
 
-        <div id="colorImagesContainer" class="border rounded p-3 mb-3">
-            <div class="font-weight-bold">Ảnh theo màu</div>
-            <small class="text-muted">Mỗi màu chỉ cần upload một lần, ảnh sẽ dùng cho tất cả size của màu đó.</small>
+        <div id="colorImagesContainer" class="color-upload-panel mb-3">
+            <div class="d-flex align-items-center mb-1">
+                <i class="fa fa-images text-primary mr-2"></i>
+                <div class="font-weight-bold">Ảnh theo màu</div>
+            </div>
+            <small class="text-muted d-block mb-3">Mỗi màu chỉ cần upload một lần, ảnh sẽ dùng cho tất cả size của màu đó.</small>
             <div id="colorImageRows" class="row mt-2"></div>
         </div>
 
@@ -348,21 +390,23 @@ function refreshColorImageRows() {
     container.innerHTML = '';
     selected.forEach((name, colorId) => {
         const col = document.createElement('div');
-        col.className = 'col-md-6 mb-2';
+        col.className = 'col-md-6 mb-3';
+        col.innerHTML = '<div class="color-upload-card"></div>';
+        const card = col.firstElementChild;
         const label = document.createElement('label');
-        label.className = 'small font-weight-bold';
+        label.className = 'small font-weight-bold d-block mb-2';
         label.textContent = name;
         const input = colorRows.get(colorId) || document.createElement('input');
         input.type = 'file';
         input.name = `color_images[${colorId}][]`;
         input.dataset.colorId = colorId;
-        input.className = 'form-control-file color-image-input';
+        input.className = 'form-control-file color-upload-input color-image-input';
         input.accept = 'image/jpeg,image/png,image/gif,image/webp';
         input.multiple = true;
-        col.append(label, input);
+        card.append(label, input);
         const preview = document.createElement('div');
-        preview.className = 'color-image-preview d-flex flex-wrap mt-2';
-        col.appendChild(preview);
+        preview.className = 'color-upload-preview d-flex flex-wrap mt-2';
+        card.appendChild(preview);
         container.appendChild(col);
     });
 }
@@ -373,7 +417,7 @@ variantsContainer.addEventListener('change', event => {
 document.getElementById('colorImageRows').addEventListener('change', event => {
     if (!event.target.matches('.color-image-input')) return;
     const input = event.target;
-    const preview = input.parentElement.querySelector('.color-image-preview');
+    const preview = input.parentElement.querySelector('.color-upload-preview');
     preview.innerHTML = '';
     Array.from(input.files).forEach((file, index) => {
         const image = document.createElement('img');

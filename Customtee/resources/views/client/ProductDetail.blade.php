@@ -79,7 +79,7 @@
                                  decoding="async">
                         </div>
                     </div>
-                    <div id="product-gallery-thumbnails" class="d-flex flex-wrap gap-2 mt-3" aria-label="Thư viện ảnh sản phẩm"></div>
+                    <div id="product-gallery-thumbnails" class="product-gallery-thumbnails d-flex gap-2 mt-3" aria-label="Thư viện ảnh sản phẩm"></div>
 
                     <!-- Micro Feature Tags below Image -->
                     <div class="row g-2 mt-3 text-center text-muted small">
@@ -1288,17 +1288,32 @@
      }
 
      .gallery-thumbnail {
-        opacity: 0.72;
-        transition: opacity 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-     }
+       flex: 0 0 64px;
+       width: 64px;
+       height: 64px;
+       opacity: 0.72;
+       transition: opacity 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
 
-     .gallery-thumbnail:hover,
-     .gallery-thumbnail.active {
-        opacity: 1;
-        border-color: #0f172a !important;
-        box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0f172a, 0 5px 14px rgba(15, 23, 42, 0.28);
-        transform: translateY(-2px);
-        padding: 1.5rem;
+    .product-gallery-thumbnails {
+       overflow-x: auto;
+       overflow-y: hidden;
+       padding: 4px 3px 7px;
+       scrollbar-width: thin;
+       scrollbar-color: #cbd5e1 transparent;
+    }
+
+    .gallery-thumbnail:hover,
+    .gallery-thumbnail.active {
+       opacity: 1;
+       border-color: #0f172a !important;
+       box-shadow: 0 0 0 2px #fff, 0 0 0 4px #0f172a, 0 5px 14px rgba(15, 23, 42, 0.28);
+       transform: translateY(-2px);
+    }
+
+    .gallery-thumbnail:focus-visible {
+       outline: 2px solid #2563eb;
+       outline-offset: 3px;
     }
 
     .product-media-wrapper:hover .product-main-img {

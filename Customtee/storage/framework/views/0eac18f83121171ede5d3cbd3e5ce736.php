@@ -38,6 +38,41 @@
     overflow-y:auto;
     overflow-x:hidden;
 }
+.color-upload-panel{
+    border:1px solid #e3e8ef;
+    border-radius:10px;
+    padding:16px;
+    background:#f8fafc;
+}
+.color-upload-card{
+    height:100%;
+    padding:14px;
+    border:1px solid #e5e7eb;
+    border-radius:8px;
+    background:#fff;
+    box-shadow:0 2px 8px rgba(15,23,42,.04);
+}
+.color-upload-input{
+    width:100%;
+    padding:8px;
+    border:1px dashed #b8c2cc;
+    border-radius:6px;
+    background:#f8fafc;
+    font-size:12px;
+}
+.color-upload-preview{
+    gap:6px;
+    max-height:72px;
+    overflow-y:auto;
+}
+.color-upload-preview img,
+.color-upload-existing img{
+    width:64px;
+    height:64px;
+    object-fit:cover;
+    border:1px solid #d8dee6;
+    border-radius:6px;
+}
 
 </style>
 <div class="d-flex justify-content-between align-items-center" style="margin-bottom:20px;">
@@ -111,17 +146,21 @@
 
     <div class="form-group">
         <label>Danh sách biến thể</label>
-        <div class="border rounded p-3 mb-3">
-            <div class="font-weight-bold">Ảnh theo màu</div>
-            <small class="text-muted">Mỗi màu chỉ cần upload một lần, ảnh sẽ dùng cho tất cả size của màu đó.</small>
+        <div class="color-upload-panel mb-3">
+            <div class="d-flex align-items-center mb-1">
+                <i class="fa fa-images text-primary mr-2"></i>
+                <div class="font-weight-bold">Ảnh theo màu</div>
+            </div>
+            <small class="text-muted d-block mb-3">Mỗi màu chỉ cần upload một lần, ảnh sẽ dùng cho tất cả size của màu đó.</small>
             <div class="row mt-2">
                 <?php $__currentLoopData = $colorImages; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $colorId => $images): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <?php
                         $color = $colors->firstWhere('id', $colorId);
                     ?>
                     <div class="col-md-6 mb-3">
-                        <label class="small font-weight-bold d-block"><?php echo e($color->ten_mau ?? 'Màu'); ?></label>
-                        <div class="d-flex flex-wrap mb-2">
+                        <div class="color-upload-card">
+                        <label class="small font-weight-bold d-block mb-2"><?php echo e($color->ten_mau ?? 'Màu'); ?></label>
+                        <div class="color-upload-existing d-flex flex-wrap mb-2">
                             <?php $__currentLoopData = $images; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $image): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <div class="position-relative mr-2 mb-2 existing-image" data-image-id="<?php echo e($image->id); ?>">
                                     <img src="<?php echo e(asset('storage/' . $image->duong_dan)); ?>" alt="Ảnh màu" style="width:64px;height:64px;object-fit:cover;border:1px solid #ddd;border-radius:4px;">
@@ -129,8 +168,9 @@
                                 </div>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                         </div>
-                        <input type="file" name="color_images[<?php echo e($colorId); ?>][]" class="form-control-file color-image-input" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
-                        <div class="color-image-preview d-flex flex-wrap mt-2"></div>
+                        <input type="file" name="color_images[<?php echo e($colorId); ?>][]" class="form-control-file color-upload-input color-image-input" accept="image/jpeg,image/png,image/gif,image/webp" multiple>
+                        <div class="color-upload-preview d-flex flex-wrap mt-2"></div>
+                        </div>
                     </div>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </div>
@@ -275,7 +315,7 @@ document.querySelectorAll('.variant-image-input').forEach(input => {
 
 document.querySelectorAll('.color-image-input').forEach(input => {
     input.addEventListener('change', () => {
-        const preview = input.parentElement.querySelector('.color-image-preview');
+        const preview = input.parentElement.querySelector('.color-upload-preview');
         preview.innerHTML = '';
         Array.from(input.files).forEach((file, index) => {
             const image = document.createElement('img');
